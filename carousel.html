@@ -58,11 +58,9 @@ function getAndDisplayJsonThen( thenFn ) {
 
 	    var data            = JSON.parse(this.responseText);
 	    var carouselElement = $('.carousel');
-	    console.log("DEBUG: displayJson: carouselElement=" + carouselElement);
 	    var htmlList        = data.map(function(it){
-	    	return "\n" + '<div class="item">' + it['haiku'].replace(/\n/g, '<BR>') + '</div>';
+	    	return "\n" + '<div class="item">' + it['text'].replace(/\n/g, '<BR>') + '</div>';
 	    });
-	    console.log("DEBUG: displayJson: htmlList=" + htmlList);
 	    carouselElement.html(htmlList);
 
 	    thenFn();
