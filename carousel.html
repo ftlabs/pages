@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Carousel</title>
+		<!-- using http://kenwheeler.github.io/slick/ -->
+		<link rel="stylesheet" type="text/css" href="http://cdn.jsdelivr.net/jquery.slick/1.6.0/slick.css"/>
+		<link rel="stylesheet" type="text/css" href="http://cdn.jsdelivr.net/jquery.slick/1.6.0/slick-theme.css"/>
+		<link rel="stylesheet" href="http://origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2" />
+	   	<style>
+			html {
+			    font-family: BentonSans, sans-serif;
+			}
+			h1 {
+			    font-family: MillerDisplay, serif;
+			    text-align: center;
+			    font-size: 300%;
+			    font-size: 6.2vw;
+			}
+			body {
+			    background-color: #fff1e0;
+			}
+			.carousel {
+				width: 90% ;
+				margin-left: auto ;
+				margin-right: auto ;
+				height: 90%;
+				margin-top: auto;
+				margin-bottom: auto;
+			}
+			.item {
+			}
+			.text {
+			    font-size: 300%;
+			    font-size: 6.2vw;
+			    text-align: center;
+			}
+			.instruction {
+			    font-size: 200%;
+			    font-size: 4vw;
+			    text-align: center;
+			}
+			.footer {
+				position: fixed; 
+    			bottom: 0%;
+    			width: 100%;
+			}
+			.footer-text {
+			    font-size: 300%;
+			    font-size: 6.2vw;
+			    text-align: center;
+			}
+   		</style>
+		<script type="text/javascript">
+			function urlParam(name){
+			    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+			    if (results==null){
+			       return null;
+			    }
+			    else{
+			       return results[1] || 0;
+			    }
+			}
+
+			function getAndDisplayJsonThen( thenFn ) {
+				var id      = urlParam('id');
+				var jsonUrl = "http://bertha.ig.ft.com/view/publish/gss/" + id + "/Sheet1";
+				var oReq    = new XMLHttpRequest();
+
+				oReq.onload = displayJson;
+				oReq.open("get", jsonUrl, true);
+				oReq.send();
+
+				function displayJson(e) {
+					var title           = urlParam('title') || "Carousel";
+					var titleElement    = $('.title');
+					titleElement.html(decodeURIComponent(title).replace(/"/g,""));
+
+					var footerText      = urlParam('footer') || "Financial Times";
+					var footerElement   = $('.footer-text');
+					footerElement.html(decodeURIComponent(footerText).replace(/"/g,""));
+
+					if (this.status == 200) {
+					    var data            = JSON.parse(this.responseText);
+					    var carouselElement = $('.carousel');
+					    var htmlList        = data.map(function(it){
+					    	return "\n" + '<div class="item"><div class="text">' + it['text'].replace(/\n/g, '<BR>') + '</div></div>';
+					    });
+					    carouselElement.html(htmlList);
+					}
+				    thenFn();
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<h1 class="title">Carousel Instructions: url params</h1>
+		<div class="carousel">
+			<div class="item">
+				<div class="instruction">
+					This is a simple carousel of text snippets, configured as follows:<br>
+					?title="your title"&amp;id="google spreadsheet id"&amp;footer="your footer"&amp;pause=5
+				</div>
+			</div>
+	   	</div>
+	   	<div class="footer">
+	   		<div class="footer-text"></div>
+	   	</div>
+
+		<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+		<script type="text/javascript" src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+		<script type="text/javascript" src="http://cdn.jsdelivr.net/jquery.slick/1.6.0/slick.min.js"></script>
+
+		<script type="text/javascript">
+			$(document).ready(function(){
+			var secs = urlParam('pause') || 5;
+
+			getAndDisplayJsonThen( function() {
+			    $('.carousel').slick({
+					slidesToShow: 1,
+					slidesToScroll: 1,
+					autoplay: true,
+					autoplaySpeed: (secs * 1000),
+					infinite: true,
+					speed: 500,
+					fade: true,
+					cssEase: 'linear',
+					arrows: false,
+					centerMode: true,
+					dots: true,
+			    })
+			});
+		});
+		</script>
+
+	</body>
+</html>
