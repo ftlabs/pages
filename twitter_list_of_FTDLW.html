@@ -6,7 +6,27 @@
     <meta http-equiv="refresh" content="60">
   </head>
   <body>
-    <a class="twitter-timeline" data-dnt="true" href="https://twitter.com/hashtag/FTDLW" data-widget-id="778252294794149889" height="800">#FTDLW Tweets</a>
-    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+    <a id="twitter-thingy" class="twitter-timeline" data-dnt="true" href="https://twitter.com/hashtag/FTDLW" data-widget-id="778252294794149889" height="800" width="1000">#FTDLW Tweets</a>
+    <script>
+    	function getUrlVars() {
+		    var vars = {};
+		    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,    
+		    function(m,key,value) {
+		      vars[key] = value;
+		    });
+		    return vars;
+		  }
+
+		var width = getUrlVars()["width"];
+		if(width) {
+	    	document.getElementById('twitter-thingy').setAttribute("width",width);
+		}
+
+		var height = getUrlVars()["height"];
+		if(height) {
+	    	document.getElementById('twitter-thingy').setAttribute("height",height);
+		}
+
+    	!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
   </body>
 </html>
