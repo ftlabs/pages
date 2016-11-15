@@ -47,8 +47,10 @@ var Meditation = (function() {
 
 				haikuData.forEach(function(haiku){
 					count = count + 1;
-					var id = 'Id' + count; // for now, the haiku id is the index of it in the input data
-					haiku['Id'] = id;
+					if (('Id' in haiku))) {
+						haiku['Id'] = 'Id' + count;
+					};
+					var id = haiku['Id']
 					haikuById[id] = haiku;
 
 					haiku['ProminentColoursByName'] = {};
