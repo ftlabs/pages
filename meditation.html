@@ -42,11 +42,15 @@ body {
 }
 .haiku-button {
 	font-size: 50%;
+	margin: 5px;
 }
 .haiku-prev, .haiku-next {
 	font-size: 100%
 }
-
+.vertical-text {
+	transform: rotate(270deg);
+	transform-origin: left top 0;
+}
 		</style>
 	</head>
 	<body>
@@ -61,10 +65,11 @@ body {
 			</div>
 			<BR>
 			<div class='haiku-nav'>
+				<div class="haiku-themes"></div>
 				<button class="haiku-prev haiku-button">&lt;&lt;</button>
 				<span class="haiku-theme"></span>
 				<button class="haiku-next haiku-button">&gt;&gt;</button>
-				<span class="haiku-themes"></span>
+				<span class="vertical-text"><a href="http://www.ft.com/hidden-haiku">ft.com/hidden-haiku</a></span>
 			</div>
 	   	</div>
 
