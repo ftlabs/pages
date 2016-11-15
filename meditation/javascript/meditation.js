@@ -1,6 +1,7 @@
 var Meditation = (function() {
 
 	var jsonUrl = "../data/meditation_haiku.json";
+	var page    = '/pages/meditation.html';
 	var haikuData;
 	var haikuById         = {}; // all haiku indexed by their id
 	var haikuListsByTheme = {}; // a list of haiku id for each theme
@@ -144,7 +145,7 @@ var Meditation = (function() {
 	}
 
 	function constructPageUrl( id, theme ) {
-		return '/meditation.html?haiku=' + id + '&theme=' + theme;
+		return page + '?haiku=' + id + '&theme=' + theme;
 	}
 
 	function setPageUrlForNextHaiku( id, theme , direction=1) {
