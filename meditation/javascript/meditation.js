@@ -45,7 +45,8 @@ var Meditation = (function() {
 
 				haikuData.forEach(function(haiku){
 					count = count + 1;
-					var id = count; // for now, the haiku id is the index of it in the input data
+					var id = 'Id' + count; // for now, the haiku id is the index of it in the input data
+					haiku['Id'] = id;
 					haikuById[id] = haiku;
 
 					haiku['ProminentColoursByName'] = {};
@@ -69,6 +70,8 @@ var Meditation = (function() {
 					});
 
 					coreThemes = Object.keys(knownCoreThemes);
+
+					console.log('getAndProcessJsonThen: id=' + id + ', themes=' + JSON.stringify(haiku['Themes']) + ', title=' + haiku['Title']);
 				});
 
 				Object.keys(knownAuthors).forEach(function(author){
@@ -98,6 +101,7 @@ var Meditation = (function() {
 	// if the id is invalid, use the first haiku from the theme
 	//    else lookup the index of the haiku in the them, and get the next haiku in the sequence, wrapping to first if at end of list
 	function getNextDetails( id, theme, direction=1 ) {
+		console.log('getNextDetails: id=' + id + ', theme=' + theme + ', direction=' + direction );
 		if ( ! okAsThemesHash[theme] ) {
 			theme = defaultTheme;
 		};
@@ -109,9 +113,9 @@ var Meditation = (function() {
 			indexOfIdInTheme = 0;
 		};
 		var nextIndex = indexOfIdInTheme + direction;
-		if (indexOfIdInTheme < 0) {
+		if (nextIndex < 0) {
 			nextIndex = haikuList.length -1;
-		} else if (indexOfIdInTheme >= haikuList.length) {
+		} else if (nextIndex >= haikuList.length) {
 			nextIndex = 0;
 		};
 
@@ -123,7 +127,7 @@ var Meditation = (function() {
 			haiku: haikuById[nextId]
 		};
 
-		console.log('getNextDetails: id=' + id + ', theme=' + theme + ', direction=' + direction + ',\ndetails=' + JSON.stringify(details));
+		console.log('getNextDetails: details=' + JSON.stringify(details));
 
 		return details;
 	}
@@ -135,8 +139,10 @@ var Meditation = (function() {
 	function setPageUrlForNextHaiku( id, theme , direction=1) {
 		var nextDetails = getNextDetails( id, theme, direction );
 		var nextUrl     = constructPageUrl( nextDetails['id'], nextDetails['theme'] );
-		console.log('setPageUrlForNextHaiku" nextUrl=' + nextUrl);
-		window.location.href = nextUrl;
+		var nextTitle   = "FT Hidden Haiku: " + nextDetails['theme'] ;
+		console.log('setPageUrlForNextHaiku" nextUrl=' + nextUrl + ", nextTitle=" + nextTitle);
+		window.history.pushState({}, nextTitle, nextUrl);
+
 	}
 
 	function getElementByClass(name) {
