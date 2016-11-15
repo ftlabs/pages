@@ -6,6 +6,7 @@ var Meditation = (function() {
 	var haikuListsByTheme = {}; // a list of haiku id for each theme
 	var coreThemes        = []; // a list of themes
 	var okAuthorsHash     = {}; // a hash of authors with more than one haiku
+	var okAsThemesHash    = {}; // a hash of all core themes and ok authors
 	var numHaiku;
 	var defaultHaiku = 1;
 	var defaultTheme = 'IMAGERY';
@@ -76,15 +77,77 @@ var Meditation = (function() {
 					};
 				});
 
+				// combine core themes and ok authors into okAsThemesHash
+
+				Object.keys(okAuthorsHash).forEach(function(author){
+					okAsThemesHash[author] = true;
+				});				
+
+				coreThemes.forEach(function(theme){
+					okAsThemesHash[theme] = true;
+				});
+
 				numHaiku = haikuData.length;
 			}
 			thenFn();
 		}
 	}
 
+	// given a haiku (by id) and a theme,
+	// if the theme is invalid, use the default theme.
+	// if the id is invalid, use the first haiku from the theme
+	//    else lookup the index of the haiku in the them, and get the next haiku in the sequence, wrapping to first if at end of list
+	function getNextDetails( id, theme, direction=1 ) {
+		if ( ! okAsThemesHash[theme] ) {
+			theme = defaultTheme;
+		};
+
+		var haikuList = haikuListsByTheme[theme];
+		var indexOfIdInTheme = haikuList.indexOf(id);
+
+		if (indexOfIdInTheme == -1) {
+			indexOfIdInTheme = 0;
+		};
+		var nextIndex = indexOfIdInTheme + direction;
+		if (indexOfIdInTheme < 0) {
+			nextIndex = haikuList.length -1;
+		} else if (indexOfIdInTheme >= haikuList.length) {
+			nextIndex = 0;
+		};
+
+		var nextId = haikuList[nextIndex];
+
+		var details = {
+			id:    nextId,
+			theme: theme,
+			haiku: haikuById[nextId]
+		};
+
+		console.log('getNextDetails: id=' + id + ', theme=' + theme + ', direction=' + direction + ',\ndetails=' + JSON.stringify(details));
+
+		return details;
+	}
+
+	function constructPageUrl( id, theme ) {
+		return '/meditation.html?haiku=' + id + '&theme=' + theme;
+	}
+
+	function setPageUrlForNextHaiku( id, theme , direction=1) {
+		var nextDetails = getNextDetails( id, theme, direction );
+		var nextUrl     = constructPageUrl( nextDetails['id'], nextDetails['theme'] );
+		console.log('setPageUrlForNextHaiku" nextUrl=' + nextUrl);
+		window.location.href = nextUrl;
+	}
+
+	function getElementByClass(name) {
+		return document.getElementsByClassName(name)[0];
+	}
+
 	function displayHaiku() {
-		var haikuId = urlParam('haiku');
-		var theme   = urlParam('theme') || "DATE";
+		var details = getNextDetails(urlParam('haiku'), urlParam('theme'), 0)
+		var haikuId = details['id'];
+		var theme   = details['theme'];
+		var haiku   = details['haiku'];
 
 		// locate haiku
 		// - have fallback if not found
@@ -95,27 +158,31 @@ var Meditation = (function() {
 		// - buttons
 		// -- create a Next/Previous button, and the remaining theme buttons
 		// inject into page 
-		var id = getRandomIntInclusive(1,numHaiku);
-		var haiku = haikuById[id];
 
-		var cardElt = document.getElementsByClassName("haiku-card")[0];
+		var cardElt = getElementByClass("haiku-card");
 		var prominentColor = haiku['ProminentColours'][0];
 		if ('LightMuted' in haiku['ProminentColoursByName']) {
 			prominentColor = haiku['ProminentColoursByName']['LightMuted'];
 		};
 		cardElt.style.backgroundColor = prominentColor['RGBHex'];
 
-		var textElt = document.getElementsByClassName("haiku-text")[0];
+		var textElt = getElementByClass("haiku-text");
 		textElt.innerHTML = haiku['TextWithBreaks'];
 
-		var imgElt = document.getElementsByClassName("haiku-image")[0];
+		var imgElt = getElementByClass("haiku-image");
 		imgElt.src = haiku['ImageUrl'];
 
-		var authorElt = document.getElementsByClassName("haiku-author")[0];
+		var authorElt = getElementByClass("haiku-author");
 		authorElt.innerHTML = haiku['Author'];
 
-		var navElt = document.getElementsByClassName("haiku-nav")[0];
+		var navElt = getElementByClass("haiku-themes");
 		navElt.innerHTML = haiku['Themes'].join(', ');
+
+		var nextElt = getElementByClass("haiku-next");
+		nextElt.onclick = function() {
+			setPageUrlForNextHaiku(haikuId, theme);
+			displayHaiku();
+		};
 	}
 
 	return {
