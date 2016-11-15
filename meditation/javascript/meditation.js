@@ -221,6 +221,7 @@ var Meditation = (function() {
 		var buttons = [];
 		remainingThemes.forEach(function(t){
 			var button = document.createElement("BUTTON");
+			button.className = 'haiku-button';
 			button.appendChild( document.createTextNode(t) );
 			button.onclick = function(){
 				setPageUrlForNextHaiku(haikuId, t);
