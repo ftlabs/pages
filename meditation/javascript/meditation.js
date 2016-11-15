@@ -10,6 +10,7 @@ var Meditation = (function() {
 	var numHaiku;
 	var defaultHaiku = 1;
 	var defaultTheme = 'IMAGERY';
+	var genericTheme = "DATE";
 
 	function urlParam(name){
 	    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -54,24 +55,32 @@ var Meditation = (function() {
 						haiku['ProminentColoursByName'][pc['Name']] = pc;
 					});
 
+					haiku['Themes'].push(genericTheme);
+
 					haiku['Themes'].forEach(function(theme){
 						if (! (theme in knownCoreThemes)) {
 							haikuListsByTheme[theme] = [];
 							knownCoreThemes[theme] = true;
 						};
 						haikuListsByTheme[theme].push(id);
-
-						var author = haiku['Author'];
-						if (! (author in haikuListsByTheme)) {
-							haikuListsByTheme[author] = [];
-							knownAuthors[author] = true;
-						};
-						haikuListsByTheme[author].push(id);
 					});
 
-					coreThemes = Object.keys(knownCoreThemes);
+					var author = haiku['Author'];
+					if (! (author in haikuListsByTheme)) {
+						haikuListsByTheme[author] = [];
+						knownAuthors[author] = true;
+					};
+					haikuListsByTheme[author].push(id);
 
-					console.log('getAndProcessJsonThen: id=' + id + ', themes=' + JSON.stringify(haiku['Themes']) + ', title=' + haiku['Title']);
+					Object.keys(knownCoreThemes).forEach(function(theme){
+						if (haikuListsByTheme[theme].length > 1) {
+							coreThemes.push(theme);
+						};
+					});
+
+					defaultTheme = coreThemes[0] || Object.keys(haikuListsByTheme)[0];
+
+					console.log('processJson: id=' + id + ', themes=' + JSON.stringify(haiku['Themes']) + ', title=' + haiku['Title']);
 				});
 
 				Object.keys(knownAuthors).forEach(function(author){
@@ -91,6 +100,8 @@ var Meditation = (function() {
 				});
 
 				numHaiku = haikuData.length;
+
+				console.log('processJson: haikuListsByTheme=' + JSON.stringify(haikuListsByTheme));
 			}
 			thenFn();
 		}
@@ -181,14 +192,48 @@ var Meditation = (function() {
 		var authorElt = getElementByClass("haiku-author");
 		authorElt.innerHTML = haiku['Author'];
 
-		var navElt = getElementByClass("haiku-themes");
-		navElt.innerHTML = haiku['Themes'].join(', ');
+		var themeElt = getElementByClass("haiku-theme");
+		themeElt.innerHTML = theme;
 
 		var nextElt = getElementByClass("haiku-next");
 		nextElt.onclick = function() {
 			setPageUrlForNextHaiku(haikuId, theme);
 			displayHaiku();
 		};
+
+		var prevElt = getElementByClass("haiku-prev");
+		prevElt.onclick = function() {
+			setPageUrlForNextHaiku(haikuId, theme, -1);
+			displayHaiku();
+		};
+
+		var candidateThemes = haiku['Themes'].slice();
+		candidateThemes.push(haiku['Author']);
+		var remainingThemes = [];
+
+		candidateThemes.forEach(function(t){
+			if ( t !== theme && okAsThemesHash[t] ) {
+				remainingThemes.push(t);
+			};
+		});		
+
+		var buttons = [];
+		remainingThemes.forEach(function(t){
+			var button = document.createElement("BUTTON");
+			button.appendChild( document.createTextNode(t) );
+			button.onclick = function(){
+				setPageUrlForNextHaiku(haikuId, t);
+				displayHaiku();
+			};
+			buttons.push(button);
+		});
+
+		var navElt = getElementByClass("haiku-themes");
+		navElt.innerHTML = "";
+		buttons.forEach(function(button){
+			navElt.appendChild(button);
+		});
+
 	}
 
 	return {
