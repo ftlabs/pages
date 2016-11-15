@@ -47,7 +47,7 @@ var Meditation = (function() {
 
 				haikuData.forEach(function(haiku){
 					count = count + 1;
-					if (('Id' in haiku))) {
+					if (!('Id' in haiku))) {
 						haiku['Id'] = 'Id' + count;
 					};
 					var id = haiku['Id']
