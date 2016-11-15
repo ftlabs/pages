@@ -1,6 +1,6 @@
 var Meditation = (function() {
 
-	var jsonUrl = 'data/meditation_haiku.json';
+	var jsonUrl = '/pages/data/meditation_haiku.json';
 	var page    = '/pages/meditation.html';
 	var haikuData;
 	var haikuById         = {}; // all haiku indexed by their id
