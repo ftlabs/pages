@@ -212,6 +212,10 @@ var Meditation = (function() {
 		var prominentColor = haiku['ProminentColours'][0];
 		if ('LightMuted' in haiku['ProminentColoursByName']) {
 			prominentColor = haiku['ProminentColoursByName']['LightMuted'];
+		} else if ('Muted' in haiku['ProminentColoursByName']) {
+			prominentColor = haiku['ProminentColoursByName']['Muted'];
+		} else if ('Vibrant' in haiku['ProminentColoursByName']) {
+			prominentColor = haiku['ProminentColoursByName']['Vibrant'];
 		};
 		cardElt.style.backgroundColor = prominentColor['RGBHex'];
 
