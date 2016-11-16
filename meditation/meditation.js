@@ -192,6 +192,9 @@ var Meditation = (function() {
 		var imgElt = getElementByClass("haiku-image");
 		imgElt.src = haiku['ImageUrl'];
 
+		var imgLinkElt = getElementByClass("haiku-image-link");
+		imgLinkElt.href = haiku['Url'];
+
 		var authorElt = getElementByClass("haiku-author");
 		authorElt.innerHTML = haiku['Author'];
 
