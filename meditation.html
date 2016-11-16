@@ -37,12 +37,13 @@ body {
 .haiku-brand {
 	max-width: 600px;
 	text-align: right;
-	font-size: 50%;
+	font-size: 100%;
+	vertical-align:bottom;
 }
 .haiku-nav {
 	margin: auto;
 	max-width: 550px;
-    	font-size: 200%;
+    font-size: 200%;
 }
 .haiku-themes {
 	font-size: 200%;
@@ -54,9 +55,8 @@ body {
 .haiku-prev, .haiku-next {
 	font-size: 100%
 }
-.vertical-text {
-	transform: rotate(270deg);
-	transform-origin: left top 0;
+.haiku-table {
+	width: 100%;
 }
 		</style>
 	</head>
@@ -74,16 +74,24 @@ body {
 					-Chris
 				</div>
 				<BR>
-				<div class='haiku-nav'>
-					<button class="haiku-prev haiku-button">&lt;&lt;</button>
-					<span class="haiku-theme"></span>
-					<button class="haiku-next haiku-button">&gt;&gt;</button>
-					<div class="haiku-themes"></div>
-					<div class="haiku-brand">
-						<a href="https://twitter.com/FTLabs">@FTLabs</a>
-						<BR> <a href="http://labs.ft.com/2016/07/finding-hidden-haiku/">finding</a>
-						<BR> <a href="http://www.ft.com/hidden-haiku">ft.com/hidden-haiku</a>
-					</div>
+					<table class='haiku-table'>
+						<tr>
+							<td>
+								<div class='haiku-nav'>
+									<button class="haiku-prev haiku-button">&lt;&lt;</button>
+									<span class="haiku-theme"></span>
+									<button class="haiku-next haiku-button">&gt;&gt;</button>
+									<div class="haiku-themes"></div>
+								</div>
+							</td>
+							<td class="haiku-brand">					
+									<a href="https://twitter.com/FTLabs">@FTLabs</a>
+									<BR> <a href="http://labs.ft.com/2016/07/finding-hidden-haiku/">finding</a>
+									<BR> <a href="http://www.ft.com/hidden-haiku">ft.com/hidden-haiku</a>
+									<BR>&nbsp;
+							</td>
+						</tr>
+					</table>
 				</div>
 			</div>
 	   	</div>
