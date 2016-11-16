@@ -152,13 +152,15 @@ var Meditation = (function() {
 		return page + '?haiku=' + id + '&theme=' + theme;
 	}
 
-	function setPageUrlForNextHaiku( id, theme , direction=1) {
+	function setPageUrlForNextHaiku( id, theme, direction=1, nextIn=0) {
 		var nextDetails = getNextDetails( id, theme, direction );
 		var nextUrl     = constructPageUrl( nextDetails['id'], nextDetails['theme'] );
+		if (nextIn > 0) {
+			nextUrl = nextUrl + '&next-in=' + nextIn;
+		};
 		var nextTitle   = "FT Hidden Haiku: " + nextDetails['theme'] ;
 		console.log('setPageUrlForNextHaiku" nextUrl=' + nextUrl + ", nextTitle=" + nextTitle);
 		window.history.pushState({}, nextTitle, nextUrl);
-
 	}
 
 	function getElementByClass(name) {
@@ -191,6 +193,7 @@ var Meditation = (function() {
 
 	function displayHaiku() {
 		var details = getNextDetails(urlParam('haiku'), urlParam('theme'), 0)
+		var nextIn  = urlParam('next-in');
 		var haikuId = details['id'];
 		var theme   = details['theme'];
 		var haiku   = details['haiku'];
@@ -262,6 +265,14 @@ var Meditation = (function() {
 				case 40: // down
 				break;
 			}		
+		};
+
+		if (nextIn > 0) {
+			var fnNextIn = function() {
+				setPageUrlForNextHaiku(haikuId, theme, +1, nextIn);
+				displayHaiku();
+			};
+			window.setTimeout(fnNextIn, nextIn*1000);
 		};
 
 		var candidateThemes = haiku['Themes'].slice();
