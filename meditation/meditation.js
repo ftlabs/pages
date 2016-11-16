@@ -233,16 +233,35 @@ var Meditation = (function() {
 		var themeElt = getElementByClass("haiku-theme");
 		themeElt.innerHTML = calcButtonDisplayText(theme, haiku);
 
-		var nextElt = getElementByClass("haiku-next");
-		nextElt.onclick = function() {
+		var fnPrev = function() {
 			setPageUrlForNextHaiku(haikuId, theme);
 			displayHaiku();
 		};
 
-		var prevElt = getElementByClass("haiku-prev");
-		prevElt.onclick = function() {
+		var fnNext = function() {
 			setPageUrlForNextHaiku(haikuId, theme, -1);
 			displayHaiku();
+		};
+
+		var nextElt = getElementByClass("haiku-next");
+		nextElt.onclick = fnPrev;
+
+		var prevElt = getElementByClass("haiku-prev");
+		prevElt.onclick = fnNext;
+
+		document.onkeydown = function() {
+			switch (window.event.keyCode) {
+				case 37: // left key
+					fnPrev();
+				break;
+				case 38: // up key
+				break;
+				case 39: // right key
+					fnNext();
+				break;
+				case 40: // down
+				break;
+			}		
 		};
 
 		var candidateThemes = haiku['Themes'].slice();
