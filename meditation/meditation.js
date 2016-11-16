@@ -13,6 +13,7 @@ var Meditation = (function() {
 	var defaultTheme = 'IMAGERY';
 	var genericTheme = "DATE";
 	var maxButtonTextLength = 10;
+	var lineThreshold = 26;
 
 	function urlParam(name){
 	    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -177,6 +178,15 @@ var Meditation = (function() {
 		return displayT;
 	}
 
+	function longestLineLength(text) {
+		var lines = text.split('<BR>');
+		var max = 0;
+		lines.forEach(function(line){
+			max = (line.length>max)? line.length : max;
+		});
+		return max;
+	}
+
 	function displayHaiku() {
 		var details = getNextDetails(urlParam('haiku'), urlParam('theme'), 0)
 		var haikuId = details['id'];
@@ -201,6 +211,12 @@ var Meditation = (function() {
 		cardElt.style.backgroundColor = prominentColor['RGBHex'];
 
 		var textElt = getElementByClass("haiku-text");
+		if (longestLineLength(haiku['TextWithBreaks']) > lineThreshold) {
+			textElt.classList.add('haiku-too-long');
+		} else {
+			textElt.classList.remove('haiku-too-long');
+			console.log('displayHaiku: removed haiku-too-long from', JSON.stringify(textElt.classList));
+		};
 		textElt.innerHTML = haiku['TextWithBreaks'];
 
 		var imgElt = getElementByClass("haiku-image");
