@@ -12,6 +12,7 @@ var Meditation = (function() {
 	var defaultHaiku = 1;
 	var defaultTheme = 'IMAGERY';
 	var genericTheme = "DATE";
+	var maxButtonTextLength = 10;
 
 	function urlParam(name){
 	    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -163,6 +164,19 @@ var Meditation = (function() {
 		return document.getElementsByClassName(name)[0];
 	}
 
+	function calcButtonDisplayText(t) {
+		var displayT;
+		if (t in okAuthorsHash) {
+			displayT = 'AUTHOR'
+		} else if (t.length > maxButtonTextLength) {
+			displayT = t.substring(0,maxButtonTextLength);
+		} else {
+			displayT = t;
+		};
+
+		return displayT;
+	}
+
 	function displayHaiku() {
 		var details = getNextDetails(urlParam('haiku'), urlParam('theme'), 0)
 		var haikuId = details['id'];
@@ -199,7 +213,7 @@ var Meditation = (function() {
 		authorElt.innerHTML = haiku['Author'];
 
 		var themeElt = getElementByClass("haiku-theme");
-		themeElt.innerHTML = theme;
+		themeElt.innerHTML = calcButtonDisplayText(theme);
 
 		var nextElt = getElementByClass("haiku-next");
 		nextElt.onclick = function() {
@@ -227,7 +241,7 @@ var Meditation = (function() {
 		remainingThemes.forEach(function(t){
 			var button = document.createElement("BUTTON");
 			button.className = 'haiku-button';
-			button.appendChild( document.createTextNode(t) );
+			button.appendChild( document.createTextNode(calcButtonDisplayText(t)) );
 			button.onclick = function(){
 				setPageUrlForNextHaiku(haikuId, t);
 				displayHaiku();
