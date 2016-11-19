@@ -10,8 +10,8 @@ var Meditation = (function() {
 	var okAsThemesHash    = {}; // a hash of all core themes and ok authors
 	var numHaiku;
 	var defaultHaiku = 1;
-	var defaultTheme = 'IMAGERY';
-	var genericTheme = "DATE";
+	var defaultTheme = 'DATE';    // if no theme is specified, choose this one
+	var genericTheme = "DATE";    // every haiku has this theme
 	var maxButtonTextLength = 10;
 	var lineThreshold = 26;
 
@@ -83,7 +83,9 @@ var Meditation = (function() {
 						};
 					});
 
-					defaultTheme = coreThemes[0] || Object.keys(haikuListsByTheme)[0];
+					if (!(defaultTheme in haikuListsByTheme)) {
+						defaultTheme = coreThemes[0] || Object.keys(haikuListsByTheme)[0];
+					};
 
 					console.log('processJson: id=' + id + ', themes=' + JSON.stringify(haiku['Themes']) + ', title=' + haiku['Title']);
 				});
