@@ -169,6 +169,9 @@ var Meditation = (function() {
 		if (params.kioskMode) {
 			nextUrl = nextUrl + '&kiosk=true';
 		};
+		if (params.randomWalkMode) {
+			nextUrl = nextUrl + '&randomwalk=true';
+		}
 		var nextTitle   = "FT Hidden Haiku: " + nextDetails['theme'] ;
 		console.log('setPageUrlForNextHaiku" nextUrl=' + nextUrl + ", nextTitle=" + nextTitle);
 		window.history.pushState({}, nextTitle, nextUrl);
@@ -204,12 +207,18 @@ var Meditation = (function() {
 
 	function displayHaiku() {
 		var details = getNextDetails(urlParam('haiku'), urlParam('theme'), 0)
-		var nextIn  = urlParam('next-in');
-		var kioskMode = (urlParam('kiosk') != null);
+		var nextIn         = urlParam('next-in');
+		var kioskMode      = (urlParam('kiosk')      != null);
+		var randomWalkMode = (urlParam('randomwalk') != null);
 
 		var haikuId = details['id'];
 		var theme   = details['theme'];
 		var haiku   = details['haiku'];
+
+		var numThemes = haiku['Themes'].length;
+		if (randomWalkMode && numThemes > 1) {
+			theme = haiku['Themes'][Math.floor(Math.random() * numThemes)];
+		};
 
 		// locate haiku
 		// - have fallback if not found
@@ -268,7 +277,8 @@ var Meditation = (function() {
 					theme: theme, 
 					direction: +1, 
 					nextIn: nextIn,
-					kioskMode: kioskMode
+					kioskMode: kioskMode,
+					randomWalkMode: randomWalkMode
 				});
 				displayHaiku();
 			};
@@ -280,7 +290,8 @@ var Meditation = (function() {
 			setPageUrlForNextHaiku({
 				id: haikuId, 
 				theme: theme,
-				kioskMode: kioskMode
+				kioskMode: kioskMode,
+				randomWalkMode: randomWalkMode
 			});
 			displayHaiku();
 		};
@@ -291,7 +302,8 @@ var Meditation = (function() {
 				id: haikuId, 
 				theme: theme, 
 				direction: -1,
-				kioskMode: kioskMode
+				kioskMode: kioskMode,
+				randomWalkMode: randomWalkMode
 			});
 			displayHaiku();
 		};
