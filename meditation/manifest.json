@@ -13,5 +13,8 @@
 		}
 	],
 	"theme_color": "#ffffff",
-	"display": "standalone"
+	"display": "standalone",
+	"short_name": "FT Haiku",
+	"name": "Hidden Haiku from FT.com",
+	"orientation": "portrait"
 }
