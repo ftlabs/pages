@@ -166,6 +166,9 @@ var Meditation = (function() {
 		if (params.nextIn > 0) {
 			nextUrl = nextUrl + '&next-in=' + params.nextIn;
 		};
+		if (params.kioskMode) {
+			nextUrl = nextUrl + '&kiosk=true';
+		};
 		var nextTitle   = "FT Hidden Haiku: " + nextDetails['theme'] ;
 		console.log('setPageUrlForNextHaiku" nextUrl=' + nextUrl + ", nextTitle=" + nextTitle);
 		window.history.pushState({}, nextTitle, nextUrl);
@@ -264,7 +267,8 @@ var Meditation = (function() {
 					id: haikuId, 
 					theme: theme, 
 					direction: +1, 
-					nextIn: nextIn
+					nextIn: nextIn,
+					kioskMode: kioskMode
 				});
 				displayHaiku();
 			};
@@ -275,7 +279,8 @@ var Meditation = (function() {
 			window.clearTimeout(timeoutId);
 			setPageUrlForNextHaiku({
 				id: haikuId, 
-				theme: theme
+				theme: theme,
+				kioskMode: kioskMode
 			});
 			displayHaiku();
 		};
@@ -285,7 +290,8 @@ var Meditation = (function() {
 			setPageUrlForNextHaiku({
 				id: haikuId, 
 				theme: theme, 
-				directin: -1
+				direction: -1,
+				kioskMode: kioskMode
 			});
 			displayHaiku();
 		};
@@ -330,7 +336,8 @@ var Meditation = (function() {
 				window.clearTimeout(timeoutId);
 				setPageUrlForNextHaiku({
 					id: haikuId, 
-					theme: t
+					theme: t,
+					kioskMode: kioskMode
 				});
 				displayHaiku();
 			};
