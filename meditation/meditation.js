@@ -154,11 +154,17 @@ var Meditation = (function() {
 		return page + '?haiku=' + id + '&theme=' + theme;
 	}
 
-	function setPageUrlForNextHaiku( id, theme, direction=1, nextIn=0 ) {
-		var nextDetails = getNextDetails( id, theme, direction );
+	function setPageUrlForNextHaiku( paramsWithoutDefaults ) {
+		var defaults = {
+			direction: 1,
+			nextIn   : 0
+		};
+		var params = Object.assign(defaults, paramsWithoutDefaults);
+
+		var nextDetails = getNextDetails( params.id, params.theme, params.direction );
 		var nextUrl     = constructPageUrl( nextDetails['id'], nextDetails['theme'] );
-		if (nextIn > 0) {
-			nextUrl = nextUrl + '&next-in=' + nextIn;
+		if (params.nextIn > 0) {
+			nextUrl = nextUrl + '&next-in=' + params.nextIn;
 		};
 		var nextTitle   = "FT Hidden Haiku: " + nextDetails['theme'] ;
 		console.log('setPageUrlForNextHaiku" nextUrl=' + nextUrl + ", nextTitle=" + nextTitle);
@@ -254,7 +260,12 @@ var Meditation = (function() {
 		var timeoutId;
 		if (nextIn > 0) {
 			var fnNextIn = function() {
-				setPageUrlForNextHaiku(haikuId, theme, +1, nextIn);
+				setPageUrlForNextHaiku({
+					id: haikuId, 
+					theme: theme, 
+					direction: +1, 
+					nextIn: nextIn
+				});
 				displayHaiku();
 			};
 			timeoutId = window.setTimeout(fnNextIn, nextIn*1000);
@@ -262,13 +273,20 @@ var Meditation = (function() {
 
 		var fnPrev = function() {
 			window.clearTimeout(timeoutId);
-			setPageUrlForNextHaiku(haikuId, theme);
+			setPageUrlForNextHaiku({
+				id: haikuId, 
+				theme: theme
+			});
 			displayHaiku();
 		};
 
 		var fnNext = function() {
 			window.clearTimeout(timeoutId);
-			setPageUrlForNextHaiku(haikuId, theme, -1);
+			setPageUrlForNextHaiku({
+				id: haikuId, 
+				theme: theme, 
+				directin: -1
+			});
 			displayHaiku();
 		};
 
@@ -310,7 +328,10 @@ var Meditation = (function() {
 			button.appendChild( document.createTextNode(calcButtonDisplayText(t, haiku)) );
 			button.onclick = function(){
 				window.clearTimeout(timeoutId);
-				setPageUrlForNextHaiku(haikuId, t);
+				setPageUrlForNextHaiku({
+					id: haikuId, 
+					theme: t
+				});
 				displayHaiku();
 			};
 			buttons.push(button);
