@@ -154,7 +154,7 @@ var Meditation = (function() {
 		return page + '?haiku=' + id + '&theme=' + theme;
 	}
 
-	function setPageUrlForNextHaiku( id, theme, direction=1, nextIn=0) {
+	function setPageUrlForNextHaiku( id, theme, direction=1, nextIn=0 ) {
 		var nextDetails = getNextDetails( id, theme, direction );
 		var nextUrl     = constructPageUrl( nextDetails['id'], nextDetails['theme'] );
 		if (nextIn > 0) {
@@ -196,6 +196,8 @@ var Meditation = (function() {
 	function displayHaiku() {
 		var details = getNextDetails(urlParam('haiku'), urlParam('theme'), 0)
 		var nextIn  = urlParam('next-in');
+		var kioskMode = (urlParam('kiosk') != null);
+
 		var haikuId = details['id'];
 		var theme   = details['theme'];
 		var haiku   = details['haiku'];
@@ -238,6 +240,13 @@ var Meditation = (function() {
 
 		var authorElt = getElementByClass("haiku-author");
 		authorElt.innerHTML = haiku['Author'];
+
+		var navElt = getElementByClass('haiku-nav');
+		if (kioskMode) {
+			navElt.classList.add('hide');
+		} else {			
+			navElt.classList.remove('hide');
+		};
 
 		var themeElt = getElementByClass("haiku-theme");
 		themeElt.innerHTML = calcButtonDisplayText(theme, haiku);
