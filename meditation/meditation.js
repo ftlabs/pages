@@ -86,8 +86,6 @@ var Meditation = (function() {
 					if (!(defaultTheme in haikuListsByTheme)) {
 						defaultTheme = coreThemes[0] || Object.keys(haikuListsByTheme)[0];
 					};
-
-					console.log('processJson: id=' + id + ', themes=' + JSON.stringify(haiku['Themes']) + ', title=' + haiku['Title']);
 				});
 
 				Object.keys(knownAuthors).forEach(function(author){
@@ -107,8 +105,6 @@ var Meditation = (function() {
 				});
 
 				numHaiku = haikuData.length;
-
-				console.log('processJson: haikuListsByTheme=' + JSON.stringify(haikuListsByTheme));
 			}
 			thenFn();
 		}
@@ -119,7 +115,6 @@ var Meditation = (function() {
 	// if the id is invalid, use the first haiku from the theme
 	//    else lookup the index of the haiku in the them, and get the next haiku in the sequence, wrapping to first if at end of list
 	function getNextDetails( id, theme, direction=1 ) {
-		console.log('getNextDetails: id=' + id + ', theme=' + theme + ', direction=' + direction );
 		if ( ! okAsThemesHash[theme] ) {
 			theme = defaultTheme;
 		};
@@ -144,8 +139,6 @@ var Meditation = (function() {
 			theme: theme,
 			haiku: haikuById[nextId]
 		};
-
-		console.log('getNextDetails: details=' + JSON.stringify(details));
 
 		return details;
 	}
@@ -173,7 +166,6 @@ var Meditation = (function() {
 			nextUrl = nextUrl + '&randomwalk=true';
 		}
 		var nextTitle   = "FT Hidden Haiku: " + nextDetails['theme'] ;
-		console.log('setPageUrlForNextHaiku" nextUrl=' + nextUrl + ", nextTitle=" + nextTitle);
 		window.history.pushState({}, nextTitle, nextUrl);
 	}
 
@@ -246,7 +238,6 @@ var Meditation = (function() {
 			textElt.classList.add('haiku-too-long');
 		} else {
 			textElt.classList.remove('haiku-too-long');
-			console.log('displayHaiku: removed haiku-too-long from', JSON.stringify(textElt.classList));
 		};
 		textElt.innerHTML = haiku['TextWithBreaks'];
 
