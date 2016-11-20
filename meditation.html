@@ -51,22 +51,27 @@ body {
 }
 .haiku-brand {
 	max-width: 600px;
-	text-align: right;
+	text-align: middle;
 	font-size: 100%;
-	vertical-align:bottom;
+    display: flex;
+    justify-content: space-between;
+}
+.haiku-brand > span {
+    text-align: center;
 }
 .haiku-nav {
 	text-align: center;
 	max-width: 550px;
     font-size: 200%;
     vertical-align:middle;
-    float: left;
+    display: flex;
+    justify-content: space-between;
 }
 .haiku-themes {
 	font-size: 400%;
     line-height: 5px;
 	text-align: center;
-	}
+}
 .haiku-button {
 	font-size: 50%;
 	margin: 5px;
@@ -91,8 +96,10 @@ body {
 }
 .haiku-themes-select {
 	display: inline;
-	font-size: 75%;
+	font-size: 170%;
 	background-color: #fff1e0;
+	border: 2px solid;
+    border-radius: 5px;
 }
 
 
@@ -116,17 +123,26 @@ body {
 				<BR>
 				<div class="haiku-footer">
 					<div class='haiku-nav'>
-						<button class="haiku-prev haiku-button">&lt;&lt;</button>
+						<button class="haiku-prev haiku-button">&nbsp;&lt;&nbsp;</button>
 						<select class="haiku-themes-select">
 						</select>
-						<button class="haiku-next haiku-button">&gt;&gt;</button>
+						<button class="haiku-next haiku-button">&nbsp;&gt;&nbsp;</button>
 					</div>
+					<BR>
 					<div class="haiku-brand">					
-						<a href="https://twitter.com/FTLabs">@FTLabs</a>
-						<BR> <a href="http://labs.ft.com/2016/07/finding-hidden-haiku/">finding</a>
-						<BR> <a href="http://www.ft.com/hidden-haiku">ft.com/hidden-haiku</a>
 						<BR>
-						<BR> <a href="mailto:ftlabs@ft.com">Feedback?</a>
+						<span>
+							<a href="https://twitter.com/FTLabs">@FTLabs</a>
+						</span>
+						<span>
+							<a href="http://labs.ft.com/2016/07/finding-hidden-haiku/">finding</a>
+						</span>
+						<span>
+							<a href="http://www.ft.com/hidden-haiku">ft.com/hidden-haiku</a>
+						</span>
+						<span>
+							<a href="mailto:ftlabs@ft.com">Feedback?</a>
+						</span>
 						<BR>&nbsp;
 					</div>
 				</div>
