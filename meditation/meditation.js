@@ -212,16 +212,7 @@ var Meditation = (function() {
 			theme = haiku['Themes'][Math.floor(Math.random() * numThemes)];
 		};
 
-		// locate haiku
-		// - have fallback if not found
-		// construct card
-		// - image
-		// - text
-		// - author
-		// - buttons
-		// -- create a Next/Previous button, and the remaining theme buttons
-		// inject into page 
-
+		// set the card background color
 		var cardElt = getElementByClass("haiku-card");
 		var prominentColor = haiku['ProminentColours'][0];
 		if ('LightMuted' in haiku['ProminentColoursByName']) {
@@ -233,6 +224,7 @@ var Meditation = (function() {
 		};
 		cardElt.style.backgroundColor = prominentColor['RGBHex'];
 
+		// insert the haiku text
 		var textElt = getElementByClass("haiku-text");
 		if (longestLineLength(haiku['TextWithBreaks']) > lineThreshold) {
 			textElt.classList.add('haiku-too-long');
@@ -241,15 +233,18 @@ var Meditation = (function() {
 		};
 		textElt.innerHTML = haiku['TextWithBreaks'];
 
+		// insert the img and link
 		var imgElt = getElementByClass("haiku-image");
 		imgElt.src = haiku['ImageUrl'];
 
 		var imgLinkElt = getElementByClass("haiku-image-link");
 		imgLinkElt.href = haiku['Url'];
 
+		// insert the author
 		var authorElt = getElementByClass("haiku-author");
 		authorElt.innerHTML = haiku['Author'];
 
+		// construct and insert the nav
 		var navElt = getElementByClass('haiku-nav');
 		if (kioskMode) {
 			navElt.classList.add('hide');
@@ -257,8 +252,8 @@ var Meditation = (function() {
 			navElt.classList.remove('hide');
 		};
 
-		var themeElt = getElementByClass("haiku-theme");
-		themeElt.innerHTML = calcButtonDisplayText(theme, haiku);
+		// var themeElt = getElementByClass("haiku-theme");
+		// themeElt.innerHTML = calcButtonDisplayText(theme, haiku);
 
 		var timeoutId;
 		if (nextIn > 0) {
@@ -330,29 +325,75 @@ var Meditation = (function() {
 			};
 		});		
 
-		var buttons = [];
-		remainingThemes.forEach(function(t){
-			var button = document.createElement("BUTTON");
-			button.className = 'haiku-button';
-			button.appendChild( document.createTextNode(calcButtonDisplayText(t, haiku)) );
-			button.onclick = function(){
-				window.clearTimeout(timeoutId);
-				setPageUrlForNextHaiku({
-					id: haikuId, 
-					theme: t,
-					kioskMode: kioskMode
-				});
-				displayHaiku();
+		// var buttons = [];
+		// remainingThemes.forEach(function(t){
+		// 	var button = document.createElement("BUTTON");
+		// 	button.className = 'haiku-button';
+		// 	button.appendChild( document.createTextNode(calcButtonDisplayText(t, haiku)) );
+		// 	button.onclick = function(){
+		// 		window.clearTimeout(timeoutId);
+		// 		setPageUrlForNextHaiku({
+		// 			id: haikuId, 
+		// 			theme: t,
+		// 			kioskMode: kioskMode
+		// 		});
+		// 		displayHaiku();
+		// 	};
+		// 	buttons.push(button);
+		// });
+
+		// var navElt = getElementByClass("haiku-themes");
+		// navElt.innerHTML = "";
+		// buttons.forEach(function(button){
+		// 	navElt.appendChild(button);
+		// });
+
+		// construct and insert the dropdown of themes
+		// options:
+		// - theme
+		// - remaining themes
+		// - random
+
+		var onChangeFn = function(event) {
+			var value = event.srcElement.value;
+			var selectedTheme;
+
+			if (value == "RANDOM") {
+				randomWalkMode = true;
+				selectedTheme  = theme;
+			} else {
+				randomWalkMode = false;
+				selectedTheme  = value;
 			};
-			buttons.push(button);
+
+			console.log("onChangeFn: value=", value, ", randomWalkMode=", randomWalkMode, ", selectedTheme=", selectedTheme);
+
+			window.clearTimeout(timeoutId);
+			setPageUrlForNextHaiku({
+				id:             haikuId, 
+				theme:          selectedTheme, 
+				direction:      -1,
+				kioskMode:      kioskMode,
+				randomWalkMode: randomWalkMode
+			});
+			displayHaiku();
+		};
+
+		var selectElt = getElementByClass("haiku-themes-select");
+		selectElt.options.length = 0;
+
+		selectElt.options[selectElt.options.length] = new Option(calcButtonDisplayText(theme, haiku), theme);
+
+		remainingThemes.forEach(function(t){
+			var valueT = calcButtonDisplayText(t, haiku);
+			selectElt.options[selectElt.options.length] = new Option(valueT, t); 
 		});
 
-		var navElt = getElementByClass("haiku-themes");
-		navElt.innerHTML = "";
-		buttons.forEach(function(button){
-			navElt.appendChild(button);
-		});
+		if (! randomWalkMode) {
+			selectElt.options[selectElt.options.length] = new Option("RANDOM", 'RANDOM');
+		};
 
+		selectElt.onchange = onChangeFn;
 	}
 
 	return {
