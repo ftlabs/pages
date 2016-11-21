@@ -47,11 +47,16 @@ body {
 	margin: auto;
 	max-width: 600px;
 }
-.haiku-image {
+.haiku-image-wrapper {
 	max-width:95%;
+	height: 35vh;
 	display: block;
     margin: 0 auto;
     margin-top: 15px;
+}
+.haiku-image {
+	max-width: 100%;
+	max-height: 100% 
 }
 .haiku-text {
 	margin: auto;
@@ -131,7 +136,9 @@ body {
 			<div class="haiku-card">
 				<div class="haiku-card-inner">
 					<a class="haiku-image-link" href="http://www.ft.com/hidden-haiku">
-						<img class="haiku-image" src="https://www.ft.com/__origami/service/image/v2/images/raw/http%3A%2F%2Fprod-upp-image-read.ft.com%2F69f10230-2272-11e6-aa98-db1e01fabc0c?source=next&fit=scale-down&compression=best&width=600">
+						<div class="haiku-image-wrapper">
+							<img class="haiku-image" src="https://www.ft.com/__origami/service/image/v2/images/raw/http%3A%2F%2Fprod-upp-image-read.ft.com%2F69f10230-2272-11e6-aa98-db1e01fabc0c?source=next&fit=scale-down&compression=best&width=600">
+						</div>
 					</a>
 					<br>
 					<div class="haiku-text">
