@@ -14,6 +14,7 @@ var Meditation = (function() {
 	var genericTheme = "DATE";    // every haiku has this theme
 	var maxButtonTextLength = 10;
 	var lineThreshold = 26;
+	var defaultNextIn = 2;
 
 	function urlParam(name){
 	    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -325,57 +326,43 @@ var Meditation = (function() {
 			};
 		});		
 
-		// var buttons = [];
-		// remainingThemes.forEach(function(t){
-		// 	var button = document.createElement("BUTTON");
-		// 	button.className = 'haiku-button';
-		// 	button.appendChild( document.createTextNode(calcButtonDisplayText(t, haiku)) );
-		// 	button.onclick = function(){
-		// 		window.clearTimeout(timeoutId);
-		// 		setPageUrlForNextHaiku({
-		// 			id: haikuId, 
-		// 			theme: t,
-		// 			kioskMode: kioskMode
-		// 		});
-		// 		displayHaiku();
-		// 	};
-		// 	buttons.push(button);
-		// });
-
-		// var navElt = getElementByClass("haiku-themes");
-		// navElt.innerHTML = "";
-		// buttons.forEach(function(button){
-		// 	navElt.appendChild(button);
-		// });
-
-		// construct and insert the dropdown of themes
-		// options:
-		// - theme
-		// - remaining themes
-		// - random
-
 		var onChangeFn = function(event) {
 			var value = event.srcElement.value;
+			console.log("onChangeFn: value=", value);
+
 			var selectedTheme;
 
 			if (value == "RANDOM") {
 				randomWalkMode = true;
+				selectedTheme  = theme;
+			} else if (value == "KIOSK") {
+				kioskMode = true;
+				selectedTheme  = theme;
+			} else if(value == "NEXTIN") {
+				nextIn = defaultNextIn;
 				selectedTheme  = theme;
 			} else {
 				randomWalkMode = false;
 				selectedTheme  = value;
 			};
 
-			console.log("onChangeFn: value=", value, ", randomWalkMode=", randomWalkMode, ", selectedTheme=", selectedTheme);
+			var fnSetPage = function() {
+				setPageUrlForNextHaiku({
+					id:             haikuId, 
+					theme:          selectedTheme, 
+					direction:      -1,
+					kioskMode:      kioskMode,
+					randomWalkMode: randomWalkMode,
+					nextIn:         nextIn
+				});
+			}
 
-			window.clearTimeout(timeoutId);
-			setPageUrlForNextHaiku({
-				id:             haikuId, 
-				theme:          selectedTheme, 
-				direction:      -1,
-				kioskMode:      kioskMode,
-				randomWalkMode: randomWalkMode
-			});
+			// window.clearTimeout(timeoutId);
+			// if (nextIn > 0) {
+			// 	timeoutId = window.setTimeout(fnSetPage, nextIn*1000);
+			// };
+
+			fnSetPage();
 			displayHaiku();
 		};
 
@@ -390,10 +377,18 @@ var Meditation = (function() {
 		});
 
 		if (! randomWalkMode) {
-			selectElt.options[selectElt.options.length] = new Option("RANDOM", 'RANDOM');
+			selectElt.options[selectElt.options.length] = new Option("MODE:RANDOM", 'RANDOM');
 		};
 
+		selectElt.options[selectElt.options.length] = new Option("MODE:KIOSK", 'KIOSK');
+		selectElt.options[selectElt.options.length] = new Option("MODE:AUTO",  'NEXTIN');
+
 		selectElt.onchange = onChangeFn;
+
+		selectElt.onclick  = function() { // deactivate nextIn if select is opened
+			nextIn = 0;
+			window.clearTimeout(timeoutId); 
+		};
 	}
 
 	return {
