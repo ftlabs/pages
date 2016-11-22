@@ -2,19 +2,33 @@ var Meditation = (function() {
 
 	var jsonUrl = '/pages/meditation/meditation_haiku.json';
 	var page    = '/pages/meditation.html';
-	var haikuData;
 	var haikuById         = {}; // all haiku indexed by their id
 	var haikuListsByTheme = {}; // a list of haiku id for each theme
 	var coreThemes        = []; // a list of themes
 	var okAuthorsHash     = {}; // a hash of authors with more than one haiku
 	var okAsThemesHash    = {}; // a hash of all core themes and ok authors
-	var numHaiku;
 	var defaultHaiku = 1;
 	var defaultTheme = 'DATE';    // if no theme is specified, choose this one
 	var genericTheme = "DATE";    // every haiku has this theme
-	var maxButtonTextLength = 10;
+	var maxButtonTextLength = 11;
 	var lineThreshold = 26;
 	var defaultNextIn = 8;
+	var explanationTheme = 'Explanation';
+	var explanations = [
+		"words are written once<br>but FT's Hidden Haiku<br>lets us read them twice",
+		"these fragments of text<br>there but sitting unnoticed<br>in real articles",
+		"for more on haiku<br>look in wikipedia<br>or the labs blog post",
+		"reading this help text<br>can only be annoying<br>apologies due",
+		"left and right arrows<br>lead to next haiku in group<br>or the previous",
+		"many different groups<br>selected between arrows<br>via the drop down",
+		"haiku grouped in themes<br>such as IMAGERY, CROP, MOOD<br>all in upper case",
+		"haiku keyword groups<br>such as 'but', 'if', and others<br>all in lower case",
+		"just for the record<br>instructions in haiku form<br>not worth the effort",
+		"wandering freely<br>accepting of life's foibles<br>select MODE:RANDOM",
+		"simplicity calls<br>arrow buttons unneeded<br>select MODE:KIOSK",
+		"your hands off the wheel<br>haiku flicking slowly past<br> select MODE:AUTO",
+		"your hands off the wheel<br>haiku flicking quickly past<br> pick MODE:AUTO2"
+	];
 
 	function urlParam(name){
 	    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -42,7 +56,7 @@ var Meditation = (function() {
 
 		function processJson(e) {
 			if (this.status == 200) {
-				haikuData = JSON.parse(this.responseText);
+				var haikuData = JSON.parse(this.responseText);
 				
 				var count = 0;
 				var knownCoreThemes = {};
@@ -77,17 +91,17 @@ var Meditation = (function() {
 						knownAuthors[author] = true;
 					};
 					haikuListsByTheme[author].push(id);
+				});
 
-					Object.keys(knownCoreThemes).forEach(function(theme){
-						if (haikuListsByTheme[theme].length > 1) {
-							coreThemes.push(theme);
-						};
-					});
-
-					if (!(defaultTheme in haikuListsByTheme)) {
-						defaultTheme = coreThemes[0] || Object.keys(haikuListsByTheme)[0];
+				Object.keys(knownCoreThemes).forEach(function(theme){
+					if (haikuListsByTheme[theme].length > 1) {
+						coreThemes.push(theme);
 					};
 				});
+
+				if (!(defaultTheme in haikuListsByTheme)) {
+					defaultTheme = coreThemes[0] || Object.keys(haikuListsByTheme)[0];
+				};
 
 				Object.keys(knownAuthors).forEach(function(author){
 					if (haikuListsByTheme[author].length > 1) {
@@ -104,9 +118,56 @@ var Meditation = (function() {
 				coreThemes.forEach(function(theme){
 					okAsThemesHash[theme] = true;
 				});
-
-				numHaiku = haikuData.length;
 			}
+
+			// create haiku as explanation pages, looping over the list of explanations
+
+			haikuListsByTheme[explanationTheme] = [];
+
+			var count = 0;
+			explanations.forEach(function(explanation){
+				count = count + 1;
+				var id = explanationTheme + count;
+				haikuById[id] = {
+					"Author": "Chris Gathercole",
+	    			"Title": "Explanation",
+	    			"Url": "http://labs.ft.com/2016/07/finding-hidden-haiku/",
+	    			"DateSelected": "2016-11-22",
+				    "ImageUrl": "https://www.ft.com/__origami/service/image/v2/images/raw/http%3A%2F%2Fprod-upp-image-read.ft.com%2F69f10230-2272-11e6-aa98-db1e01fabc0c?source=next&fit=scale-down&compression=best&width=600",
+				    "ImageWidth": 600,
+				    "ImageHeight": 338,
+				    "PromoImageUrl": "",
+				    "PromoImageWidth": 0,
+				    "PromoImageHeight": 0,
+				    "NonPromoImageUrl": "",
+				    "NonPromoImageWidth": 0,
+				    "NonPromoImageHeight": 0,
+	    			"Themes": [],
+	    			"Uuid": "4c9646fa-c534-11e5-b3b1-7b2481276e45",
+	    			"PubDateString": "2016-03-04T10:42:39Z",
+	    			"PubDateEpoch": 1457088159,
+	    			"TextWithBreaks": explanation,
+				    "ProminentColours": [
+				      {
+						"Name": "LightMuted",
+						"Population": 1000,
+						"RGBHex": "#fff1e0"
+				      }
+					],
+					"ProminentColoursByName": {
+						"LightMuted": {
+					        "Name": "LightMuted",
+					        "Population": 1000,
+					        "RGBHex": "#fff1e0"
+					    }
+					},
+	    			"Id": id
+				};
+				haikuById[id]['Themes'] = coreThemes.slice().sort();
+				haikuById[id]['Themes'].unshift(explanationTheme);
+				haikuListsByTheme[explanationTheme].push(id);
+			});
+
 			thenFn();
 		}
 	}
@@ -116,7 +177,9 @@ var Meditation = (function() {
 	// if the id is invalid, use the first haiku from the theme
 	//    else lookup the index of the haiku in the them, and get the next haiku in the sequence, wrapping to first if at end of list
 	function getNextDetails( id, theme, direction=1 ) {
-		if ( ! okAsThemesHash[theme] ) {
+		if (theme == explanationTheme) {
+			// leave as is
+		} else if ( ! okAsThemesHash[theme] ) {
 			theme = defaultTheme;
 		};
 
@@ -200,9 +263,9 @@ var Meditation = (function() {
 
 	function displayHaiku() {
 		var details = getNextDetails(urlParam('haiku'), urlParam('theme'), 0)
-		var nextIn         = urlParam('next-in');
-		var kioskMode      = (urlParam('kiosk')      != null);
-		var randomWalkMode = (urlParam('randomwalk') != null);
+		var nextIn          = urlParam('next-in');
+		var kioskMode       = (urlParam('kiosk')       != null);
+		var randomWalkMode  = (urlParam('randomwalk')  != null);
 
 		var haikuId = details['id'];
 		var theme   = details['theme'];
@@ -390,6 +453,7 @@ var Meditation = (function() {
 		selectElt.options[selectElt.options.length] = new Option("MODE:KIOSK", 'KIOSK');
 		selectElt.options[selectElt.options.length] = new Option("MODE:AUTO",  'NEXTIN');
 		selectElt.options[selectElt.options.length] = new Option("MODE:AUTO2",  'NEXTIN2');
+		selectElt.options[selectElt.options.length] = new Option(explanationTheme,  explanationTheme);
 
 		selectElt.onchange = onChangeFn;
 
