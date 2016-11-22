@@ -14,7 +14,7 @@ var Meditation = (function() {
 	var genericTheme = "DATE";    // every haiku has this theme
 	var maxButtonTextLength = 10;
 	var lineThreshold = 26;
-	var defaultNextIn = 2;
+	var defaultNextIn = 8;
 
 	function urlParam(name){
 	    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -246,15 +246,19 @@ var Meditation = (function() {
 		authorElt.innerHTML = haiku['Author'];
 
 		// construct and insert the nav
-		var navElt = getElementByClass('haiku-nav');
+		var navElt    = getElementByClass('haiku-nav');
+		
 		if (kioskMode) {
 			navElt.classList.add('hide');
-		} else {			
+			textElt.onclick = function(){
+				kioskMode = false;
+				navElt.classList.remove('hide');
+				textElt.onclick = null;
+			};
+		} else {	
+			textElt.onclick = null;
 			navElt.classList.remove('hide');
 		};
-
-		// var themeElt = getElementByClass("haiku-theme");
-		// themeElt.innerHTML = calcButtonDisplayText(theme, haiku);
 
 		var timeoutId;
 		if (nextIn > 0) {
@@ -341,6 +345,9 @@ var Meditation = (function() {
 			} else if(value == "NEXTIN") {
 				nextIn = defaultNextIn;
 				selectedTheme  = theme;
+			} else if(value == "NEXTIN2") {
+				nextIn = 2;
+				selectedTheme  = theme;
 			} else {
 				randomWalkMode = false;
 				selectedTheme  = value;
@@ -382,6 +389,7 @@ var Meditation = (function() {
 
 		selectElt.options[selectElt.options.length] = new Option("MODE:KIOSK", 'KIOSK');
 		selectElt.options[selectElt.options.length] = new Option("MODE:AUTO",  'NEXTIN');
+		selectElt.options[selectElt.options.length] = new Option("MODE:AUTO2",  'NEXTIN2');
 
 		selectElt.onchange = onChangeFn;
 
