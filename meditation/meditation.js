@@ -403,4 +403,6 @@ var Meditation = (function() {
 
 })();
 
+window.onpopstate = Meditation.displayHaiku; // redraw page when back button is used
+
 Meditation.getAndProcessJsonThen( Meditation.displayHaiku );
