@@ -29,6 +29,7 @@ var Meditation = (function() {
 		"your hands off the wheel<br>haiku flicking slowly past<br> select MODE:AUTO",
 		"your hands off the wheel<br>haiku flicking quickly past<br> pick MODE:AUTO2"
 	];
+	var explanationAuthor = 'Explanations of Haiku and App';
 
 	function urlParam(name){
 	    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -129,7 +130,7 @@ var Meditation = (function() {
 				count = count + 1;
 				var id = explanationTheme + count;
 				haikuById[id] = {
-					"Author": "Chris Gathercole",
+					"Author": explanationAuthor,
 	    			"Title": "Explanation",
 	    			"Url": "http://labs.ft.com/2016/07/finding-hidden-haiku/",
 	    			"DateSelected": "2016-11-22",
