@@ -49,6 +49,146 @@ var Meditation = (function() {
 	  return Math.floor(Math.random() * (max - min + 1)) + min;
 	}
 
+	// convert text into json and build up the haiku data structs
+	// returns the count of haiku extracted
+
+	function processJsonImpl(text) {
+		var haikuData = JSON.parse(text);
+		
+		var count           = 0;
+		var knownCoreThemes = {};
+		var knownAuthors    = {};
+
+		haikuData.forEach(function(haiku){
+			count = count + 1;
+			if (!('Id' in haiku)) {
+				haiku['Id'] = 'Id' + count;
+			};
+			var id = haiku['Id']
+			haikuById[id] = haiku;
+
+			haiku['ProminentColoursByName'] = {};
+			haiku['ProminentColours'].forEach(function(pc){
+				haiku['ProminentColoursByName'][pc['Name']] = pc;
+			});
+
+			haiku['Themes'].push(genericTheme);
+
+			haiku['Themes'].forEach(function(theme){
+				if (! (theme in knownCoreThemes)) {
+					haikuListsByTheme[theme] = [];
+					knownCoreThemes[theme] = true;
+				};
+				haikuListsByTheme[theme].push(id);
+			});
+
+			var author = haiku['Author'];
+			if (! (author in haikuListsByTheme)) {
+				haikuListsByTheme[author] = [];
+				knownAuthors[author] = true;
+			};
+			haikuListsByTheme[author].push(id);
+		});
+
+		Object.keys(knownCoreThemes).forEach(function(theme){
+			if (haikuListsByTheme[theme].length > 1) {
+				coreThemes.push(theme);
+			};
+		});
+
+		if (!(defaultTheme in haikuListsByTheme)) {
+			defaultTheme = coreThemes[0] || Object.keys(haikuListsByTheme)[0];
+		};
+
+		Object.keys(knownAuthors).forEach(function(author){
+			if (haikuListsByTheme[author].length > 1) {
+				okAuthorsHash[author] = true;
+			};
+		});
+
+		// combine core themes and ok authors into okAsThemesHash
+
+		Object.keys(okAuthorsHash).forEach(function(author){
+			okAsThemesHash[author] = true;
+		});				
+
+		coreThemes.forEach(function(theme){
+			okAsThemesHash[theme] = true;
+		});
+
+		return count;
+	}
+
+	// create special haiku, not from the main collection, e.g. 'explanation' haiku, 
+	// differing in text but sharing all the other criteria such as author and date.
+	// See default_spec for how to specify the new haiku, 
+	// and any part(s) can be overridden in the optional param, detailed_spec.
+	// theme should be a string
+	// texts should be a list of strings
+
+	function constructBespokeHaiku(theme, texts, detailed_spec={}){
+		var default_spec = {
+			"Author": theme,
+			"Title": theme,
+			"Url": "http://labs.ft.com/2016/07/finding-hidden-haiku/",
+			"DateSelected": "2016-11-22",
+		    "ImageUrl": "https://www.ft.com/__origami/service/image/v2/images/raw/http%3A%2F%2Fprod-upp-image-read.ft.com%2F69f10230-2272-11e6-aa98-db1e01fabc0c?source=next&fit=scale-down&compression=best&width=600",
+		    "ImageWidth": 600,
+		    "ImageHeight": 338,
+		    "PromoImageUrl": "",
+		    "PromoImageWidth": 0,
+		    "PromoImageHeight": 0,
+		    "NonPromoImageUrl": "",
+		    "NonPromoImageWidth": 0,
+		    "NonPromoImageHeight": 0,
+			"Uuid": "4c9646fa-c534-11e5-b3b1-7b2481276e45",
+			"PubDateString": "2016-03-04T10:42:39Z",
+			"PubDateEpoch": 1457088159,
+			"TextWithBreaks": theme,
+			"Themes": [],
+		    "ProminentColours": [
+		      {
+				"Name": "LightMuted",
+				"Population": 1000,
+				"RGBHex": "#fff1e0"
+		      }
+			],
+			"ProminentColoursByName": {
+				"LightMuted": {
+			        "Name": "LightMuted",
+			        "Population": 1000,
+			        "RGBHex": "#fff1e0"
+			    }
+			},
+			"Id": theme
+		};
+
+		if (!(theme in haikuListsByTheme)) {
+			haikuListsByTheme[theme] = [];
+		};
+
+		var count = 0;
+		texts.forEach(function(text){
+			count = count + 1;
+			var id = theme + count;
+			var haiku = Object.assign(
+					{}, 
+					default_spec, 
+					detailed_spec,
+					{
+						TextWithBreaks: text,
+						Id:             id
+					}
+				);
+			haikuById[id] = haiku;
+			haikuById[id]['Themes'] = coreThemes.slice().sort();
+			haikuById[id]['Themes'].unshift(theme);
+			haikuListsByTheme[theme].push(id);
+		});
+
+		return count;
+	}
+
 	function getAndProcessJsonThen( thenFn ) {
 		var oReq    = new XMLHttpRequest();
 		oReq.onload = processJson;
@@ -57,117 +197,13 @@ var Meditation = (function() {
 
 		function processJson(e) {
 			if (this.status == 200) {
-				var haikuData = JSON.parse(this.responseText);
-				
-				var count = 0;
-				var knownCoreThemes = {};
-				var knownAuthors    = {};
-
-				haikuData.forEach(function(haiku){
-					count = count + 1;
-					if (!('Id' in haiku)) {
-						haiku['Id'] = 'Id' + count;
-					};
-					var id = haiku['Id']
-					haikuById[id] = haiku;
-
-					haiku['ProminentColoursByName'] = {};
-					haiku['ProminentColours'].forEach(function(pc){
-						haiku['ProminentColoursByName'][pc['Name']] = pc;
-					});
-
-					haiku['Themes'].push(genericTheme);
-
-					haiku['Themes'].forEach(function(theme){
-						if (! (theme in knownCoreThemes)) {
-							haikuListsByTheme[theme] = [];
-							knownCoreThemes[theme] = true;
-						};
-						haikuListsByTheme[theme].push(id);
-					});
-
-					var author = haiku['Author'];
-					if (! (author in haikuListsByTheme)) {
-						haikuListsByTheme[author] = [];
-						knownAuthors[author] = true;
-					};
-					haikuListsByTheme[author].push(id);
-				});
-
-				Object.keys(knownCoreThemes).forEach(function(theme){
-					if (haikuListsByTheme[theme].length > 1) {
-						coreThemes.push(theme);
-					};
-				});
-
-				if (!(defaultTheme in haikuListsByTheme)) {
-					defaultTheme = coreThemes[0] || Object.keys(haikuListsByTheme)[0];
-				};
-
-				Object.keys(knownAuthors).forEach(function(author){
-					if (haikuListsByTheme[author].length > 1) {
-						okAuthorsHash[author] = true;
-					};
-				});
-
-				// combine core themes and ok authors into okAsThemesHash
-
-				Object.keys(okAuthorsHash).forEach(function(author){
-					okAsThemesHash[author] = true;
-				});				
-
-				coreThemes.forEach(function(theme){
-					okAsThemesHash[theme] = true;
-				});
+				var numHaiku = processJsonImpl(this.responseText);
+				console.log('processJson: numHaiku=' + numHaiku);
+				var numBespokeHaiku = constructBespokeHaiku(explanationTheme, explanations);
+				console.log('processJson: for theme=' + explanationTheme + ', numBespokeHaiku=' + numBespokeHaiku);
+			} else {
+				console.log("Error: failed to retrive haiku: status=" + this.status);
 			}
-
-			// create haiku as explanation pages, looping over the list of explanations
-
-			haikuListsByTheme[explanationTheme] = [];
-
-			var count = 0;
-			explanations.forEach(function(explanation){
-				count = count + 1;
-				var id = explanationTheme + count;
-				haikuById[id] = {
-					"Author": explanationAuthor,
-	    			"Title": "Explanation",
-	    			"Url": "http://labs.ft.com/2016/07/finding-hidden-haiku/",
-	    			"DateSelected": "2016-11-22",
-				    "ImageUrl": "https://www.ft.com/__origami/service/image/v2/images/raw/http%3A%2F%2Fprod-upp-image-read.ft.com%2F69f10230-2272-11e6-aa98-db1e01fabc0c?source=next&fit=scale-down&compression=best&width=600",
-				    "ImageWidth": 600,
-				    "ImageHeight": 338,
-				    "PromoImageUrl": "",
-				    "PromoImageWidth": 0,
-				    "PromoImageHeight": 0,
-				    "NonPromoImageUrl": "",
-				    "NonPromoImageWidth": 0,
-				    "NonPromoImageHeight": 0,
-	    			"Themes": [],
-	    			"Uuid": "4c9646fa-c534-11e5-b3b1-7b2481276e45",
-	    			"PubDateString": "2016-03-04T10:42:39Z",
-	    			"PubDateEpoch": 1457088159,
-	    			"TextWithBreaks": explanation,
-				    "ProminentColours": [
-				      {
-						"Name": "LightMuted",
-						"Population": 1000,
-						"RGBHex": "#fff1e0"
-				      }
-					],
-					"ProminentColoursByName": {
-						"LightMuted": {
-					        "Name": "LightMuted",
-					        "Population": 1000,
-					        "RGBHex": "#fff1e0"
-					    }
-					},
-	    			"Id": id
-				};
-				haikuById[id]['Themes'] = coreThemes.slice().sort();
-				haikuById[id]['Themes'].unshift(explanationTheme);
-				haikuListsByTheme[explanationTheme].push(id);
-			});
 
 			thenFn();
 		}
