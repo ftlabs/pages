@@ -29,10 +29,9 @@ var Meditation = (function() {
 		"haiku grouped in themes<br>such as IMAGERY, CROP, MOOD<br>all in upper case",
 		"haiku keyword groups<br>such as 'but', 'if', and others<br>all in lower case",
 		"just for the record<br>instructions in haiku form<br>not worth the effort",
-		"wandering freely<br>accepting of life's foibles<br>select MODE:RANDOM",
-		"simplicity calls<br>arrow buttons unneeded<br>select MODE:KIOSK",
-		"your hands off the wheel<br>haiku flicking slowly past<br> select MODE:AUTO",
-		"your hands off the wheel<br>haiku flicking quickly past<br> pick MODE:AUTO2"
+		"wandering freely<br>accepting of life's foibles<br>RANDOM takes you there",
+		"simplicity calls<br>navigation unneeded<br>KIOSK tidies up",
+		"your hands off the wheel<br>haiku flicking slowly past<br>choose greater than twice"
 	];
 	var explanationAuthor = 'Explanations of Haiku and App';
 
@@ -99,6 +98,8 @@ var Meditation = (function() {
 				coreThemes.push(theme);
 			};
 		});
+
+		coreThemes = coreThemes.sort();
 
 		if (!(defaultTheme in haikuListsByTheme)) {
 			defaultTheme = coreThemes[0] || Object.keys(haikuListsByTheme)[0];
@@ -353,12 +354,15 @@ var Meditation = (function() {
 
 		// construct and insert the nav
 		var navElt    = getElementByClass('haiku-nav');
+		var modesElt  = getElementByClass('haiku-modes');
 		
 		if (kioskMode) {
 			navElt.classList.add('hide');
+			modesElt.classList.add('hide');
 			textElt.onclick = function(){
 				kioskMode = false;
 				navElt.classList.remove('hide');
+				modesElt.classList.remove('hide');
 				textElt.onclick = null;
 			};
 		} else {	
@@ -405,11 +409,59 @@ var Meditation = (function() {
 			displayHaiku();
 		};
 
+		var fnNextAuto = function() {
+			window.clearTimeout(timeoutId);
+			setPageUrlForNextHaiku({
+				id: haikuId, 
+				theme: theme, 
+				direction: -1,
+				kioskMode: kioskMode,
+				randomWalkMode: randomWalkMode,
+				nextIn: defaultNextIn
+			});
+			displayHaiku();
+		};
+
+		var fnNextKiosk = function() {
+			window.clearTimeout(timeoutId);
+			setPageUrlForNextHaiku({
+				id: haikuId, 
+				theme: theme, 
+				direction: -1,
+				kioskMode: true,
+				randomWalkMode: randomWalkMode,
+				nextIn: nextIn
+			});
+			displayHaiku();
+		};
+
+		var fnNextRandom = function() {
+			window.clearTimeout(timeoutId);
+			setPageUrlForNextHaiku({
+				id: haikuId, 
+				theme: theme, 
+				direction: -1,
+				kioskMode: kioskMode,
+				randomWalkMode: ! randomWalkMode,
+				nextIn: nextIn
+			});
+			displayHaiku();
+		};
+
 		var nextElt = getElementByClass("haiku-next");
 		nextElt.onclick = fnPrev;
 
 		var prevElt = getElementByClass("haiku-prev");
 		prevElt.onclick = fnNext;
+
+		var autoElt = getElementByClass("haiku-auto");
+		autoElt.onclick = fnNextAuto;
+
+		var kioskElt = getElementByClass("haiku-kiosk");
+		kioskElt.onclick = fnNextKiosk;
+
+		var randomElt = getElementByClass("haiku-random");
+		randomElt.onclick = fnNextRandom;
 
 		document.onkeydown = function() {
 			switch (window.event.keyCode) {
@@ -441,21 +493,12 @@ var Meditation = (function() {
 			console.log("onChangeFn: value=", value);
 
 			var selectedTheme;
+			var direction = -1;
 
-			if (value == "RANDOM") {
-				randomWalkMode = true;
+			if (value == "THEME") {
 				selectedTheme  = theme;
-			} else if (value == "KIOSK") {
-				kioskMode = true;
-				selectedTheme  = theme;
-			} else if(value == "NEXTIN") {
-				nextIn = defaultNextIn;
-				selectedTheme  = theme;
-			} else if(value == "NEXTIN2") {
-				nextIn = 2;
-				selectedTheme  = theme;
+				direction      = 0;
 			} else {
-				randomWalkMode = false;
 				selectedTheme  = value;
 			};
 
@@ -463,17 +506,12 @@ var Meditation = (function() {
 				setPageUrlForNextHaiku({
 					id:             haikuId, 
 					theme:          selectedTheme, 
-					direction:      -1,
+					direction:      direction,
 					kioskMode:      kioskMode,
 					randomWalkMode: randomWalkMode,
 					nextIn:         nextIn
 				});
 			}
-
-			// window.clearTimeout(timeoutId);
-			// if (nextIn > 0) {
-			// 	timeoutId = window.setTimeout(fnSetPage, nextIn*1000);
-			// };
 
 			fnSetPage();
 			displayHaiku();
@@ -484,23 +522,20 @@ var Meditation = (function() {
 
 		selectElt.options[selectElt.options.length] = new Option(calcButtonDisplayText(theme, haiku), theme);
 
-		remainingThemes.forEach(function(t){
-			var valueT = calcButtonDisplayText(t, haiku);
-			selectElt.options[selectElt.options.length] = new Option(valueT, t); 
-		});
-
-		if (! randomWalkMode) {
-			selectElt.options[selectElt.options.length] = new Option("MODE:RANDOM", 'RANDOM');
-		};
-
-		selectElt.options[selectElt.options.length] = new Option("MODE:KIOSK", 'KIOSK');
-		selectElt.options[selectElt.options.length] = new Option("MODE:AUTO",  'NEXTIN');
-		selectElt.options[selectElt.options.length] = new Option("MODE:AUTO2",  'NEXTIN2');
 		selectElt.options[selectElt.options.length] = new Option(explanationTheme,  explanationTheme);
+
+		// append all core themes
+		selectElt.options[selectElt.options.length] = new Option("--- THEMES ---", "THEME");
+		coreThemes.forEach(function(ct){
+			var isCandidateTheme = candidateThemes.includes(ct);
+			var suffix = (isCandidateTheme)? " *" : "";
+			var displayName = calcButtonDisplayText(ct, haiku) + suffix;
+			selectElt.options[selectElt.options.length] = new Option(displayName, ct);
+		});
 
 		// append all the authors
 		if (authorOptions.length == 0) {
-			authorOptions.push( new Option("AUTHOR", haiku['Author']) );
+			authorOptions.push( new Option("--- AUTHOR ---", haiku['Author']) );
 			Object.keys(knownAuthorsHash).sort().forEach(function(author){
 				var displayName = calcButtonDisplayText(author, haiku) + '(' + haikuListsByTheme[author].length + ')';
 				

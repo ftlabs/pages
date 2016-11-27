@@ -61,10 +61,10 @@ body {
 .haiku-text {
 	margin: auto;
 	max-width: 93%;
-    font-size: 3.5vh;
+    font-size: 3.45vh;
 }
 .haiku-too-long {
-	font-size: 3.5vh;
+	font-size: 3.45vh;
 }
 .haiku-card-footer {
     margin: auto;
@@ -105,15 +105,23 @@ body {
 }
 .haiku-button {
 	font-size: 50%;
-	margin: 5px;
+	margin: 2px;
 	background-color: #fff1e0;
 	border: 2px solid;
     border-radius: 5px;
     display: inline;
     vertical-align:top;
+    padding: 5px;
 }
 .haiku-prev, .haiku-next {
 	font-size: 300%
+}
+.haiku-modes {
+	display: flex;
+    justify-content: center;
+}
+.haiku-mode {
+	font-size: 100%;
 }
 .haiku-table {
 	width: 100%;
@@ -131,6 +139,7 @@ body {
 	background-color: #fff1e0;
 	border: 2px solid;
     border-radius: 5px;
+	margin: 2px;
 }
 .haiku-footer {
 	margin: auto;
@@ -164,6 +173,11 @@ body {
 		   	</div>
 			<BR>
 			<div class="haiku-footer">
+				<div class="haiku-modes">
+					<button class="haiku-random haiku-button haiku-mode">&nbsp;RANDOM&nbsp;</button>
+					<button class="haiku-kiosk haiku-button haiku-mode">&nbsp;KIOSK&nbsp;</button>
+					<button class="haiku-auto haiku-button haiku-mode">&nbsp;&gt;&gt;&nbsp;</button>
+				</div>
 				<div class='haiku-nav'>
 					<button class="haiku-prev haiku-button">&nbsp;&nbsp;&lt;&nbsp;&nbsp;</button>
 					<select class="haiku-themes-select">
@@ -177,10 +191,10 @@ body {
 						<a href="https://twitter.com/FTLabs">@FTLabs</a>
 					</span>
 					<span>
-						<a href="http://labs.ft.com/2016/07/finding-hidden-haiku/">finding</a>
+						<a href="http://labs.ft.com/2016/07/finding-hidden-haiku/">finding haiku</a>
 					</span>
 					<span>
-						<a href="/pages/meditation.html?theme=Explanation">help</a>
+						<a href="/pages/meditation.html?theme=Explanation/Help">help</a>
 					</span>
 					<span>
 						<a href="mailto:ftlabs@ft.com?subject=Feedback%20on%20the%20Haiku%20app">Feedback?</a>
