@@ -369,21 +369,18 @@ var Meditation = (function() {
 		};
 
 		// construct and insert the nav
-		var navElt    = getElementByClass('haiku-nav');
-		var modesElt  = getElementByClass('haiku-modes');
+		var footerElt = getElementByClass('haiku-footer');
 		
 		if (kioskMode) {
-			navElt.classList.add('hide');
-			modesElt.classList.add('hide');
+			footerElt.classList.add('hide');
 			textElt.onclick = function(){
 				kioskMode = false;
-				navElt.classList.remove('hide');
-				modesElt.classList.remove('hide');
+				footerElt.classList.remove('hide');
 				textElt.onclick = null;
 			};
 		} else {	
 			textElt.onclick = null;
-			navElt.classList.remove('hide');
+			footerElt.classList.remove('hide');
 		};
 
 		var timeoutId;
