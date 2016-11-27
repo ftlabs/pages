@@ -433,10 +433,10 @@ var Meditation = (function() {
 			setPageUrlForNextHaiku({
 				id: haikuId, 
 				theme: theme, 
-				direction: -1,
+				direction: (nextIn > 0)? 0 : -1,
 				kioskMode: kioskMode,
 				randomWalkMode: randomWalkMode,
-				nextIn: defaultNextIn,
+				nextIn: (nextIn > 0) ? 0 : defaultNextIn,
 				revealMode: revealMode
 			});
 			displayHaiku();
@@ -490,17 +490,28 @@ var Meditation = (function() {
 		var prevElt = getElementByClass("haiku-prev");
 		prevElt.onclick = fnNext;
 
-		var autoElt = getElementByClass("haiku-auto");
-		autoElt.onclick = fnNextAuto;
-
 		var kioskElt = getElementByClass("haiku-kiosk");
 		kioskElt.onclick = fnNextKiosk;
 
+		var fnSetSelected = function(elt, selected) {
+			if (selected) {
+				elt.classList.add('selected');
+			} else {
+				elt.classList.remove('selected');
+			};
+		};
+
+		var autoElt = getElementByClass("haiku-auto");
+		autoElt.onclick = fnNextAuto;
+		fnSetSelected(autoElt, (nextIn > 0) );
+
 		var randomElt = getElementByClass("haiku-random");
 		randomElt.onclick = fnNextRandom;
+		fnSetSelected(randomElt, randomWalkMode);
 
 		var revealElt = getElementByClass("haiku-reveal");
 		revealElt.onclick = fnNextReveal;
+		fnSetSelected(revealElt, revealMode);
 
 		document.onkeydown = function() {
 			switch (window.event.keyCode) {
