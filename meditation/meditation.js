@@ -273,6 +273,9 @@ var Meditation = (function() {
 		if (params.randomWalkMode) {
 			nextUrl = nextUrl + '&randomwalk=true';
 		}
+		if (params.revealMode) {
+			nextUrl = nextUrl + '&reveal=true';
+		}
 		var nextTitle   = "FT Hidden Haiku: " + nextDetails['theme'] ;
 		window.history.pushState({}, nextTitle, nextUrl);
 	}
@@ -310,6 +313,7 @@ var Meditation = (function() {
 		var nextIn          = urlParam('next-in');
 		var kioskMode       = (urlParam('kiosk')       != null);
 		var randomWalkMode  = (urlParam('randomwalk')  != null);
+		var revealMode      = (urlParam('reveal')      != null);
 
 		var haikuId = details['id'];
 		var theme   = details['theme'];
@@ -352,6 +356,18 @@ var Meditation = (function() {
 		var authorElt = getElementByClass("haiku-author");
 		authorElt.innerHTML = haiku['Author'];
 
+		// insert the article title
+		var articleTitleLinkElt = getElementByClass("haiku-article-title-link");
+		articleTitleLinkElt.href = haiku['Url'];
+		articleTitleLinkElt.innerHTML = haiku['Title'];
+
+		var articleTitleElt = getElementByClass("haiku-article-title");
+		if (revealMode) {
+			articleTitleElt.classList.remove('hide');
+		} else {
+			articleTitleElt.classList.add('hide');
+		};
+
 		// construct and insert the nav
 		var navElt    = getElementByClass('haiku-nav');
 		var modesElt  = getElementByClass('haiku-modes');
@@ -379,7 +395,8 @@ var Meditation = (function() {
 					direction: +1, 
 					nextIn: nextIn,
 					kioskMode: kioskMode,
-					randomWalkMode: randomWalkMode
+					randomWalkMode: randomWalkMode,
+					revealMode: revealMode
 				});
 				displayHaiku();
 			};
@@ -392,7 +409,8 @@ var Meditation = (function() {
 				id: haikuId, 
 				theme: theme,
 				kioskMode: kioskMode,
-				randomWalkMode: randomWalkMode
+				randomWalkMode: randomWalkMode,
+				revealMode: revealMode
 			});
 			displayHaiku();
 		};
@@ -404,7 +422,8 @@ var Meditation = (function() {
 				theme: theme, 
 				direction: -1,
 				kioskMode: kioskMode,
-				randomWalkMode: randomWalkMode
+				randomWalkMode: randomWalkMode,
+				revealMode: revealMode
 			});
 			displayHaiku();
 		};
@@ -417,7 +436,8 @@ var Meditation = (function() {
 				direction: -1,
 				kioskMode: kioskMode,
 				randomWalkMode: randomWalkMode,
-				nextIn: defaultNextIn
+				nextIn: defaultNextIn,
+				revealMode: revealMode
 			});
 			displayHaiku();
 		};
@@ -430,7 +450,8 @@ var Meditation = (function() {
 				direction: -1,
 				kioskMode: true,
 				randomWalkMode: randomWalkMode,
-				nextIn: nextIn
+				nextIn: nextIn,
+				revealMode: revealMode
 			});
 			displayHaiku();
 		};
@@ -443,7 +464,22 @@ var Meditation = (function() {
 				direction: -1,
 				kioskMode: kioskMode,
 				randomWalkMode: ! randomWalkMode,
-				nextIn: nextIn
+				nextIn: nextIn,
+				revealMode: revealMode
+			});
+			displayHaiku();
+		};
+
+		var fnNextReveal = function() {
+			window.clearTimeout(timeoutId);
+			setPageUrlForNextHaiku({
+				id: haikuId, 
+				theme: theme, 
+				direction: 0,
+				kioskMode: kioskMode,
+				randomWalkMode: randomWalkMode,
+				nextIn: nextIn,
+				revealMode: ! revealMode
 			});
 			displayHaiku();
 		};
@@ -462,6 +498,9 @@ var Meditation = (function() {
 
 		var randomElt = getElementByClass("haiku-random");
 		randomElt.onclick = fnNextRandom;
+
+		var revealElt = getElementByClass("haiku-reveal");
+		revealElt.onclick = fnNextReveal;
 
 		document.onkeydown = function() {
 			switch (window.event.keyCode) {
@@ -509,7 +548,8 @@ var Meditation = (function() {
 					direction:      direction,
 					kioskMode:      kioskMode,
 					randomWalkMode: randomWalkMode,
-					nextIn:         nextIn
+					nextIn:         nextIn,
+					revealMode:     revealMode
 				});
 			}
 
