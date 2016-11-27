@@ -5,7 +5,9 @@ var Meditation = (function() {
 	var haikuById         = {}; // all haiku indexed by their id
 	var haikuListsByTheme = {}; // a list of haiku id for each theme
 	var coreThemes        = []; // a list of themes
+	var knownAuthorsHash  = {}; // a hash of all known authors
 	var okAuthorsHash     = {}; // a hash of authors with more than one haiku
+	var authorOptions     = []; // a list of Option elements, one per author
 	var okAsThemesHash    = {}; // a hash of all core themes and ok authors
 	var defaultHaiku = 1;
 	var defaultTheme = 'DATE';    // if no theme is specified, choose this one
@@ -55,9 +57,8 @@ var Meditation = (function() {
 	function processJsonImpl(text) {
 		var haikuData = JSON.parse(text);
 		
-		var count           = 0;
-		var knownCoreThemes = {};
-		var knownAuthors    = {};
+		var count            = 0;
+		var knownCoreThemes  = {};
 
 		haikuData.forEach(function(haiku){
 			count = count + 1;
@@ -85,7 +86,7 @@ var Meditation = (function() {
 			var author = haiku['Author'];
 			if (! (author in haikuListsByTheme)) {
 				haikuListsByTheme[author] = [];
-				knownAuthors[author] = true;
+				knownAuthorsHash[author] = true;
 			};
 			haikuListsByTheme[author].push(id);
 		});
@@ -100,7 +101,7 @@ var Meditation = (function() {
 			defaultTheme = coreThemes[0] || Object.keys(haikuListsByTheme)[0];
 		};
 
-		Object.keys(knownAuthors).forEach(function(author){
+		Object.keys(knownAuthorsHash).forEach(function(author){
 			if (haikuListsByTheme[author].length > 1) {
 				okAuthorsHash[author] = true;
 			};
@@ -216,6 +217,8 @@ var Meditation = (function() {
 	function getNextDetails( id, theme, direction=1 ) {
 		if (theme == explanationTheme) {
 			// leave as is
+		} else if ( knownAuthorsHash[theme] ) {
+			// leave as is
 		} else if ( ! okAsThemesHash[theme] ) {
 			theme = defaultTheme;
 		};
@@ -278,10 +281,10 @@ var Meditation = (function() {
 		var displayT;
 		if(t == 'DATE') {
 			displayT = haiku['PubDateString'].split('T')[0];
-		} else if (t in okAuthorsHash) {
-			displayT = 'AUTHOR';
+		// } else if (t in okAuthorsHash) {
+		// 	displayT = t;
 		} else if (t.length > maxButtonTextLength) {
-			displayT = t.substring(0,maxButtonTextLength);
+			displayT = t.substring(0,maxButtonTextLength) + '...';
 		} else {
 			displayT = t;
 		};
@@ -491,6 +494,22 @@ var Meditation = (function() {
 		selectElt.options[selectElt.options.length] = new Option("MODE:AUTO",  'NEXTIN');
 		selectElt.options[selectElt.options.length] = new Option("MODE:AUTO2",  'NEXTIN2');
 		selectElt.options[selectElt.options.length] = new Option(explanationTheme,  explanationTheme);
+
+		// append all the authors
+		if (authorOptions.length == 0) {
+			authorOptions.push( new Option("AUTHOR", haiku['Author']) );
+			Object.keys(knownAuthorsHash).sort().forEach(function(author){
+				var displayName = calcButtonDisplayText(author, haiku) + '(' + haikuListsByTheme[author].length + ')';
+				
+				authorOptions.push( new Option(displayName, author) );
+			});
+		};
+
+		authorOptions.forEach(function(option){
+			selectElt.options[selectElt.options.length] = option;
+		});
+
+		selectElt.selectedIndex = 0;
 
 		selectElt.onchange = onChangeFn;
 
