@@ -516,11 +516,13 @@ var Meditation = (function() {
 					fnPrev();
 				break;
 				case 38: // up key
+					fnNextRandom();
 				break;
 				case 39: // right key
 					fnNext();
 				break;
 				case 40: // down
+					fnNextReveal();
 				break;
 			}		
 		};
