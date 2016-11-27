@@ -15,12 +15,15 @@ var Meditation = (function() {
 	var maxButtonTextLength = 11;
 	var lineThreshold = 26;
 	var defaultNextIn = 8;
-	var explanationTheme = 'Explanation';
+	var explanationTheme = 'Explanation/Help';
 	var explanations = [
 		"words are written once<br>but FT's Hidden Haiku<br>lets us read them twice",
 		"these fragments of text<br>there but sitting unnoticed<br>in real articles",
-		"for more on haiku<br>look in wikipedia<br>or the labs blog post",
-		"reading this help text<br>can only be annoying<br>apologies due",
+		"for naive Haiku<br>five, seven, five syllables<br>three lines, no rhyming",
+		"short observations<br>impressionistic, wistful<br>juxtapositions",
+		"with hidden haiku<br>out come powerful moments<br>serendipity",
+		'for more on haiku<br>look in <a href="https://en.wikipedia.org/wiki/Haiku_in_English">wikipedia</a><br>or the <a href="http://labs.ft.com/2016/07/finding-hidden-haiku/">labs blog post</a>',
+		"these help text haiku<br>can only be annoying<br>apologies due",
 		"left and right arrows<br>lead to next haiku in group<br>or the previous",
 		"many different groups<br>selected between arrows<br>via the drop down",
 		"haiku grouped in themes<br>such as IMAGERY, CROP, MOOD<br>all in upper case",
