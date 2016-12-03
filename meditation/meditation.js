@@ -198,40 +198,43 @@ var Meditation = (function() {
 	function getAndProcessJsonThen( thenFn ) {
 		var oReq    = new XMLHttpRequest();
 		oReq.onload = processJson;
-		oReq.open("get", jsonUrlGz, true); //gunzip technique copied from http://dougbtv.com/2014/04/16/decompressing-gzipped-with-javascript/
-		oReq.overrideMimeType('text\/plain; charset=x-user-defined');    
+		oReq.open("get", jsonUrl, true); 
+		// oReq.open("get", jsonUrlGz, true); //gunzip technique copied from http://dougbtv.com/2014/04/16/decompressing-gzipped-with-javascript/
+		// oReq.overrideMimeType('text\/plain; charset=x-user-defined');    
 		oReq.send(null);
 
 		function processJson(e) {
 			if (this.status == 200) {
-				// Here's our raw binary.
-	    		var rawfile = oReq.responseText;
+				// // Here's our raw binary.
+	   		 //    var rawfile = oReq.responseText;
 
-			    // Ok you gotta walk all the characters here
-			    // this is to remove the high-order values.
+			 //    // Ok you gotta walk all the characters here
+			 //    // this is to remove the high-order values.
 
-			    // Create a byte array.
-			    var bytes = [];
+			 //    // Create a byte array.
+			 //    var bytes = [];
 
-			    // Walk through each character in the stream.
-			    for (var fileidx = 0; fileidx < rawfile.length; fileidx++) {
-			        var abyte = rawfile.charCodeAt(fileidx) & 0xff;
-			        bytes.push(abyte);
-			    }
+			 //    // Walk through each character in the stream.
+			 //    for (var fileidx = 0; fileidx < rawfile.length; fileidx++) {
+			 //        var abyte = rawfile.charCodeAt(fileidx) & 0xff;
+			 //        bytes.push(abyte);
+			 //    }
 
-			    // Instantiate our zlib object, and gunzip it.    
-			    // Requires: http://goo.gl/PIqhbC [github]
-			    // (remove the map instruction at the very end.)
-			    var  gunzip  =  new  Zlib.Gunzip ( bytes ); 
-			    var  plain  =  gunzip.decompress ();
+			 //    // Instantiate our zlib object, and gunzip it.    
+			 //    // Requires: http://goo.gl/PIqhbC [github]
+			 //    // (remove the map instruction at the very end.)
+			 //    var  gunzip  =  new  Zlib.Gunzip ( bytes ); 
+			 //    var  plain  =  gunzip.decompress ();
 
-			    // Now go ahead and create an ascii string from all those bytes.
-			    var asciistring = "";
-			    for (var i = 0; i < plain.length; i++) {         
-			         asciistring += String.fromCharCode(plain[i]);
-			    }
+			 //    // Now go ahead and create an ascii string from all those bytes.
+			 //    var asciistring = "";
+			 //    for (var i = 0; i < plain.length; i++) {         
+			 //         asciistring += String.fromCharCode(plain[i]);
+			 //    }
 
-				var numHaiku = processJsonImpl(asciistring);
+			 // var numHaiku = processJsonImpl(asciistring);
+
+				var numHaiku = processJsonImpl(oReq.responseText);
 				console.log('processJson: numHaiku=' + numHaiku);
 				var numBespokeHaiku = constructBespokeHaiku(explanationTheme, explanations);
 				console.log('processJson: for theme=' + explanationTheme + ', numBespokeHaiku=' + numBespokeHaiku);
