@@ -568,7 +568,7 @@ var Meditation = (function() {
 					theme:          selectedTheme, 
 					direction:      direction,
 					kioskMode:      kioskMode,
-					randomWalkMode: randomWalkMode,
+					randomWalkMode: false,
 					nextIn:         nextIn,
 					revealMode:     revealMode
 				});
