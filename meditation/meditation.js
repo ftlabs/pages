@@ -390,7 +390,7 @@ var Meditation = (function() {
 		// insert the article title
 		var articleTitleLinkElt = getElementByClass("haiku-article-title-link");
 		articleTitleLinkElt.href = haiku['Url'];
-		articleTitleLinkElt.innerHTML = haiku['Title'] + ' (' + haiku['PubDateString'].split('T')[0] +')';
+		articleTitleLinkElt.innerHTML = haiku['Title'] + ' (' + haiku['PubDateString'].split('T')[0].split('-').join('&nbsp;') +')';
 
 		var articleTitleElt = getElementByClass("haiku-article-title");
 		if (revealMode) {
