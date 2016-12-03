@@ -285,19 +285,20 @@ var Meditation = (function() {
 		return document.getElementsByClassName(name)[0];
 	}
 
-	function calcButtonDisplayText(t, haiku) {
-		var displayT;
-		if(t == 'DATE') {
-			displayT = haiku['PubDateString'].split('T')[0];
-		// } else if (t in okAuthorsHash) {
-		// 	displayT = t;
-		} else if (t.length > maxButtonTextLength) {
-			displayT = t.substring(0,maxButtonTextLength) + '...';
+	function calcButtonDisplayText(text, haiku) {
+		var displayText;
+		if(text == 'DATE') {
+			displayText = text; // leave as is
+			// displayText = haiku['PubDateString'].split('T')[0];
+		// } else if (text in okAuthorsHash) {
+		// 	displayText = text;
+		} else if (text.length > maxButtonTextLength) {
+			displayText = text.substring(0,maxButtonTextLength) + '...';
 		} else {
-			displayT = t;
+			displayText = text;
 		};
 
-		return displayT;
+		return displayText;
 	}
 
 	function longestLineLength(text) {
@@ -360,7 +361,7 @@ var Meditation = (function() {
 		// insert the article title
 		var articleTitleLinkElt = getElementByClass("haiku-article-title-link");
 		articleTitleLinkElt.href = haiku['Url'];
-		articleTitleLinkElt.innerHTML = haiku['Title'];
+		articleTitleLinkElt.innerHTML = haiku['Title'] + ' (' + haiku['PubDateString'].split('T')[0] +')';
 
 		var articleTitleElt = getElementByClass("haiku-article-title");
 		if (revealMode) {
