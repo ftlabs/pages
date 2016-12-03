@@ -224,7 +224,8 @@ var Meditation = (function() {
 		} else if ( knownAuthorsHash[theme] ) {
 			// leave as is
 		} else if ( ! okAsThemesHash[theme] ) {
-			theme = defaultTheme;
+			theme     = defaultTheme;
+			direction = 0; // don't tick over to next one
 		};
 
 		var haikuList = haikuListsByTheme[theme];
@@ -509,6 +510,15 @@ var Meditation = (function() {
 		var revealElt = getElementByClass("haiku-reveal");
 		revealElt.onclick = fnNextReveal;
 		fnSetSelected(revealElt, revealMode);
+
+		var latestElt = getElementByClass("haiku-latest");
+		latestElt.onclick = function() {
+			window.clearTimeout(timeoutId);
+			setPageUrlForNextHaiku({
+				latest: true
+			});
+			displayHaiku();
+		};
 
 		document.onkeydown = function() {
 			switch (window.event.keyCode) {
