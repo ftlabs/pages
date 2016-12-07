@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Carousel</title>
+		<title>Pull Quotes</title>
 		<!-- using http://kenwheeler.github.io/slick/ -->
 		<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/jquery.slick/1.6.0/slick.css"/>
 		<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/jquery.slick/1.6.0/slick-theme.css"/>
@@ -73,7 +73,7 @@
 				oReq.send();
 
 				function displayJson(e) {
-					var title           = urlParam('title') || "Carousel";
+					var title           = urlParam('title') || "Pull Quotes @FT";
 					var titleElement    = $('.title');
 					titleElement.html(decodeURIComponent(title).replace(/"/g,""));
 
@@ -88,12 +88,12 @@
 
 					   	data.forEach(function(pq){
 					   		var pieces = [];
-					   		pieces.push('<div class="item">');
-					   		pieces.push('<div class="text">');
-					   		pieces.push('<div class="title">' + pq.Title + '</div>');
-
-					   		pieces.push( '<div class="text">' + pq.PullQuoteAssets[0].Body + '</div>');
-
+					   		pieces.push('<div class="pq-item">');
+					   		pieces.push('<img class="pq-image" src="' + pq.ImageUrl + '">');
+					   		pieces.push('<div class="pq-title">' + pq.Title + '</div>');
+					   		pieces.push('<div class="pq-date">' + pq.PubDateString + '</div>');
+					   		pieces.push('<div class="pq-body">' + pq.PullQuoteAssets[0].Body + '</div>');
+					   		pieces.push('<span class="pq-attribution">' + pq.PullQuoteAssets[0].Attribution + '</div>');
 					   		pieces.push('</div>');	
 					   		pieces.push('</div>');	
 					   		htmlList.push( pieces.join("\n") );
