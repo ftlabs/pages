@@ -87,16 +87,18 @@
 					    var htmlList        = [];
 
 					   	data.forEach(function(pq){
-					   		var pieces = [];
-					   		pieces.push('<div class="pq-item">');
-					   		pieces.push('<img class="pq-image" src="' + pq.ImageUrl + '">');
-					   		pieces.push('<div class="pq-title">' + pq.Title + '</div>');
-					   		pieces.push('<div class="pq-date">' + pq.PubDateString + '</div>');
-					   		pieces.push('<div class="pq-body">' + pq.PullQuoteAssets[0].Body + '</div>');
-					   		pieces.push('<span class="pq-attribution">' + pq.PullQuoteAssets[0].Attribution + '</div>');
-					   		pieces.push('</div>');	
-					   		pieces.push('</div>');	
-					   		htmlList.push( pieces.join("\n") );
+					   		var html = `
+<div class="pq-item">
+	<div class="pq-item">
+		<img class="pq-image" src="${pq.ImageUrl}">
+		<div class="pq-title">${pq.Title}</div>
+		<div class="pq-date">${pq.PubDateString}</div>
+		<div class="pq-body">${pq.PullQuoteAssets[0].Body}</div>
+		<span class="pq-attribution">${pq.PullQuoteAssets[0].Attribution}</div>
+	</div>
+</div>
+`	
+					   		htmlList.push( html );
 					   	});
 
 					    carouselElement.html(htmlList);
