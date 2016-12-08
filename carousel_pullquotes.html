@@ -27,11 +27,30 @@
 				margin-top: auto;
 				margin-bottom: auto;
 			}
-			.item {
+			.pq-item {
+			   display: -webkit-flex;
+			   display: flex;
+			   -webkit-flex-direction: row;
+			   flex-direction: row;
 			}
-			.text {
-			    font-size: 300%;
-			    font-size: 5vw;
+			.pq {
+			}
+			.pq-article {
+			}
+			.pq-title {
+			}
+			.pq-date {
+			}
+			.pq-quote {
+			}
+			.pq-body {
+			    font-size: 100%;
+			    font-size: 2vw;
+			    text-align: center;
+			}
+			.pq-attribution {
+			    font-size: 100%;
+			    font-size: 2vw;
 			    text-align: center;
 			}
 			.instruction {
@@ -89,15 +108,17 @@
 					   	data.forEach(function(pq){
 					   		var html = `
 <div class="pq-item">
-	<div class="pq-item">
+	<div class="pq-article">
 		<img class="pq-image" src="${pq.ImageUrl}">
 		<div class="pq-title">${pq.Title}</div>
 		<div class="pq-date">${pq.PubDateString}</div>
+	</div>
+	<div class="pq-quote">
 		<div class="pq-body">${pq.PullQuoteAssets[0].Body}</div>
 		<span class="pq-attribution">${pq.PullQuoteAssets[0].Attribution}</div>
 	</div>
 </div>
-`	
+`;
 					   		htmlList.push( html );
 					   	});
 
@@ -113,8 +134,8 @@
 		<div class="carousel">
 			<div class="item">
 				<div class="instruction">
-					This is a simple carousel of text snippets, configured as follows:<br>
-					?title="your title"&amp;id="google spreadsheet id"&amp;footer="your footer"&amp;pause=5
+					This is a simple carousel of FT Article Pull Quotes, configured as follows:<br>
+					?title="your title"&amp;footer="your footer"&amp;pause=5
 				</div>
 			</div>
 	   	</div>
