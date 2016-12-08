@@ -5,10 +5,14 @@
 		<!-- using http://kenwheeler.github.io/slick/ -->
 		<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/jquery.slick/1.6.0/slick.css"/>
 		<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/jquery.slick/1.6.0/slick-theme.css"/>
-		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2" />
+		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0" />
 	   	<style>
 			html {
 			    font-family: BentonSans, sans-serif;
+			    padding: 0;
+			    margin: 0;
+			    width: 100%;
+			    height: 100%;
 			}
 			h1 {
 			    font-family: MillerDisplay, serif;
@@ -32,7 +36,7 @@
 			   display: flex;
 			   -webkit-flex-direction: row;
 			   flex-direction: row;
-			   flex-wrap: wrap;
+			   align-items: center;
 			}
 			.pq-article {
 			}
@@ -41,16 +45,21 @@
 			.pq-date {
 			}
 			.pq-quote {
+				padding: 15px;
+				background: url(https://www.ft.com/__origami/service/image/v2/images/raw/fticon-v1:speech-left?source=pullquotes);
+				background-position: 0px 30px;
+				background-size: 100px 100px;
+				background-repeat: no-repeat; 
 			}
-			.pq-body {
+			.pq-body { 
 			    font-size: 100%;
-			    font-size: 2vw;
-			    text-align: center;
+			    font-size: 3vw;
+			    text-align: left;
 			}
 			.pq-attribution {
 			    font-size: 100%;
-			    font-size: 2vw;
-			    text-align: center;
+			    font-size: 2.5vw;
+			    text-align: left;
 			}
 			.instruction {
 			    font-size: 200%;
@@ -132,19 +141,16 @@
 	</head>
 	<body>
 		<h1 class="title">Pull Quotes @ FT</h1>
-		<div class="temp-pq">
-		</div>
-
 		<div class="carousel">
 			<div class="pq-item">
 				<div class="pq-article">
 					<img class="pq-image" src="">
-					<div class="pq-title"></div>
-					<div class="pq-date"></div>
+					<h3 class="pq-title"></h3>
+					<h4 class="pq-date"></h4>
 				</div>
 				<div class="pq-quote">
-					<div class="pq-body"></div>
-					<span class="pq-attribution"></div>
+					<h1 class="pq-body"></h1>
+					<h2 class="pq-attribution"></h2>
 				</div>
 			</div>
 	   	</div>
