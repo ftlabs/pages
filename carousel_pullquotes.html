@@ -77,53 +77,54 @@
 			    return (results==null)? null : (results[1] || 0);
 			}
 
+			function setClassElementHtml( classname, html ){
+				var element = $(classname);
+				element && element.html(html);
+			}
+			function setClassElementSrc( classname, src ){
+				var element = $(classname);
+				element && element.attr('src', src);
+			}
+
 			function getAndDisplayJson() {
 				var jsonUrl = 'https://ftlabs-alignment.herokuapp.com/pullquotes/json?ontology=pages&value=http%3A%2F%2Fwww.ft.com%2Fnews-feed&max=200';
 				var secs    = urlParam('pause') * 1 || 5;
 
 				var title = urlParam('title');
-				if (title) {
-					let titleElement = $('.title');
-					titleElement && titleElement.html(decodeURIComponent(title).replace(/"/g,""));
-				};
+				title && setClassElementHtml( '.title', decodeURIComponent(title).replace(/"/g,"") );
+
 				var footerText = urlParam('footer');
-				if (footerText) {
-					let footerElement = $('.footer-text');
-					footerElement && footerElement.html(decodeURIComponent(footerText).replace(/"/g,""));
-				};
+				footerText && setClassElementHtml( '.footer-text', decodeURIComponent(footerText).replace(/"/g,"") );
 				
 				var oReq    = new XMLHttpRequest();
 				oReq.onload = displayJson;
 				oReq.open("get", jsonUrl, true);
 				oReq.send();
 
-				function displayJson(e) {
-					if (this.status == 200) {
-					    var data            = JSON.parse(this.responseText);
-					    var htmlList        = [];
+				function displayJson(e) {					
+					if (this.status != 200) {
+						console.log("Error: failed to retrieve data: ", e)
+					} else {
+					    var data = JSON.parse(this.responseText);
+					    var index = 0;
 
-					   	data.forEach(function(pq){
-					   		var html = `
-<div class="pq-item">
-	<div class="pq-article">
-		<img class="pq-image" src="${pq.ImageUrl}">
-		<div class="pq-title">${pq.Title}</div>
-		<div class="pq-date">${pq.PubDateString}</div>
-	</div>
-	<div class="pq-quote">
-		<div class="pq-body">${pq.PullQuoteAssets[0].Body}</div>
-		<span class="pq-attribution">${pq.PullQuoteAssets[0].Attribution}</div>
-	</div>
-</div>
-`;
-					   		htmlList.push( html );
-					   	});
+						let writeItemFn = function(){
+						    var pq = data[index];
+						    setClassElementSrc(".pq-image", pq.ImageUrl);
+						    setClassElementHtml(".pq-title", pq.Title);
+						    setClassElementHtml(".pq-date", pq.PubDateString);
+						    setClassElementHtml(".pq-body", pq.PullQuoteAssets[0].Body);
+						    setClassElementHtml(".pq-attribution", pq.PullQuoteAssets[0].Attribution);
+						    index = (index + 1) % data.length;
+						    setTimeoutFn();
+						};
 
-					    // var carouselElement = $('.carousel');
-					    // carouselElement.html(htmlList);
+					    let setTimeoutFn = function(){
+					    	let timeoutId = window.setTimeout(writeItemFn, secs*1000);
+					    } 
 
-					    var tempPqElement = $('.temp-pq');
-					    tempPqElement.html(htmlList[1]);
+						writeItemFn();
+						setTimeoutFn();
 					}
 				}
 			}
