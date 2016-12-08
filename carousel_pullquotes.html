@@ -32,8 +32,7 @@
 			   display: flex;
 			   -webkit-flex-direction: row;
 			   flex-direction: row;
-			}
-			.pq {
+			   flex-wrap: wrap;
 			}
 			.pq-article {
 			}
@@ -102,7 +101,6 @@
 
 					if (this.status == 200) {
 					    var data            = JSON.parse(this.responseText);
-					    var carouselElement = $('.carousel');
 					    var htmlList        = [];
 
 					   	data.forEach(function(pq){
@@ -122,7 +120,11 @@
 					   		htmlList.push( html );
 					   	});
 
+					    var carouselElement = $('.carousel');
 					    carouselElement.html(htmlList);
+
+					    var tempPqElement = $('.temp-pq');
+					    tempPqElement.html(htmlList[1]);
 					}
 				    thenFn();
 				}
@@ -131,6 +133,9 @@
 	</head>
 	<body>
 		<h1 class="title">Carousel Instructions: url params</h1>
+		<div class="temp-pq">
+		</div>
+
 		<div class="carousel">
 			<div class="item">
 				<div class="instruction">
