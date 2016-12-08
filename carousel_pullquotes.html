@@ -74,31 +74,30 @@
 		<script type="text/javascript">
 			function urlParam(name){
 			    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
-			    if (results==null){
-			       return null;
-			    }
-			    else{
-			       return results[1] || 0;
-			    }
+			    return (results==null)? null : (results[1] || 0);
 			}
 
-			function getAndDisplayJsonThen( thenFn ) {
+			function getAndDisplayJson() {
 				var jsonUrl = 'https://ftlabs-alignment.herokuapp.com/pullquotes/json?ontology=pages&value=http%3A%2F%2Fwww.ft.com%2Fnews-feed&max=200';
-				var oReq    = new XMLHttpRequest();
+				var secs    = urlParam('pause') * 1 || 5;
 
+				var title = urlParam('title');
+				if (title) {
+					let titleElement = $('.title');
+					titleElement && titleElement.html(decodeURIComponent(title).replace(/"/g,""));
+				};
+				var footerText = urlParam('footer');
+				if (footerText) {
+					let footerElement = $('.footer-text');
+					footerElement && footerElement.html(decodeURIComponent(footerText).replace(/"/g,""));
+				};
+				
+				var oReq    = new XMLHttpRequest();
 				oReq.onload = displayJson;
 				oReq.open("get", jsonUrl, true);
 				oReq.send();
 
 				function displayJson(e) {
-					var title           = urlParam('title') || "Pull Quotes @FT";
-					var titleElement    = $('.title');
-					titleElement.html(decodeURIComponent(title).replace(/"/g,""));
-
-					var footerText      = urlParam('footer') || "Financial Times";
-					var footerElement   = $('.footer-text');
-					footerElement.html(decodeURIComponent(footerText).replace(/"/g,""));
-
 					if (this.status == 200) {
 					    var data            = JSON.parse(this.responseText);
 					    var htmlList        = [];
@@ -120,58 +119,43 @@
 					   		htmlList.push( html );
 					   	});
 
-					    var carouselElement = $('.carousel');
-					    carouselElement.html(htmlList);
+					    // var carouselElement = $('.carousel');
+					    // carouselElement.html(htmlList);
 
 					    var tempPqElement = $('.temp-pq');
 					    tempPqElement.html(htmlList[1]);
 					}
-				    thenFn();
 				}
 			}
 		</script>
 	</head>
 	<body>
-		<h1 class="title">Carousel Instructions: url params</h1>
+		<h1 class="title">Pull Quotes @ FT</h1>
 		<div class="temp-pq">
 		</div>
 
 		<div class="carousel">
-			<div class="item">
-				<div class="instruction">
-					This is a simple carousel of FT Article Pull Quotes, configured as follows:<br>
-					?title="your title"&amp;footer="your footer"&amp;pause=5
+			<div class="pq-item">
+				<div class="pq-article">
+					<img class="pq-image" src="">
+					<div class="pq-title"></div>
+					<div class="pq-date"></div>
+				</div>
+				<div class="pq-quote">
+					<div class="pq-body"></div>
+					<span class="pq-attribution"></div>
 				</div>
 			</div>
 	   	</div>
 	   	<div class="footer">
-	   		<div class="footer-text"></div>
+	   		<div class="footer-text">Financial Times</div>
 	   	</div>
 
 		<script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 		<script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-		<script type="text/javascript" src="//cdn.jsdelivr.net/jquery.slick/1.6.0/slick.min.js"></script>
 
 		<script type="text/javascript">
-			$(document).ready(function(){
-			var secs = urlParam('pause') || 5;
-
-			getAndDisplayJsonThen( function() {
-			    $('.carousel').slick({
-					slidesToShow: 1,
-					slidesToScroll: 1,
-					autoplay: true,
-					autoplaySpeed: (secs * 1000),
-					infinite: true,
-					speed: 500,
-					fade: true,
-					cssEase: 'linear',
-					arrows: false,
-					centerMode: true,
-					dots: true,
-			    })
-			});
-		});
+			$(document).ready(getAndDisplayJson);
 		</script>
 
 	</body>
