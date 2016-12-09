@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<title>Pull Quotes</title>
-		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0,o-date@^2.7.0" />
+		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0" />
 	   	<style>
 			html {
 			    font-family: BentonSans, sans-serif;
@@ -78,81 +78,85 @@
 			}
    		</style>
 		<script type="text/javascript">
-			const jsonUrl = 'https://ftlabs-alignment.herokuapp.com/pullquotes/json?ontology=pages&value=http%3A%2F%2Fwww.ft.com%2Fnews-feed&max=200';
-			const imgWidth = 400;
+			var Carousel = (function() {
+				const jsonUrl = 'https://ftlabs-alignment.herokuapp.com/pullquotes/json?ontology=pages&value=http%3A%2F%2Fwww.ft.com%2Fnews-feed&max=200';
+				const imgWidth = 400;
 
-			function urlParam(name){
-			    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
-			    return (results==null)? null : (decodeURIComponent(results[1]).replace(/"/g,"") || 0);
-			}
+				function urlParam(name){
+				    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+				    return (results==null)? null : (decodeURIComponent(results[1]).replace(/"/g,"") || 0);
+				}
 
-			function setClassElement( classname, attributename, value ){
-				var element = document.querySelector(classname);
-				element[attributename] = value;
-			}
+				function setClassElement( classname, attributename, value ){
+					var element = document.querySelector(classname);
+					element[attributename] = value;
+				}
 
-			function setClassElementText( classname, text ){
-				var element = document.querySelector(classname);
-				element.textContent = text;
-			}
-			function setClassElementHtml( classname, html ){
-				var element = document.querySelector(classname);
-				element.innerHTML = html;
-			}
-			function setClassElementSrc( classname, src ){
-				var element = document.querySelector(classname);
-				element.src = src;
-			}
+				function setClassElementText( classname, text ){
+					var element = document.querySelector(classname);
+					element.textContent = text;
+				}
+				function setClassElementHtml( classname, html ){
+					var element = document.querySelector(classname);
+					element.innerHTML = html;
+				}
+				function setClassElementSrc( classname, src ){
+					var element = document.querySelector(classname);
+					element.src = src;
+				}
 
-			function mungeImgUrl( url ){
-				return [
-				'https://www.ft.com/__origami/service/image/v2/images/raw/',
-				encodeURIComponent(url),
-				'?source=url-builder&width=' + imgWidth
-				].join('');
-			}
+				function mungeImgUrl( url ){
+					return [
+					'https://www.ft.com/__origami/service/image/v2/images/raw/',
+					encodeURIComponent(url),
+					'?source=url-builder&width=' + imgWidth
+					].join('');
+				}
 
-			function getAndDisplayJson() {
-				var secs  = urlParam('pause') * 1 || 5;
-				var title = urlParam('title');
-				title && setClassElementText( '.title', title );
+				function getAndDisplayJson() {
+					var secs  = urlParam('pause') * 1 || 5;
+					var title = urlParam('title');
+					title && setClassElementText( '.title', title );
 
-				var footerText = urlParam('footer');
-				footerText && setClassElementText( '.footer-text', footerText );
-				
-				var oReq    = new XMLHttpRequest();
-				oReq.onload = displayJson;
-				oReq.open("get", jsonUrl, true);
-				oReq.send();
+					var footerText = urlParam('footer');
+					footerText && setClassElementText( '.footer-text', footerText );
+					
+					var oReq    = new XMLHttpRequest();
+					oReq.onload = displayJson;
+					oReq.open("get", jsonUrl, true);
+					oReq.send();
 
-				function displayJson(e) {					
-					if (this.status != 200) {
-						console.log("Error: failed to retrieve data: ", e)
-					} else {
-					    var data = JSON.parse(this.responseText);
-					    var index = 0;
-						//	https://www.ft.com/__origami/service/image/v2/images/raw/http%3A%2F%2Fim.ft-static.com%2Fcontent%2Fimages%2F2afb2f66-d1a8-472c-9fee-22e56bc4b540.img?source=url-builder&width=400
+					function displayJson(e) {					
+						if (this.status != 200) {
+							console.log("Error: failed to retrieve data: ", e)
+						} else {
+						    var data = JSON.parse(this.responseText);
+						    var index = 0;
 
-						let writeItemFn = function(){
-						    var pq = data[index];
-						    setClassElementSrc (".pq-image",       mungeImgUrl(pq.ImageUrl)           );
-						    setClassElementText(".pq-title",       pq.Title                           );
-						    setClassElementText(".pq-date",        moment(pq.PubDateString).fromNow() );
-						    setClassElementHtml(".pq-body",        pq.PullQuoteAssets[0].Body         );
-						    setClassElementText(".pq-attribution", pq.PullQuoteAssets[0].Attribution  );
-						    index = (index + 1) % data.length;
-						    setTimeoutFn();
-						};
+							let writeItemFn = function(){
+							    var pq = data[index];
+							    setClassElementSrc (".pq-image",       mungeImgUrl(pq.ImageUrl)           );
+							    setClassElementText(".pq-title",       pq.Title                           );
+							    setClassElementText(".pq-date",        moment(pq.PubDateString).fromNow() );
+							    setClassElementHtml(".pq-body",        pq.PullQuoteAssets[0].Body         );
+							    setClassElementText(".pq-attribution", pq.PullQuoteAssets[0].Attribution  );
+							    index = (index + 1) % data.length;
+							    setTimeoutFn();
+							};
 
-					    let setTimeoutFn = function(){
-					    	let timeoutId = window.setTimeout(writeItemFn, secs*1000);
-					    } 
+						    let setTimeoutFn = function(){
+						    	let timeoutId = window.setTimeout(writeItemFn, secs*1000);
+						    } 
 
-						writeItemFn();
-						setTimeoutFn();
+							writeItemFn();
+							setTimeoutFn();
+						}
 					}
 				}
-			}
+				return {
+					getAndDisplayJson: getAndDisplayJson
+				}
+			})();
 		</script>
 	</head>
 	<body>
@@ -177,7 +181,7 @@
 		<script type="text/javascript" src="pullquotes/moment.min.js"></script>
 
 		<script type="text/javascript">
-			document.addEventListener('DOMContentLoaded', getAndDisplayJson );
+			document.addEventListener('DOMContentLoaded', Carousel.getAndDisplayJson );
 		</script>
 
 	</body>
