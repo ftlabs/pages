@@ -21,7 +21,7 @@
 			    background-color: #fff1e0;
 			}
 			.carousel {
-				width: 90% ;
+				width: 98% ;
 				margin-left: auto ;
 				margin-right: auto ;
 				height: 90%;
@@ -83,11 +83,13 @@
 			    return (results==null)? null : (decodeURIComponent(results[1]).replace(/"/g,"") || 0);
 			}
 
-			function setClassElementHtml( classname, html ){
-				console.log("setClassElementHtml: classname=", classname, ", html=", html);
+			function setClassElementText( classname, text ){
 				var element = document.querySelector(classname);
-				console.log("setClassElementHtml: element=", element);
-				element.innerHtml = html;
+				element.textContent = text;
+			}
+			function setClassElementHtml( classname, html ){
+				var element = document.querySelector(classname);
+				element.innerHTML = html;
 			}
 			function setClassElementSrc( classname, src ){
 				var element = document.querySelector(classname);
@@ -99,10 +101,10 @@
 				var secs    = urlParam('pause') * 1 || 5;
 
 				var title = urlParam('title');
-				title && setClassElementHtml( '.title', title );
+				title && setClassElementText( '.title', title );
 
 				var footerText = urlParam('footer');
-				footerText && setClassElementHtml( '.footer-text', footerText );
+				footerText && setClassElementText( '.footer-text', footerText );
 				
 				var oReq    = new XMLHttpRequest();
 				oReq.onload = displayJson;
@@ -118,11 +120,11 @@
 
 						let writeItemFn = function(){
 						    var pq = data[index];
-						    setClassElementSrc(".pq-image", pq.ImageUrl);
-						    setClassElementHtml(".pq-title", pq.Title);
-						    setClassElementHtml(".pq-date", pq.PubDateString);
-						    setClassElementHtml(".pq-body", pq.PullQuoteAssets[0].Body);
-						    setClassElementHtml(".pq-attribution", pq.PullQuoteAssets[0].Attribution);
+						    setClassElementSrc (".pq-image",       pq.ImageUrl                      );
+						    setClassElementText(".pq-title",       pq.Title                         );
+						    setClassElementText(".pq-date",        pq.PubDateString                 );
+						    setClassElementHtml(".pq-body",        pq.PullQuoteAssets[0].Body       );
+						    setClassElementText(".pq-attribution", pq.PullQuoteAssets[0].Attribution);
 						    index = (index + 1) % data.length;
 						    setTimeoutFn();
 						};
