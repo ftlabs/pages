@@ -109,7 +109,7 @@
 			}
    		</style>
 
-		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0" />
+		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0,o-teaser@^1.3.1" />
 	
 		<script src="//polyfill.webservices.ft.com/v1/polyfill.min.js"></script>
 		<!--
@@ -144,19 +144,6 @@
 					element[attributename] = value;
 				}
 
-				function setClassElementText( classname, text ){
-					var element = document.querySelector(classname);
-					element.textContent = text;
-				}
-				function setClassElementHtml( classname, html ){
-					var element = document.querySelector(classname);
-					element.innerHTML = html;
-				}
-				function setClassElementSrc( classname, src ){
-					var element = document.querySelector(classname);
-					element.src = src;
-				}
-
 				function mungeImgUrl( url ){
 					return [
 					'https://www.ft.com/__origami/service/image/v2/images/raw/',
@@ -187,11 +174,12 @@
 
 							let writeItemFn = function(){
 							    var pq = data[index];
-							    setClassElementSrc (".pq-image",       mungeImgUrl(pq.ImageUrl)           );
-							    setClassElementText(".pq-title",       pq.Title                           );
-							    setClassElementText(".pq-date",        moment(pq.PubDateString).fromNow() );
-							    setClassElementHtml(".pq-body",        pq.PullQuoteAssets[0].Body         );
-							    setClassElementText(".pq-attribution", pq.PullQuoteAssets[0].Attribution  );
+							    setClassElement(".pq-image", 	   "src", 		  mungeImgUrl(pq.ImageUrl)           );
+							    setClassElement(".pq-title", 	   "textContent", pq.Title                           );
+							    setClassElement(".pq-article-url", "href", 		  pq.Url                             );
+							    setClassElement(".pq-date", 	   "textContent", moment(pq.PubDateString).fromNow() );
+							    setClassElement(".pq-body",        "innerHTML",   pq.PullQuoteAssets[0].Body         );
+							    setClassElement(".pq-attribution", "textContent", pq.PullQuoteAssets[0].Attribution  );
 							    index = (index + 1) % data.length;
 							    setTimeoutFn();
 							};
@@ -218,7 +206,11 @@
 		<div class="carousel">
 			<div class="pq-item">
 				<div class="pq-article">
-					<h3 class="pq-title"></h3>
+					<h3 class="o-teaser__heading">
+						<a class="pq-article-url" href="">
+							<span class="pq-title"></span>
+						</a>
+					</h3>
 					<img class="pq-image" src="">
 					<h4 class="pq-date"></h4>
 				</div>
