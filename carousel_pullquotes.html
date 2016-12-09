@@ -149,6 +149,8 @@
 
 							writeItemFn();
 							setTimeoutFn();
+							var prefetchedImage = new Image();
+							prefetchedImage.src = mungeImgUrl(data[index].ImageUrl);
 						}
 					}
 				}
