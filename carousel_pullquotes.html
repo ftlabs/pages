@@ -152,7 +152,7 @@
 					].join('');
 				}
 
-				function getAndDisplayJson() {
+				var getAndDisplayJson = function() {
 					var secs  = urlParam('pause') * 1 || defaultPause;					
 					var oReq    = new XMLHttpRequest();
 					oReq.onload = displayJson;
@@ -180,7 +180,12 @@
 							};
 
 						    let setTimeoutFn = function(){
-						    	timeoutId = window.setTimeout(writeItemFn, secs*1000);
+								// having completed a cycle through all the items, fetch the latest set of items
+						    	if (index == data.length-1) {
+						    		timeoutId = window.setTimeout(getAndDisplayJson, secs*1000);
+						    	} else {
+						    		timeoutId = window.setTimeout(writeItemFn, secs*1000);
+						    	}
 						    } 
 
 						    let clearTimeoutFn = function() {
