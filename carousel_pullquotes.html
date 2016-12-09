@@ -133,6 +133,7 @@
 			var Carousel = (function() {
 				const jsonUrl = 'https://ftlabs-alignment.herokuapp.com/pullquotes/json?ontology=pages&value=http%3A%2F%2Fwww.ft.com%2Fnews-feed&max=200';
 				const imgWidth = 400;
+				const defaultPause = 8;
 
 				function urlParam(name){
 				    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -153,13 +154,7 @@
 				}
 
 				function getAndDisplayJson() {
-					var secs  = urlParam('pause') * 1 || 5;
-					var title = urlParam('title');
-					title && setClassElementText( '.title', title );
-
-					var footerText = urlParam('footer');
-					footerText && setClassElementText( '.footer-text', footerText );
-					
+					var secs  = urlParam('pause') * 1 || defaultPause;					
 					var oReq    = new XMLHttpRequest();
 					oReq.onload = displayJson;
 					oReq.open("get", jsonUrl, true);
@@ -171,6 +166,7 @@
 						} else {
 						    var data = JSON.parse(this.responseText);
 						    var index = 0;
+						    var timeoutId;
 
 							let writeItemFn = function(){
 							    var pq = data[index];
@@ -185,13 +181,34 @@
 							};
 
 						    let setTimeoutFn = function(){
-						    	let timeoutId = window.setTimeout(writeItemFn, secs*1000);
+						    	timeoutId = window.setTimeout(writeItemFn, secs*1000);
 						    } 
 
+						    let clearTimeoutFn = function() {
+						    	window.clearTimeout(timeoutId);
+						    }
+
 							writeItemFn();
-							setTimeoutFn();
+
 							var prefetchedImage = new Image();
 							prefetchedImage.src = mungeImgUrl(data[index].ImageUrl);
+
+							document.onkeydown = function() {
+								switch (window.event.keyCode) {
+									case 40: // down key
+									case 37: // left key
+										clearTimeoutFn();
+										index = (index + data.length + data.length - 2) % data.length;
+										writeItemFn();
+									break;
+									case 38: // up key
+									case 39: // right key
+										clearTimeoutFn();
+										writeItemFn();
+									break;
+								}		
+							};
+
 						}
 					}
 				}
@@ -202,7 +219,7 @@
 		</script>
 	</head>
 	<body>
-		<h1 class="title">Pull Quotes @ FT</h1>
+		<h1 class="title">FT Labs Experiment: Pull Quotes</h1>
 		<div class="carousel">
 			<div class="pq-item">
 				<div class="pq-article">
