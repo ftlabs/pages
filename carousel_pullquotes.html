@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<title>Pull Quotes</title>
-		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0" />
+		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0,o-date@^2.7.0" />
 	   	<style>
 			html {
 			    font-family: BentonSans, sans-serif;
@@ -83,6 +83,11 @@
 			    return (results==null)? null : (decodeURIComponent(results[1]).replace(/"/g,"") || 0);
 			}
 
+			function setClassElement( classname, attributename, value ){
+				var element = document.querySelector(classname);
+				element[attributename] = value;
+			}
+
 			function setClassElementText( classname, text ){
 				var element = document.querySelector(classname);
 				element.textContent = text;
@@ -122,7 +127,7 @@
 						    var pq = data[index];
 						    setClassElementSrc (".pq-image",       pq.ImageUrl                      );
 						    setClassElementText(".pq-title",       pq.Title                         );
-						    setClassElementText(".pq-date",        pq.PubDateString                 );
+						    setClassElementText(".pq-date",        moment(pq.PubDateString).fromNow() );
 						    setClassElementHtml(".pq-body",        pq.PullQuoteAssets[0].Body       );
 						    setClassElementText(".pq-attribution", pq.PullQuoteAssets[0].Attribution);
 						    index = (index + 1) % data.length;
@@ -158,6 +163,8 @@
 	   	<div class="footer">
 	   		<div class="footer-text">Financial Times</div>
 	   	</div>
+
+		<script type="text/javascript" src="pullquotes/moment.min.js"></script>
 
 		<script type="text/javascript">
 			document.addEventListener('DOMContentLoaded', getAndDisplayJson );
