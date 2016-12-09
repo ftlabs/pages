@@ -2,9 +2,6 @@
 <html>
 	<head>
 		<title>Pull Quotes</title>
-		<!-- using http://kenwheeler.github.io/slick/ -->
-		<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/jquery.slick/1.6.0/slick.css"/>
-		<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/jquery.slick/1.6.0/slick-theme.css"/>
 		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0" />
 	   	<style>
 			html {
@@ -83,7 +80,7 @@
 		<script type="text/javascript">
 			function urlParam(name){
 			    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
-			    return (results==null)? null : (results[1] || 0);
+			    return (results==null)? null : (decodeURIComponent(results[1]).replace(/"/g,"") || 0);
 			}
 
 			function setClassElementHtml( classname, html ){
@@ -100,10 +97,10 @@
 				var secs    = urlParam('pause') * 1 || 5;
 
 				var title = urlParam('title');
-				title && setClassElementHtml( '.title', decodeURIComponent(title).replace(/"/g,"") );
+				title && setClassElementHtml( '.title', title );
 
 				var footerText = urlParam('footer');
-				footerText && setClassElementHtml( '.footer-text', decodeURIComponent(footerText).replace(/"/g,"") );
+				footerText && setClassElementHtml( '.footer-text', footerText );
 				
 				var oReq    = new XMLHttpRequest();
 				oReq.onload = displayJson;
