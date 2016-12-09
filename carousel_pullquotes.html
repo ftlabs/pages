@@ -78,6 +78,9 @@
 			}
    		</style>
 		<script type="text/javascript">
+			const jsonUrl = 'https://ftlabs-alignment.herokuapp.com/pullquotes/json?ontology=pages&value=http%3A%2F%2Fwww.ft.com%2Fnews-feed&max=200';
+			const imgWidth = 400;
+
 			function urlParam(name){
 			    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
 			    return (results==null)? null : (decodeURIComponent(results[1]).replace(/"/g,"") || 0);
@@ -101,10 +104,16 @@
 				element.src = src;
 			}
 
-			function getAndDisplayJson() {
-				var jsonUrl = 'https://ftlabs-alignment.herokuapp.com/pullquotes/json?ontology=pages&value=http%3A%2F%2Fwww.ft.com%2Fnews-feed&max=200';
-				var secs    = urlParam('pause') * 1 || 5;
+			function mungeImgUrl( url ){
+				return [
+				'https://www.ft.com/__origami/service/image/v2/images/raw/',
+				encodeURIComponent(url),
+				'?source=url-builder&width=' + imgWidth
+				].join('');
+			}
 
+			function getAndDisplayJson() {
+				var secs  = urlParam('pause') * 1 || 5;
 				var title = urlParam('title');
 				title && setClassElementText( '.title', title );
 
@@ -122,14 +131,15 @@
 					} else {
 					    var data = JSON.parse(this.responseText);
 					    var index = 0;
+						//	https://www.ft.com/__origami/service/image/v2/images/raw/http%3A%2F%2Fim.ft-static.com%2Fcontent%2Fimages%2F2afb2f66-d1a8-472c-9fee-22e56bc4b540.img?source=url-builder&width=400
 
 						let writeItemFn = function(){
 						    var pq = data[index];
-						    setClassElementSrc (".pq-image",       pq.ImageUrl                      );
-						    setClassElementText(".pq-title",       pq.Title                         );
+						    setClassElementSrc (".pq-image",       mungeImgUrl(pq.ImageUrl)           );
+						    setClassElementText(".pq-title",       pq.Title                           );
 						    setClassElementText(".pq-date",        moment(pq.PubDateString).fromNow() );
-						    setClassElementHtml(".pq-body",        pq.PullQuoteAssets[0].Body       );
-						    setClassElementText(".pq-attribution", pq.PullQuoteAssets[0].Attribution);
+						    setClassElementHtml(".pq-body",        pq.PullQuoteAssets[0].Body         );
+						    setClassElementText(".pq-attribution", pq.PullQuoteAssets[0].Attribution  );
 						    index = (index + 1) % data.length;
 						    setTimeoutFn();
 						};
