@@ -84,12 +84,14 @@
 			}
 
 			function setClassElementHtml( classname, html ){
-				var element = $(classname);
-				element && element.html(html);
+				console.log("setClassElementHtml: classname=", classname, ", html=", html);
+				var element = document.querySelector(classname);
+				console.log("setClassElementHtml: element=", element);
+				element.innerHtml = html;
 			}
 			function setClassElementSrc( classname, src ){
-				var element = $(classname);
-				element && element.attr('src', src);
+				var element = document.querySelector(classname);
+				element.src = src;
 			}
 
 			function getAndDisplayJson() {
@@ -155,11 +157,8 @@
 	   		<div class="footer-text">Financial Times</div>
 	   	</div>
 
-		<script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-		<script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-
 		<script type="text/javascript">
-			$(document).ready(getAndDisplayJson);
+			document.addEventListener('DOMContentLoaded', getAndDisplayJson );
 		</script>
 
 	</body>
