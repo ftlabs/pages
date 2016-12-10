@@ -100,6 +100,23 @@
     			bottom: 0%;
     			width: 100%;
 			}
+			.pq-progress {
+				display: -webkit-flex;
+				display: flex;
+				-webkit-flex-direction: row;
+				flex-direction: row;
+				justify-content: space-around;
+				margin-bottom: 2%;
+			}
+			.pq-progress-other {
+				font-size: 3vw;
+				color: white;
+			}
+			.pq-progress-current {
+				font-size: 3vw;
+				color: white;
+				font-weight: bolder
+			}
 			.footer-text {
 			    font-size: 200%;
 			    font-size: 3vw;
@@ -134,6 +151,8 @@
 				const jsonUrl = 'https://ftlabs-alignment.herokuapp.com/pullquotes/json?ontology=pages&value=http%3A%2F%2Fwww.ft.com%2Fnews-feed&max=200';
 				const imgWidth = 400;
 				const defaultPause = 8;
+				const progressOtherIcon   = '<span class="pq-progress-other">o</span>'
+				const progressCurrentIcon = '<span class="pq-progress-current">O</span>'
 
 				function urlParam(name){
 				    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -177,6 +196,10 @@
 							    setClassElement(".pq-date", 	   "textContent", moment(pq.PubDateString).fromNow() );
 							    setClassElement(".pq-body",        "innerHTML",   pq.PullQuoteAssets[0].Body         );
 							    setClassElement(".pq-attribution", "textContent", pq.PullQuoteAssets[0].Attribution  );
+							    var progressBar = [...Array(data.length)].map(
+							    	(_, i) => (i==index)? progressCurrentIcon : progressOtherIcon ).join('');
+							    setClassElement(".pq-progress",    "innerHTML",   progressBar                        );
+
 							    index = (index + 1) % data.length;
 							    setTimeoutFn();
 							};
@@ -273,6 +296,7 @@
 					<img class="pq-image" src="">
 					<h4 class="pq-date"></h4>
  -->				<div class="footer">
+ 						<div class="pq-progress"></div>
 				   		<div class="footer-text">An experiment by <a href="http://labs.ft.com/">FTLabs</a> @ Financial Times</div>
 				   	</div>
 				</div>
