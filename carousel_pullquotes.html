@@ -180,12 +180,16 @@
 							};
 
 						    let setTimeoutFn = function(){
-								// having completed a cycle through all the items, fetch the latest set of items
-						    	if (index == data.length-1) {
-						    		timeoutId = window.setTimeout(getAndDisplayJson, secs*1000);
+						    	if (secs <= 0) {
+						    		// do nothing
 						    	} else {
-						    		timeoutId = window.setTimeout(writeItemFn, secs*1000);
-						    	}
+									// having completed a cycle through all the items, fetch the latest set of items
+							    	if (index == data.length-1) {
+							    		timeoutId = window.setTimeout(getAndDisplayJson, secs*1000);
+							    	} else {
+							    		timeoutId = window.setTimeout(writeItemFn, secs*1000);
+							    	}
+							    }
 						    } 
 
 						    let clearTimeoutFn = function() {
