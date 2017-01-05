@@ -155,11 +155,11 @@
 
 		<script type="text/javascript">
 			var Carousel = (function() {
-				const jsonUrl = 'https://ftlabs-alignment.herokuapp.com/pullquotes/json?ontology=pages&value=http%3A%2F%2Fwww.ft.com%2Fnews-feed&max=200';
-				const imgWidth = 400;
-				const defaultPause = 8;
-				const progressOtherIcon   = '<span class="pq-progress-other">o</span>'
-				const progressCurrentIcon = '<span class="pq-progress-current">O</span>'
+				var jsonUrl = 'https://ftlabs-alignment.herokuapp.com/pullquotes/json?ontology=pages&value=http%3A%2F%2Fwww.ft.com%2Fnews-feed&max=200';
+				var imgWidth = 400;
+				var defaultPause = 8;
+				var progressOtherIcon   = '<span class="pq-progress-other">o</span>'
+				var progressCurrentIcon = '<span class="pq-progress-current">O</span>'
 
 				function urlParam(name){
 				    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
