@@ -200,8 +200,10 @@
 							    setClassElement(".pq-date", 	   "textContent", moment(pq.PubDateString).fromNow() );
 							    setClassElement(".pq-body",        "innerHTML",   pq.PullQuoteAssets[0].Body         );
 							    setClassElement(".pq-attribution", "textContent", pq.PullQuoteAssets[0].Attribution  );
-							    var progressBar = [...Array(data.length)].map(
-							    	(_, i) => (i==index)? progressCurrentIcon : progressOtherIcon ).join('');
+							    var currentOrOtherFn = function(_, i) {
+					    			return (i==index)? progressCurrentIcon : progressOtherIcon;
+					    		};
+							    var progressBar = [...Array(data.length)].map( currentOrOtherFn ).join('');
 							    setClassElement(".pq-progress",    "innerHTML",   progressBar                        );
 
 							    index = (index + 1) % data.length;
