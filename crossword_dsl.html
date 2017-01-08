@@ -70,11 +70,10 @@
 						   down : [],
 						 errors : [],
 					};
-					var match;
-					var clue;
 					var cluesGrouping;
 					var lines = text.split(/\r|\n/);
 					lines.forEach(function(line){
+						let match;
 						// strip out comments
 						if (match = /^([^\#]*)\#.*$/.exec(line) ) {
 							line = match[1];
@@ -98,7 +97,7 @@
 							if (! /(across|down)/.test(cluesGrouping)) {
 								crossword.errors.push("ERROR: clue specified but no 'across' or 'down' grouping specified");
 							} else {
-								clue = {
+								let clue = {
 									coordinates : [ parseInt(match[1]), parseInt(match[2]) ],
 									         id : parseInt(match[3]),
 									       body : match[4],
@@ -119,12 +118,32 @@
 					var maxCoord = parseInt(crossword.dimensions.split('x')[0]);
 					var grid = new Array( maxCoord * maxCoord ).fill(' ');
 					crossword.grid = grid;
+					var groupingPrev = {
+						across : {
+									id : 0,
+									 x : 0,
+									 y : 0
+								},
+						  down : {
+									id : 0,
+									 x : 0,
+									 y : 0
+								} 
+					};
 
 					for(let grouping of ['across', 'down']){
+						let prev = groupingPrev[grouping];
 						for(let clue of crossword[grouping]){
 							function clueError(msg){
-								crossword.errors.push("Error: " + msg + " in clue=" + clue.original);
+								crossword.errors.push("Error: " + msg + " in " + grouping + " clue=" + clue.original);
 							}
+
+							// check id sequence in order
+							if (clue.id <= prev.id) {
+								clueError("id out of sequence");
+								break;
+							}
+
 							// check x,y within bounds
 							let x = clue.coordinates[0];
 							if (x > maxCoord) {
@@ -134,6 +153,12 @@
 							let y = clue.coordinates[1];
 							if (y > maxCoord) {
 								clueError("y coord too large");
+								break;
+							}
+
+							// check x and y sequence in order 
+							if ( (x + y * maxCoord) <= (prev.x + prev.y * maxCoord) ) {
+								clueError("x,y out of sequence");
 								break;
 							}
 
@@ -162,6 +187,11 @@
 									break;
 								}
 							}
+
+							// update prev
+							prev.id = clue.id;
+							prev.x  = x;
+							prev.y  = y;
 						}
 					}	
 
