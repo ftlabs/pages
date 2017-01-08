@@ -119,34 +119,51 @@
 					var maxCoord = parseInt(crossword.dimensions.split('x')[0]);
 					var grid = new Array( maxCoord * maxCoord ).fill(' ');
 					crossword.grid = grid;
-					var wordsString, x, y;
 
-					for(let clue of crossword.across){
-						function clueError(msg){
-							crossword.errors.push("Error: " + msg + " in clue=" + clue.original);
-						}
-						x = clue.coordinates[0];
-						if (x > maxCoord) {
-							clueError("x coord too large");
-							break;
-						}
-						y = clue.coordinates[1];
-						if (y > maxCoord) {
-							clueError("y coord too large");
-							break;
-						}
+					for(let grouping of ['across', 'down']){
+						for(let clue of crossword[grouping]){
+							function clueError(msg){
+								crossword.errors.push("Error: " + msg + " in clue=" + clue.original);
+							}
+							// check x,y within bounds
+							let x = clue.coordinates[0];
+							if (x > maxCoord) {
+								clueError("x coord too large");
+								break;
+							}
+							let y = clue.coordinates[1];
+							if (y > maxCoord) {
+								clueError("y coord too large");
+								break;
+							}
 
-						wordsString = clue.answerCSV.split(/[,-]/).join('');
-						if (wordsString.length > maxCoord) {
-							clueError("answer too long for crossword");
-							break;
-						}
+							// check answer within bounds
+							let wordsString = clue.answerCSV.split(/[,-]/).join('');
+							if (wordsString.length > maxCoord) {
+								clueError("answer too long for crossword");
+								break;
+							}
 
-						if (wordsString.length + x > maxCoord) {
-							clueError("answer too long for crossword from that coord");
-							break;
+							// check answer + offset within bounds
+							if(    (grouping==='across' && (wordsString.length + x > maxCoord))
+								|| (grouping==='down'   && (wordsString.length + y > maxCoord)) ){
+								clueError("answer too long(" + grouping + ") for crossword from that coord");
+								break;
+							}
+
+							// check answer does not clash with previous answers
+							let step = (grouping==='across')? 1 : maxCoord;
+							for (var i = 0; i < wordsString.length; i++) {
+								let pos = x + y*maxCoord + i*step;
+								if (grid[pos] === ' ') {
+									grid[pos] = wordsString[i];
+								} else if( grid[pos] !== wordsString[i] ) {
+									clueError("letter " + (i+1) + " clashes with previous clues");
+									break;
+								}
+							}
 						}
-					}
+					}	
 
 					return crossword;
 				}
