@@ -65,7 +65,7 @@
 					var crossword = {
 						version : "standard v1",
 						pubdate : "today",
-						   size : "17x17",
+					 dimensions : "17x17",
 						 across : [],
 						   down : [],
 						 errors : [],
@@ -91,7 +91,7 @@
 						} else if (match = /^pubdate\s+(\d\d\d\d\/\d\d\/\d\d)$/i.exec(line) ) {
 							crossword.pubdate = match[1]; 
 						} else if (match = /^size\s+(15x15|17x17)$/i.exec(line) ) {
-							crossword.size = match[1]; 
+							crossword.dimensions = match[1]; 
 						} else if (match = /^(across|down)$/i.exec(line) ) {
 							cluesGrouping = match[1]; 
 						} else if (match = /^\[(\d+),(\d+)\]\s+(\d+)\.\s+(.+)\s+\(([A-Z,-]+)\)$/.exec(line) ) {
@@ -99,10 +99,11 @@
 								crossword.errors.push("ERROR: clue specified but no 'across' or 'down' grouping specified");
 							} else {
 								clue = {
-									coordinates : [ match[1], match[2] ],
-									         id : match[3],
+									coordinates : [ parseInt(match[1]), parseInt(match[2]) ],
+									         id : parseInt(match[3]),
 									       body : match[4],
 									  answerCSV : match[5],
+									   original : line,
 								}; 
 								crossword[cluesGrouping].push(clue);
 							}
@@ -110,6 +111,42 @@
 							crossword.errors.push("ERROR: couldn't parse line: " + line);
 						}
 					});
+
+					return crossword;
+				}
+
+				function validateCrossword( crossword ){
+					var maxCoord = parseInt(crossword.dimensions.split('x')[0]);
+					var grid = new Array( maxCoord * maxCoord ).fill(' ');
+					crossword.grid = grid;
+					var wordsString, x, y;
+
+					for(let clue of crossword.across){
+						function clueError(msg){
+							crossword.errors.push("Error: " + msg + " in clue=" + clue.original);
+						}
+						x = clue.coordinates[0];
+						if (x > maxCoord) {
+							clueError("x coord too large");
+							break;
+						}
+						y = clue.coordinates[1];
+						if (y > maxCoord) {
+							clueError("y coord too large");
+							break;
+						}
+
+						wordsString = clue.answerCSV.split(/[,-]/).join('');
+						if (wordsString.length > maxCoord) {
+							clueError("answer too long for crossword");
+							break;
+						}
+
+						if (wordsString.length + x > maxCoord) {
+							clueError("answer too long for crossword from that coord");
+							break;
+						}
+					}
 
 					return crossword;
 				}
@@ -126,6 +163,8 @@
 					var initialText = getElementById('dsl').value;
 					var crossword = parse(initialText);
 					console.log("crossword=", crossword);
+					crossword = validateCrossword(crossword);
+					console.log("validated crossword=", crossword);
 					var specText;
 					if (crossword.errors.length > 0) {
 						specText = crossword.errors.join("\n");
