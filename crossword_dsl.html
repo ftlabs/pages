@@ -116,6 +116,7 @@
 
 				function validateCrossword( crossword ){
 					var maxCoord = parseInt(crossword.dimensions.split('x')[0]);
+					crossword.maxCoord = maxCoord;
 					var grid = new Array( maxCoord * maxCoord ).fill(' ');
 					crossword.grid = grid;
 					var groupingPrev = {
@@ -214,6 +215,8 @@
 						}
 					}
 
+					// check clues start from edge or from an empty cell
+
 					return crossword;
 				}
 
@@ -239,6 +242,24 @@
 					}
 					var specElt = getElementById('spec');
 					specElt.value = specText;
+
+					if('grid' in crossword) {
+						let rows = [];
+						let maxCoord = crossword.maxCoord;
+						let grid = crossword.grid;
+						for (var y = 0; y < maxCoord; y++) {
+							let row = [];
+							for (var x = 0; x < maxCoord; x++) {
+								let cell = grid[x + y*maxCoord];
+								cell = (cell === " ")? '.' : cell;
+								row.push( cell );
+							}
+							rows.push( row.join('') ); 
+						}
+						let gridText = rows.join("\n");
+						var gridElt = getElementById('grid');
+						gridElt.innerHTML = gridText;
+					}
 				}
 
 				function invoke(){
@@ -288,6 +309,11 @@ down
 
 		<textarea rows="10" cols="80" onclick="this.focus();this.select()" readonly="readonly" id="spec">
 		</textarea>
+
+		<div>
+			<pre id="grid">
+			</pre>
+		</div>
 
 		<script type="text/javascript">
 			document.addEventListener('DOMContentLoaded', CrosswordDSL.invoke );
