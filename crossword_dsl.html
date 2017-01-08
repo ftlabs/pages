@@ -60,8 +60,59 @@
 
 		<script type="text/javascript">
 			var CrosswordDSL = (function() {
+
+				function parse(text){
+					var crossword = {
+						version : "standard v1",
+						pubdate : "today",
+						   size : "17x17",
+						 across : [],
+						   down : [],
+						 errors : [],
+					};
+					var match;
+					var lines = text.split(/\r|\n/);
+					lines.map(function(line){
+						line = line.trim();
+						if (line === "") {
+							// do nothing
+						} else if (match = /^version\s+(.+)$/.exec(line) ) {
+							crossword.version = match[1]; 
+						} else {
+							crossword.errors.push("ERROR: couldn't parse line: " + line);
+						}
+					});
+
+					return crossword;
+				}
+
+				function getElementByClass(name) {
+					return document.getElementsByClassName(name)[0];
+				}
+
+				function getElementById(id) {
+					return document.getElementById(id);
+				}
+
+				function updateSpec() {
+					var initialText = getElementById('dsl').value;
+					var crossword = parse(initialText);
+					console.log("crossword=", crossword);
+					var specText;
+					if (crossword.errors.length > 0) {
+						specText = crossword.errors.join("\n");
+					} else {
+						specText = JSON.stringify(crossword);
+					}
+					var specElt = getElementById('spec');
+					specElt.value = specText;
+				}
+
 				function invoke(){
 					console.log("invoked");
+					updateSpec();
+					var buttonElt = getElementById('update-button');
+					buttonElt.onclick = updateSpec;
 				}
 
 				return {
@@ -82,8 +133,8 @@
 
 		<h2>type in the crossword details</h2>
 
-		<textarea rows="20" cols="80" name="dsl">
-crossword type standard v1
+		<textarea rows="20" cols="80" id="dsl">
+version standard v1
 id 00001
 pubdate 2017/01/08
 size 17x17
@@ -93,9 +144,14 @@ down
 [1,1] 1. Gges (SCRAMBLED,EGGS)		
 		</textarea>
 
+		<button type="button" id="update-button">Update</button>
+
 		<h2>crossword data structure</h2>
 
 		<div class="crossword-data"></div>
+
+		<textarea rows="10" cols="80" onclick="this.focus();this.select()" readonly="readonly" id="spec">
+		</textarea>
 
 		<script type="text/javascript">
 			document.addEventListener('DOMContentLoaded', CrosswordDSL.invoke );
