@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html class="core" lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>FT Labs Experiment: Crossword DSL parser</title>
+		<!--
+			Perform your cuts the mustard test.
+			For information about what features come bundled with other
+			features in all browsers, see caniuse.com
+		-->
+		<script>
+			var cutsTheMustard = ('querySelector' in document && 'localStorage' in window && 'addEventListener' in window);
+
+			if (cutsTheMustard) {
+				// Swap the `core` class on the HTML element for an `enhanced` one
+				// We're doing it early in the head to avoid a flash of unstyled content
+				document.documentElement.className = document.documentElement.className.replace(/\bcore\b/g, 'enhanced');
+			}
+		</script>
+
+	   	<style>
+			/* Hide any enhanced experience content when in core mode, and vice versa. */
+			.core .o--if-js,
+			.enhanced .o--if-no-js { display: none !important; }
+
+			body {
+				/* Remove space around the document */
+				margin: 0;
+			}
+			html {
+				/* Set a font family on the whole document */
+				font-family: Georgia, serif;
+
+				/* Prevent navigation menus from creating
+				   extra space on sides of the page */
+				overflow-x: hidden;
+
+			    font-family: BentonSans, sans-serif;
+			    padding: 0;
+			    margin: 0;
+			    width: 100%;
+			    height: 100%;
+			}
+			h1 {
+			    font-family: MillerDisplay, serif;
+			    text-align: center;
+			    font-size: 300%;
+			    font-size: 6.2vw;
+			}
+			body {
+			    background-color: #fff1e0;
+			}
+   		</style>
+
+		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0,o-teaser@^1.3.1,o-header-services@^1.0.2" />
+	
+		<script src="//polyfill.webservices.ft.com/v1/polyfill.min.js"></script>
+
+		<script type="text/javascript">
+			var CrosswordDSL = (function() {
+				function invoke(){
+					console.log("invoked");
+				}
+
+				return {
+					invoke: invoke
+				}
+			})();
+		</script>
+	</head>
+	<body>
+		<header class="o-header-services" data-o-component="o-header">
+			<div class="o-header-services__top o-header-services__container">
+				<div class="o-header-services__ftlogo"></div>
+				<div class="o-header-services__title">
+					<h1 class="o-header-services__product-name"><a href="/">FT Labs experiment</a></h1><span class="o-header-subrand__product-tagline ">Crossword DSL</span>
+				</div>
+			</div>
+		</header>
+
+		<h2>type in the crossword details</h2>
+
+		<textarea rows="20" cols="80" name="dsl">
+crossword type standard v1
+id 00001
+pubdate 2017/01/08
+size 17x17
+across
+[1,1] 1. Gges (SCRAMBLED,EGGS)
+down
+[1,1] 1. Gges (SCRAMBLED,EGGS)		
+		</textarea>
+
+		<h2>crossword data structure</h2>
+
+		<div class="crossword-data"></div>
+
+		<script type="text/javascript">
+			document.addEventListener('DOMContentLoaded', CrosswordDSL.invoke );
+		</script>
+
+	</body>
+</html>
