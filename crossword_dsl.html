@@ -130,6 +130,8 @@
 									 y : 0
 								} 
 					};
+					var knownIds = {};
+					var maxId = 0;
 
 					for(let grouping of ['across', 'down']){
 						let prev = groupingPrev[grouping];
@@ -137,6 +139,15 @@
 							function clueError(msg){
 								crossword.errors.push("Error: " + msg + " in " + grouping + " clue=" + clue.original);
 							}
+
+							// check non-zero id
+							if (clue.id === 0) {
+								clueError("id must be positive");
+								break;
+							}
+
+							knownIds[clue.id] = true;
+							maxId = (clue.id > maxId) ? clue.id : maxId;
 
 							// check id sequence in order
 							if (clue.id <= prev.id) {
@@ -194,6 +205,14 @@
 							prev.y  = y;
 						}
 					}	
+
+					// check we have a contiguous and complete clue id sequence
+					console.log("DEBUG: maxId=", maxId, ", knownIds=", knownIds);
+					for (var i = 1; i <= maxId; i++) {
+						if (! (i in knownIds)) {
+							crossword.errors.push("Error: missing clue with id=" + i);
+						}
+					}
 
 					return crossword;
 				}
