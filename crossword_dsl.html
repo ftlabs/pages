@@ -71,6 +71,7 @@
 						 errors : [],
 					};
 					var match;
+					var cluesGrouping;
 					var lines = text.split(/\r|\n/);
 					lines.map(function(line){
 						line = line.trim();
@@ -78,6 +79,15 @@
 							// do nothing
 						} else if (match = /^version\s+(.+)$/.exec(line) ) {
 							crossword.version = match[1]; 
+						} else if (match = /^id\s+(.+)$/.exec(line) ) {
+							crossword.id = match[1]; 
+						} else if (match = /^pubdate\s+(\d\d\d\d\/\d\d\/\d\d)$/.exec(line) ) {
+							crossword.pubdate = match[1]; 
+						} else if (match = /^(across|down)$/.exec(line) ) {
+							crossword.size = match[1]; 
+						} else if (match = /^size\s+(15x15|17x17)$/.exec(line) ) {
+							cluesGrouping = match[1]; 
+// [1,1] 1. Gges (SCRAMBLED,EGGS)
 						} else {
 							crossword.errors.push("ERROR: couldn't parse line: " + line);
 						}
