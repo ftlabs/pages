@@ -27,7 +27,7 @@
 
 			body {
 				/* Remove space around the document */
-				margin: 0;
+				/* margin: 0; */
 			}
 			html {
 				/* Set a font family on the whole document */
@@ -191,7 +191,7 @@
 							// check answer does not clash with previous answers
 							let step = (grouping==='across')? 1 : maxCoord;
 							for (var i = 0; i < wordsString.length; i++) {
-								let pos = x + y*maxCoord + i*step;
+								let pos = (x-1) + (y-1)*maxCoord + i*step;
 								if (grid[pos] === ' ') {
 									grid[pos] = wordsString[i];
 								} else if( grid[pos] !== wordsString[i] ) {
@@ -247,10 +247,32 @@
 						let rows = [];
 						let maxCoord = crossword.maxCoord;
 						let grid = crossword.grid;
-						for (var y = 0; y < maxCoord; y++) {
+						
+						{
+							let row10s = [' ', ' ', ' '];
+							let row1s  = [' ', ' ', ' '];
+							let rowSpaces = [' ', ' ', ' '];
+							for (var x = 1; x <= maxCoord; x++) {
+								let num10s = Math.floor(x/10);
+								row10s.push((num10s > 0)? num10s : ' ');
+								row1s.push(x%10);
+								rowSpaces.push(' ');
+							}
+							rows.push(row10s.join(''));
+							rows.push(row1s.join(''));
+							rows.push(rowSpaces.join(''));
+						}
+
+						for (var y = 1; y <= maxCoord; y++) {
 							let row = [];
-							for (var x = 0; x < maxCoord; x++) {
-								let cell = grid[x + y*maxCoord];
+							{
+								let num10s = Math.floor(y/10);
+								row.push((num10s > 0)? num10s : ' ');
+								row.push(y%10);
+								row.push(' ');
+							}
+							for (var x = 1; x <= maxCoord; x++) {
+								let cell = grid[(x-1) + (y-1)*maxCoord];
 								cell = (cell === " ")? '.' : cell;
 								row.push( cell );
 							}
@@ -297,8 +319,8 @@ across
 down
 [1,1] 1. Gges (SCRAMBLED,EGGS)		
 #
-# [coordinates of clue in grid: x=across, y=down]
-# (words in answer are captialised, and separated by commas or hyphens)
+# [coordinates of clue in grid]: [across,down]. [1,1] = top left, [15,15]=bottom right.
+# (WORDS,IN,ANSWER): captialised, and separated by commas or hyphens.
 		</textarea>
 		<BR>
 		<button type="button" id="update-button">Update</button>
