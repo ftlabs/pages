@@ -208,7 +208,6 @@
 					}	
 
 					// check we have a contiguous and complete clue id sequence
-					console.log("DEBUG: maxId=", maxId, ", knownIds=", knownIds);
 					for (var i = 1; i <= maxId; i++) {
 						if (! (i in knownIds)) {
 							crossword.errors.push("Error: missing clue with id=" + i);
@@ -231,7 +230,6 @@
 				function updateSpec() {
 					var initialText = getElementById('dsl').value;
 					var crossword = parse(initialText);
-					console.log("crossword=", crossword);
 					crossword = validateCrossword(crossword);
 					console.log("validated crossword=", crossword);
 					var specText;
