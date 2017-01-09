@@ -253,19 +253,8 @@
 					return document.getElementById(id);
 				}
 
-				function updateSpec() {
-					var initialText = getElementById('dsl').value;
-					var crossword = parse(initialText);
-					crossword = validateCrossword(crossword);
-					console.log("validated crossword=", crossword);
-					var specText;
-					if (crossword.errors.length > 0) {
-						specText = crossword.errors.join("\n");
-					} else {
-						specText = JSON.stringify(crossword);
-					}
-					var specElt = getElementById('spec');
-					specElt.value = specText;
+				function generateGridText(crossword) {
+					var gridText = '';
 
 					if('grid' in crossword) {
 						let rows = [];
@@ -302,10 +291,55 @@
 							}
 							rows.push( row.join('') ); 
 						}
-						let gridText = rows.join("\n");
-						var gridElt = getElementById('grid');
-						gridElt.innerHTML = gridText;
+						gridText = rows.join("\n");
 					}
+
+					return gridText;
+				}
+
+				function generateSpecJson(crossword){
+					var spec = {
+						    title : crossword.title,
+					       author : crossword.author,
+						   editor : crossword.editor,
+						copyright : crossword.copyright,
+						publisher : crossword.publisher,
+						     date : crossword.pubdate,
+						     size : {
+								rows : crossword.maxCoord,
+								cols : crossword.maxCoord,
+						},
+							grid : [],
+						gridnums : [],
+						   clues : {
+								across : [],
+								  down : [],
+						},
+						 notepad : "",
+						      id : crossword.id,
+					};
+
+
+					return JSON.stringify(spec);
+				}
+
+				function updateSpec() {
+					var initialText = getElementById('dsl').value;
+					var crossword = parse(initialText);
+					crossword = validateCrossword(crossword);
+					console.log("validated crossword=", crossword);
+					var specText;
+					if (crossword.errors.length > 0) {
+						specText = crossword.errors.join("\n");
+					} else {
+						specText = generateSpecJson(crossword);
+					}
+					var specElt = getElementById('spec');
+					specElt.value = specText;
+
+					let gridText = generateGridText( crossword );
+					var gridElt = getElementById('grid');
+					gridElt.innerHTML = gridText;
 				}
 
 				function invoke(){
