@@ -185,7 +185,13 @@
 
 							// check x and y sequence in order 
 							if ( (x + y * maxCoord) <= (prev.x + prev.y * maxCoord) ) {
-								clueError("x,y out of sequence");
+								if (y < prev.y) {
+									clueError("starts above clue " + prev.id);
+								} else if ((y === prev.y) && (x === prev.x)) {
+									clueError("starts at same coords as clue " + prev.id);
+								} else {
+									clueError("starts to the left of clue " + prev.id);									
+								}
 								break;
 							}
 
@@ -223,9 +229,11 @@
 					}	
 
 					// check we have a contiguous and complete clue id sequence
-					for (var i = 1; i <= maxId; i++) {
-						if (! (i in knownIds)) {
-							crossword.errors.push("Error: missing clue with id=" + i);
+					if (crossword.errors.length == 0) {
+						for (var i = 1; i <= maxId; i++) {
+							if (! (i in knownIds)) {
+								crossword.errors.push("Error: missing clue with id=" + i);
+							}
 						}
 					}
 
@@ -335,7 +343,7 @@ down
 [3,1] 2. Its an air, a police, a disk (RAID)		
 #
 # [coordinates of clue in grid]: [across,down]. [1,1] = top left, [17,17]=bottom right.
-# (WORDS,IN,ANSWER): captialised, and separated by commas or hyphens.
+# (WORDS,IN,ANSWER): capitalised, and separated by commas or hyphens.
 		</textarea>
 		<BR>
 		<button type="button" id="update-button">Update</button>
