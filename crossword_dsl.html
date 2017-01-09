@@ -139,6 +139,7 @@
 								} 
 					};
 					var knownIds = {};
+					crossword.knownIds = knownIds;
 					var maxId = 0;
 
 					for(let grouping of ['across', 'down']){
@@ -199,11 +200,27 @@
 							}
 
 							// check answer within bounds
-							let wordsString = clue.answerCSV.split(/[,-]/).join('');
+							let words = clue.answerCSV.split(/[,-]/);
+							let wordsString = words.join('');
+							clue.wordsString = wordsString;
 							if (wordsString.length > maxCoord) {
 								clueError("answer too long for crossword");
 								break;
 							}
+
+							clue.wordsLengths = words.map(function(w){
+								return w.length;
+							});
+
+							let answerPieces = clue.answerCSV.split(/([A-Z]+|[,-])/);
+							let answerSpecPieces = answerPieces.map(function(p){
+								if (/[A-Z]+/.exec(p)) {
+									return p.length;
+								} else {
+									return p;
+								}
+							});
+							clue.answerSpec = answerSpecPieces.join('');
 
 							// check answer + offset within bounds
 							if(    (grouping==='across' && (wordsString.length + x > maxCoord))
@@ -306,8 +323,8 @@
 						publisher : crossword.publisher,
 						     date : crossword.pubdate,
 						     size : {
-								rows : crossword.maxCoord,
-								cols : crossword.maxCoord,
+								  rows : crossword.maxCoord,
+								  cols : crossword.maxCoord,
 						},
 							grid : [],
 						gridnums : [],
@@ -319,6 +336,40 @@
 						      id : crossword.id,
 					};
 
+					// flesh out spec grid
+					for (var y = 1; y<=crossword.maxCoord; y++) {
+						let row = [];
+						for (var x = 1; x<=crossword.maxCoord; x++) {
+							let cell = crossword.grid[(x-1) + (y-1)*crossword.maxCoord];
+							row.push( (cell === ' ')? '.' : 'X' );
+						}
+						spec.grid.push(row);
+					}
+
+					// flesh out gridnums
+					// fill with 0, then overwrite with ids
+
+					for (var y = 1; y<=crossword.maxCoord; y++) {
+						spec.gridnums.push( new Array(crossword.maxCoord).fill(0) );
+					}
+
+					for (var id in crossword.knownIds) {
+						let clue = crossword.knownIds[id];
+						spec.gridnums[clue.coordinates[1]][clue.coordinates[0]] = parseInt(id);
+					}
+
+					// flesh out clues
+
+					['across', 'down'].forEach( function(grouping){
+						crossword[grouping].forEach( function(clue) {
+							let item = [
+								parseInt(clue.id),
+								clue.body,
+								clue.answerSpec,
+							];
+							spec.clues[grouping].push(item);
+						});
+					});
 
 					return JSON.stringify(spec);
 				}
