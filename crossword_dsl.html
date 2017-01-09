@@ -151,7 +151,6 @@
 								break;
 							}
 
-							knownIds[clue.id] = true;
 							maxId = (clue.id > maxId) ? clue.id : maxId;
 
 							// check id sequence in order
@@ -170,6 +169,18 @@
 							if (y > maxCoord) {
 								clueError("y coord too large");
 								break;
+							}
+
+							// check all clues with shared ids start at same coords
+							if (clue.id in knownIds) {
+								let knownCoords = knownIds[clue.id].coordinates;
+								if (   x !== knownCoords[0] 
+									|| y !== knownCoords[1]) {
+									clueError("shared id clashes with previous coordinates");
+									break;
+								}
+							} else {
+								knownIds[clue.id] = clue;								
 							}
 
 							// check x and y sequence in order 
