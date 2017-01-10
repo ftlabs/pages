@@ -60,6 +60,9 @@
 
 		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0,o-teaser@^1.3.1,o-header-services@^1.0.2" />
 	
+	<script>(function(d) { d.className = d.className + ' demo-js'; })(document.documentElement);</script>
+	<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-crossword%400.3.1%3A%2Fdemos%2Fsrc%2Fdemo.scss">
+
 		<script src="//polyfill.webservices.ft.com/v1/polyfill.min.js"></script>
 
 		<script type="text/javascript">
@@ -399,6 +402,11 @@
 					let gridText = generateGridText( crossword );
 					var gridElt = getElementById('grid');
 					gridElt.innerHTML = gridText;
+
+					if (crossword.errors.length === 0) {
+						let oCrosswordElt = getElementByClass('o-crossword');
+						oCrosswordElt.setAttribute('data-o-crossword-data', specText);
+					}
 				}
 
 				function invoke(){
@@ -456,14 +464,28 @@ down
 		<textarea rows="10" cols="80" onclick="this.focus();this.select()" readonly="readonly" id="spec">
 		</textarea>
 
+		<h2>simple grid</h2>
+
 		<div>
 			<pre id="grid">
 			</pre>
 		</div>
 
+
+		<h2>responsive crossword</h2>
+
+<div style="width: 100%;">
+	<div class="o-crossword" data-o-component="o-crossword" data-o-crossword-data="https://cdn.rawgit.com/ftlabs/o-crossword/3084a5f074d194817d4a46aed21c9ee72ebfa64e/demos/examples/crossword_ft_daily_2016_03_03_15179_ADA_REFORMAT_ANSWERS.json">
+		<ul class="o-crossword-clues"></ul>
+		<table class="o-crossword-table"></table>
+	</div>
+</div>
 		<script type="text/javascript">
 			document.addEventListener('DOMContentLoaded', CrosswordDSL.invoke );
 		</script>
+
+<script src="//origami-build.ft.com/v2/bundles/js?modules=o-crossword%400.3.1%3A%2Fdemos%2Fsrc%2Fdemo.js"></script>
+<script src="//registry.origami.ft.com/embedapi?autoload=resize"></script>
 
 	</body>
 </html>
