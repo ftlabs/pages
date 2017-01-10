@@ -187,18 +187,6 @@
 								knownIds[clue.id] = clue;								
 							}
 
-							// check x and y sequence in order 
-							if ( (x + y * maxCoord) <= (prev.x + prev.y * maxCoord) ) {
-								if (y < prev.y) {
-									clueError("starts above clue " + prev.id);
-								} else if ((y === prev.y) && (x === prev.x)) {
-									clueError("starts at same coords as clue " + prev.id);
-								} else {
-									clueError("starts to the left of clue " + prev.id);									
-								}
-								break;
-							}
-
 							// check answer within bounds
 							let words = clue.answerCSV.split(/[,-]/);
 							let wordsString = words.join('');
@@ -253,6 +241,26 @@
 						for (var i = 1; i <= maxId; i++) {
 							if (! (i in knownIds)) {
 								crossword.errors.push("Error: missing clue with id=" + i);
+							}
+						}
+					}
+
+					// check all the clues across and down are monotonic, 
+					// i.e. each id starts to the right or down from the previous id
+					if (crossword.errors.length == 0) {
+						for (var i = 2; i <= maxId; i++) {
+							let prevClue = knownIds[i-1];
+							let clue 	 = knownIds[i];
+
+							if ( (clue.coordinates[0] + clue.coordinates[1] * maxCoord) <= (prevClue.coordinates[0] + prevClue.coordinates[1] * maxCoord) ) {
+								if (clue.coordinates[1] < prevClue.coordinates[1]) {
+									crossword.errors.push("Error: clue " + clue.id + " starts above clue " + prevClue.id);
+								} else if ((clue.coordinates[1] === prevClue.coordinates[1]) && (clue.coordinates[0] === prevClue.coordinates[0])) {
+									crossword.errors.push("Error: clue " + clue.id + " starts at same coords as clue " + prevClue.id);
+								} else {
+									crossword.errors.push("Error: clue " + clue.id + " starts to the left of clue " + prevClue.id);
+								}
+								break;
 							}
 						}
 					}
