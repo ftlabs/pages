@@ -61,7 +61,7 @@
 		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0,o-teaser@^1.3.1,o-header-services@^1.0.2" />
 	
 	<script>(function(d) { d.className = d.className + ' demo-js'; })(document.documentElement);</script>
-	<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-crossword%400.3.1%3A%2Fdemos%2Fsrc%2Fdemo.scss">
+	<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-crossword%400.3.2%3A%2Fdemos%2Fsrc%2Fdemo.scss">
 
 		<script src="//polyfill.webservices.ft.com/v1/polyfill.min.js"></script>
 
@@ -366,7 +366,7 @@
 
 					for (var id in crossword.knownIds) {
 						let clue = crossword.knownIds[id];
-						spec.gridnums[clue.coordinates[1]][clue.coordinates[0]] = parseInt(id);
+						spec.gridnums[clue.coordinates[1]-1][clue.coordinates[0]-1] = parseInt(id);
 					}
 
 					// flesh out clues
@@ -376,7 +376,7 @@
 							let item = [
 								parseInt(clue.id),
 								clue.body,
-								clue.answerSpec,
+								clue.wordsLengths,
 							];
 							spec.clues[grouping].push(item);
 						});
@@ -406,6 +406,8 @@
 					if (crossword.errors.length === 0) {
 						let oCrosswordElt = getElementByClass('o-crossword');
 						oCrosswordElt.setAttribute('data-o-crossword-data', specText);
+						document.dispatchEvent(new CustomEvent('o.CrosswordDataUpdated'));
+
 					}
 				}
 
@@ -484,7 +486,7 @@ down
 			document.addEventListener('DOMContentLoaded', CrosswordDSL.invoke );
 		</script>
 
-<script src="//origami-build.ft.com/v2/bundles/js?modules=o-crossword%400.3.1%3A%2Fdemos%2Fsrc%2Fdemo.js"></script>
+<script src="//origami-build.ft.com/v2/bundles/js?modules=o-crossword%400.3.2%3A%2Fdemos%2Fsrc%2Fdemo.js"></script>
 <script src="//registry.origami.ft.com/embedapi?autoload=resize"></script>
 
 	</body>
