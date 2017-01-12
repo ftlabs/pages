@@ -60,6 +60,9 @@
 			.responsive-crossword {
 				width: 100%;
 			}
+			.responsive-crossword-with-answers {
+				width: 50%;
+			}
 
    		</style>
 
@@ -149,6 +152,11 @@
 					var knownIds = {};
 					crossword.knownIds = knownIds;
 					var maxId = 0;
+					var answers = {
+						across : [],
+						down   : []
+					};
+					crossword.answers = answers;
 
 					for(let grouping of ['across', 'down']){
 						let prev = groupingPrev[grouping];
@@ -203,6 +211,7 @@
 								clueError("answer too long for crossword");
 								break;
 							}
+							answers[grouping].push(wordsString);
 
 							clue.wordsLengths = words.map(function(w){
 								return w.length;
@@ -330,7 +339,7 @@
 					return gridText;
 				}
 
-				function generateSpecJson(crossword){
+				function generateSpec(crossword){
 					var spec = {
 						    title : crossword.title,
 					       author : crossword.author,
@@ -348,6 +357,7 @@
 								across : [],
 								  down : [],
 						},
+						 answers : crossword.answers,
 						 notepad : "",
 						      id : crossword.id,
 					};
@@ -387,7 +397,7 @@
 						});
 					});
 
-					return JSON.stringify(spec);
+					return spec;
 				}
 
 				function updateSpec() {
@@ -395,11 +405,15 @@
 					var crossword = parse(initialText);
 					crossword = validateCrossword(crossword);
 					console.log("validated crossword=", crossword);
-					var specText;
+					var specText = "";
+					var specTextWithAnswers = "";
 					if (crossword.errors.length > 0) {
 						specText = crossword.errors.join("\n");
 					} else {
-						specText = generateSpecJson(crossword);
+						let spec = generateSpec(crossword);
+						specTextWithAnswers = JSON.stringify(spec);
+						delete spec['answers'];
+						specText = JSON.stringify(spec);
 					}
 					var specElt = getElementById('spec');
 					specElt.value = specText;
@@ -409,19 +423,26 @@
 					gridElt.innerHTML = gridText;
 
 					if (crossword.errors.length === 0) {
-						// make sure we reset the html for the o-crossword component, because it generates its own wrapper elements when it constructs the crossword display
-						let responsiveCrossElt = getElementByClass('responsive-crossword');
-						responsiveCrossElt.innerHTML = `
-							<div class="o-crossword" data-o-component="o-crossword" data-o-crossword-data="">
-								<ul class="o-crossword-clues"></ul>
-								<table class="o-crossword-table"></table>
-							</div>
-						`;
 
-						// then inject the json crossword spec into the data-o-crossword-data attribute
+						// apologies, uses same name for class of outer element, then id of inner element
+						for ( let cl of ['responsive-crossword', 'responsive-crossword-with-answers'] ){
+							// make sure we reset the html for the o-crossword component, because it generates its own wrapper elements when it constructs the crossword display
+	
+							let crosswordSkeletonHTML = `
+								<div class="o-crossword" data-o-component="o-crossword" data-o-crossword-data="" id="${cl}">
+									<ul class="o-crossword-clues"></ul>
+									<table class="o-crossword-table"></table>
+								</div>
+							`;
+							let responsiveCrossElt = getElementByClass(cl);
+							responsiveCrossElt.innerHTML = crosswordSkeletonHTML;
 
-						let oCrosswordElt = getElementByClass('o-crossword');
-						oCrosswordElt.setAttribute('data-o-crossword-data', specText);
+							// then inject the json crossword spec into the data-o-crossword-data attribute
+							let text = (cl === 'responsive-crossword') ? specText : specTextWithAnswers;
+							let oCrosswordElt = getElementById(cl);
+							oCrosswordElt.setAttribute('data-o-crossword-data', text);
+						}
+
 						document.dispatchEvent(new CustomEvent('o.CrosswordDataUpdated'));
 					}
 				}
@@ -492,6 +513,11 @@ down
 		<h2>responsive crossword</h2>
 
 		<div class="responsive-crossword" >
+		</div>
+
+		<h2>responsive crossword with answers</h2>
+
+		<div class="responsive-crossword-with-answers" >
 		</div>
 
 		<script type="text/javascript">
