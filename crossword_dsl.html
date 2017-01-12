@@ -53,6 +53,18 @@
 			    background-color: #fff1e0;
 			}
 
+			.entry-pieces {
+			   display: -webkit-flex;
+			   display: flex;
+			   -webkit-flex-direction: row;
+			   flex-direction: row;
+			   flex-wrap: wrap;
+			}
+
+			.entry-piece {
+				margin-left: 5px;
+			}
+
 			#grid {
 				letter-spacing: 1em;
 			}
@@ -426,7 +438,8 @@
 
 						// apologies, uses same name for class of outer element, then id of inner element
 						for ( let cl of ['responsive-crossword', 'responsive-crossword-with-answers'] ){
-							// make sure we reset the html for the o-crossword component, because it generates its own wrapper elements when it constructs the crossword display
+							// make sure we reset the html for the o-crossword component, 
+							// because it generates its own wrapper elements when it constructs the crossword display
 	
 							let crosswordSkeletonHTML = `
 								<div class="o-crossword" data-o-component="o-crossword" data-o-crossword-data="" id="${cl}">
@@ -470,9 +483,11 @@
 			</div>
 		</header>
 
-		<h2>type in the crossword details</h2>
+		<div class="entry-pieces">
+			<div class="spec-entry entry-piece">
+				<h2>type in the crossword details</h2>
 
-		<textarea rows="20" cols="80" id="dsl">
+				<textarea rows="20" cols="60" id="dsl">
 version standard v1
 title Financial Times, Thu, Mar 2, 2016
 author Fred
@@ -491,24 +506,27 @@ down
 #
 # [coordinates of clue in grid]: [across,down]. [1,1] = top left, [17,17]=bottom right.
 # (WORDS,IN,ANSWER): capitalised, and separated by commas or hyphens.
-		</textarea>
-		<BR>
-		<button type="button" id="update-button">Update</button>
+				</textarea>
+				<BR>
+				<button type="button" id="update-button">Update</button>
+			</div>
 
-		<h2>crossword data structure</h2>
+			<div class="simple-grid entry-piece">
+				<h2>simple grid</h2>
 
-		<div class="crossword-data"></div>
+				<div>
+					<pre id="grid">
+					</pre>
+				</div>
+			</div>
 
-		<textarea rows="10" cols="80" onclick="this.focus();this.select()" readonly="readonly" id="spec">
-		</textarea>
+			<div class="data-structure entry-piece">
+				<h2>crossword data structure</h2>
 
-		<h2>simple grid</h2>
-
-		<div>
-			<pre id="grid">
-			</pre>
+				<textarea rows="10" cols="40" onclick="this.focus();this.select()" readonly="readonly" id="spec">
+				</textarea>
+			</div>
 		</div>
-
 
 		<h2>responsive crossword</h2>
 
