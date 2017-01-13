@@ -53,6 +53,10 @@
 			    background-color: #fff1e0;
 			}
 
+			.alert-condition {
+				background-color: orange;
+			}
+
 			.entry-pieces {
 			   display: -webkit-flex;
 			   display: flex;
@@ -103,7 +107,7 @@
 					};
 					var cluesGrouping;
 					var lines = text.split(/\r|\n/);
-					lines.forEach(function(line){
+					for(let line of lines){
 						let match;
 						// strip out comments
 						if (match = /^([^\#]*)\#.*$/.exec(line) ) {
@@ -126,6 +130,7 @@
 						else if (match = /^\[(\d+),(\d+)\]\s+(\d+)\.\s+(.+)\s+\(([A-Z,-]+)\)$/.exec(line) ) {
 							if (! /(across|down)/.test(cluesGrouping)) {
 								crossword.errors.push("ERROR: clue specified but no 'across' or 'down' grouping specified");
+								break;
 							} else {
 								let clue = {
 									coordinates : [ parseInt(match[1]), parseInt(match[2]) ],
@@ -139,7 +144,7 @@
 						} else {
 							crossword.errors.push("ERROR: couldn't parse line: " + line);
 						}
-					});
+					};
 
 					return crossword;
 				}
@@ -428,6 +433,11 @@
 						specText = JSON.stringify(spec);
 					}
 					var specElt = getElementById('spec');
+					if (crossword.errors.length === 0) {
+						specElt.classList.remove('alert-condition');
+					} else {
+						specElt.classList.add('alert-condition');
+					}
 					specElt.value = specText;
 
 					let gridText = generateGridText( crossword );
@@ -511,6 +521,13 @@ down
 				<button type="button" id="update-button">Update</button>
 			</div>
 
+			<div class="data-structure entry-piece">
+				<h2>crossword data structure</h2>
+
+				<textarea rows="10" cols="40" onclick="this.focus();this.select()" readonly="readonly" id="spec">
+				</textarea>
+			</div>
+
 			<div class="simple-grid entry-piece">
 				<h2>simple grid</h2>
 
@@ -518,13 +535,6 @@ down
 					<pre id="grid">
 					</pre>
 				</div>
-			</div>
-
-			<div class="data-structure entry-piece">
-				<h2>crossword data structure</h2>
-
-				<textarea rows="10" cols="40" onclick="this.focus();this.select()" readonly="readonly" id="spec">
-				</textarea>
 			</div>
 		</div>
 
