@@ -85,14 +85,14 @@
 		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0,o-teaser@^1.3.1,o-header-services@^1.0.2" />
 	
 	<script>(function(d) { d.className = d.className + ' demo-js'; })(document.documentElement);</script>
-	<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-crossword%400.3.2%3A%2Fdemos%2Fsrc%2Fdemo.scss">
+	<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-crossword%400.3.3%3A%2Fdemos%2Fsrc%2Fdemo.scss">
 
 		<script src="//polyfill.webservices.ft.com/v1/polyfill.min.js"></script>
 
 		<script type="text/javascript">
 			var CrosswordDSL = (function() {
 
-				function parse(text){
+				function parseDSL(text){
 					var crossword = {
 						version : "standard v1",
 						 author : "",
@@ -149,7 +149,7 @@
 					return crossword;
 				}
 
-				function validateCrossword( crossword ){
+				function validateAndEmbellishCrossword( crossword ){
 					var maxCoord = parseInt(crossword.dimensions.split('x')[0]);
 					crossword.maxCoord = maxCoord;
 					var grid = new Array( maxCoord * maxCoord ).fill(' ');
@@ -417,32 +417,39 @@
 					return spec;
 				}
 
-				function updateSpec() {
-					var initialText = getElementById('dsl').value;
-					var crossword = parse(initialText);
-					crossword = validateCrossword(crossword);
+				function updateDisplay() {
+					var dslText = getElementById('dsl').value;
+					var crossword = parseDSL(dslText);
+					crossword = validateAndEmbellishCrossword(crossword);
 					console.log("validated crossword=", crossword);
-					var specText = "";
+
+					// generate specTexts with and without answers, or listing the errors
+					var specTextWithoutAnswers = "";
 					var specTextWithAnswers = "";
 					if (crossword.errors.length > 0) {
-						specText = crossword.errors.join("\n");
+						specTextWithoutAnswers = crossword.errors.join("\n");
 					} else {
 						let spec = generateSpec(crossword);
 						specTextWithAnswers = JSON.stringify(spec);
 						delete spec['answers'];
-						specText = JSON.stringify(spec);
+						specTextWithoutAnswers = JSON.stringify(spec);
 					}
-					var specElt = getElementById('spec');
-					if (crossword.errors.length === 0) {
-						specElt.classList.remove('alert-condition');
-					} else {
-						specElt.classList.add('alert-condition');
-					}
-					specElt.value = specText;
 
-					let gridText = generateGridText( crossword );
-					var gridElt = getElementById('grid');
-					gridElt.innerHTML = gridText;
+					{ // update the spec display
+						var specElt = getElementById('spec');
+						if (crossword.errors.length === 0) {
+							specElt.classList.remove('alert-condition');
+						} else {
+							specElt.classList.add('alert-condition');
+						}
+						specElt.value = specTextWithoutAnswers;
+					}
+
+					{ // update the grid display
+						let gridText = generateGridText( crossword );
+						var gridElt = getElementById('grid');
+						gridElt.innerHTML = gridText;
+					}
 
 					if (crossword.errors.length === 0) {
 
@@ -461,7 +468,7 @@
 							responsiveCrossElt.innerHTML = crosswordSkeletonHTML;
 
 							// then inject the json crossword spec into the data-o-crossword-data attribute
-							let text = (cl === 'responsive-crossword') ? specText : specTextWithAnswers;
+							let text = (cl === 'responsive-crossword') ? specTextWithoutAnswers : specTextWithAnswers;
 							let oCrosswordElt = getElementById(cl);
 							oCrosswordElt.setAttribute('data-o-crossword-data', text);
 						}
@@ -472,9 +479,9 @@
 
 				function invoke(){
 					console.log("invoked");
-					updateSpec();
+					updateDisplay();
 					var buttonElt = getElementById('update-button');
-					buttonElt.onclick = updateSpec;
+					buttonElt.onclick = updateDisplay;
 				}
 
 				return {
@@ -552,8 +559,8 @@ down
 			document.addEventListener('DOMContentLoaded', CrosswordDSL.invoke );
 		</script>
 
-<script src="//origami-build.ft.com/v2/bundles/js?modules=o-crossword%400.3.3%3A%2Fdemos%2Fsrc%2Fdemo.js"></script>
-<script src="//registry.origami.ft.com/embedapi?autoload=resize"></script>
+		<script src="//origami-build.ft.com/v2/bundles/js?modules=o-crossword%400.3.3%3A%2Fdemos%2Fsrc%2Fdemo.js"></script>
+		<script src="//registry.origami.ft.com/embedapi?autoload=resize"></script>
 
 	</body>
 </html>
