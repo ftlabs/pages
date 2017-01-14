@@ -91,6 +91,7 @@
 
 		<script type="text/javascript">
 			var CrosswordDSL = (function() {
+				const classForAlert = 'alert-condition';
 
 				function parseDSL(text){
 					var crossword = {
@@ -423,6 +424,8 @@
 					crossword = validateAndEmbellishCrossword(crossword);
 					console.log("validated crossword=", crossword);
 
+					getElementById('update-button').classList.remove(classForAlert);
+
 					// generate specTexts with and without answers, or listing the errors
 					var specTextWithoutAnswers = "";
 					var specTextWithAnswers = "";
@@ -438,9 +441,9 @@
 					{ // update the spec display
 						var specElt = getElementById('spec');
 						if (crossword.errors.length === 0) {
-							specElt.classList.remove('alert-condition');
+							specElt.classList.remove(classForAlert);
 						} else {
-							specElt.classList.add('alert-condition');
+							specElt.classList.add(classForAlert);
 						}
 						specElt.value = specTextWithoutAnswers;
 					}
@@ -480,8 +483,15 @@
 				function invoke(){
 					console.log("invoked");
 					updateDisplay();
-					var buttonElt = getElementById('update-button');
+
+					let buttonElt = getElementById('update-button');
 					buttonElt.onclick = updateDisplay;
+
+					let textAreaElt = getElementById('dsl');
+					textAreaElt.oninput = function(){
+						let buttonElt = getElementById('update-button');
+						buttonElt.classList.add(classForAlert);
+					};
 				}
 
 				return {
