@@ -93,6 +93,11 @@
 			var CrosswordDSL = (function() {
 				const classForAlert = 'alert-condition';
 
+				// Given the json text of a crossword spec, generate the equivalent DSL,
+				// bailing as soon as an error is found.
+				// Only enough error checking is done to ensure the DSL can be constructed, 
+				// since it is assumed the DSL will itself be checked subsequently 
+				// to see if it specifies a valid crossword. 
 				function parseJson(text) {
 					var dslLines = [];
 					var errors   = [];
@@ -102,9 +107,15 @@
 					};
 					var json;
 
+					function addError(e){
+						errors.push( "ERROR: " + e );						
+					}
+
 					function responseWithError(e) {
 						errors.unshift('Assuming this is a JSON doc...');
-						errors.push( e );
+						if (e) {
+							addError( e );
+						}
 						return response;
 					}
 
@@ -124,7 +135,7 @@
 							}
 							dslLines.push( name + ' ' + json[f] );
 						} else {
-							return responseWithError( `ERROR: mising field: ${f}` );
+							addError( `missing field: ${f}` );
 						}
 					});
 
@@ -132,17 +143,101 @@
 					// except 'answers' (for now)
 					['size','grid','gridnums','clues'].forEach( f => {
 						if (! (f in json) ) {
-							return responseWithError( `ERROR: mising field: ${f}` );
+							addError( `missing field: ${f}` );
 						}
 					});
+
+					if (errors.length > 0) {
+						return responseWithError();
+					}
 
 					if (json.size.rows && json.size.cols) {
 						dslLines.push(`size ${json.size.rows}x${json.size.cols}`);
 					} else {
-						return responseWithError('ERROR: could not parse size rows and cols');
+						return responseWithError('could not parse size rows and cols');
+					}
+
+					if (json.gridnums.length !== json.size.rows){
+						return responseWithError('gridnums does not match size.rows');
+					}
+
+					let idCoordinates = {};
+
+					for( let [r, row] of json.gridnums.entries() ) {
+						if (row.length !== json.size.cols){
+							return responseWithError(`gridnums row ${r+1} does not match size.cols`);
+						}
+						for( let [c, cell] of row.entries() ) {
+							if(cell !== 0){
+								if (cell in idCoordinates) {
+									return responseWithError(`duplicate id in gridnums: [${r+1},${c+1}] ${cell}`);
+								}
+								idCoordinates[cell] = [c,r];
+							}
+						}
+					}
+
+					let answers;
+
+					if (json.answers) {
+						for( let grouping of ['across', 'down'] ) {
+							if(! json.answers[grouping]){
+								return responseWithError(`could not find answers.${grouping}`);
+							}
+						}
+
+						answers = json.answers;
+					}
+
+					for( let grouping of ['across', 'down'] ) {
+						if(! json.clues[grouping]){
+							return responseWithError(`could not find clues.${grouping}`);
+						}
+						if(answers && (json.clues[grouping].length !== answers[grouping].length)) {
+							return responseWithError(`mismatch between answers and clues in grouping ${grouping}`);
+						}
+
+						dslLines.push(grouping);
+
+						for( let [i, c] of json.clues[grouping].entries()) {
+							let id = c[0];
+							if (! (id in idCoordinates)) {
+								return responseWithError(`no gridnums value for clue ${id} ${grouping}`);
+							}
+
+							// there was a bug in the spec which seems to have resulted in some 
+							// instances containing a mix of integers and strings here,
+							// so stripping out non integers
+							let wordSizes = c[2].filter(Number.isInteger);
+
+							// if we only have the answer sizes, mock up a string consisting entirely of Xs
+							let answerCombined;
+							if (answers) {
+								answerCombined = answers[grouping][i];
+							} else {
+								answerCombined = wordSizes.map(s => 'X'.repeat(s) ).join('');
+							}
+
+							// then split the text into the correctly-sized words.
+							let letters = answerCombined.split('');
+							let words = wordSizes.map(s => letters.splice(0, s).join(''));
+							let wordsCSV = words.join(',');
+
+							let body = c[1];
+
+							let clue = [
+								`[${idCoordinates[id][0]+1},${idCoordinates[id][1]+1}]`,
+								`${id}.`,
+								body,
+								`(${wordsCSV})`
+							].join(' ');
+
+							dslLines.push(clue);
+						}
 					}
 
 					if( errors.length > 0 ) {
+						addError("having attempted to catch all the errors, should not reach this point with any remaining errors");
 						return responseWithError();
 					}
 
@@ -151,6 +246,8 @@
 					return response;
 				}
 
+				// given the DSL, ensure we have all the relevant pieces,
+				// and assume there will be subsequent checking to ensure they are valid
 				function parseDSL(text){
 					var crossword = {
 						version : "standard v1",
@@ -208,6 +305,8 @@
 					return crossword;
 				}
 
+				// having found the pieces, check that they encode a valid crossword,
+				// creating useful data structures along the way
 				function validateAndEmbellishCrossword( crossword ){
 					var maxCoord = parseInt(crossword.dimensions.split('x')[0]);
 					crossword.maxCoord = maxCoord;
@@ -304,8 +403,8 @@
 							clue.answerSpec = answerSpecPieces.join('');
 
 							// check answer + offset within bounds
-							if(    (grouping==='across' && (wordsString.length + x > maxCoord))
-								|| (grouping==='down'   && (wordsString.length + y > maxCoord)) ){
+							if(    (grouping==='across' && (wordsString.length + x - 1 > maxCoord))
+								|| (grouping==='down'   && (wordsString.length + y - 1 > maxCoord)) ){
 								clueError("answer too long(" + grouping + ") for crossword from that coord");
 								break;
 							}
@@ -371,6 +470,7 @@
 					return document.getElementById(id);
 				}
 
+				// a simple text display of the crossword answers in place
 				function generateGridText(crossword) {
 					var gridText = '';
 
@@ -415,6 +515,9 @@
 					return gridText;
 				}
 
+				// having previously checked that the data encodes a valid crossword,
+				// actually construct the spec as a data structure,
+				// assuming a later step will convert it to JSON text 
 				function generateSpec(crossword){
 					var spec = {
 						    title : crossword.title,
@@ -476,9 +579,14 @@
 					return spec;
 				}
 
+				// take the text in the textarea, parse it, generate the various views, write them
 				function updateDisplay() {
 					var crossword;
 					var dslText = getElementById('dsl').value;
+
+					// a bit ugly, but if the text is probably JSON (i.e. starts with a '{'),
+					// assume it is the JSON text of the spec, and parse it accordingly,
+					// otherwise assume it is DSL
 
 					if (dslText.startsWith('{')) {
 						let parsedJson = parseJson( dslText );
@@ -498,7 +606,7 @@
 						crossword = validateAndEmbellishCrossword(crossword);
 						console.log("validated crossword=", crossword);
 					} else {
-						console.log("did not crossword=", crossword);
+						console.log("could not validate crossword=", crossword);
 					}
 
 					getElementById('update-button').classList.remove(classForAlert);
@@ -515,7 +623,9 @@
 						specTextWithoutAnswers = JSON.stringify(spec);
 					}
 
-					{ // update the spec display
+					{ // update the spec display, with either the generated spec JSON, 
+					  // or the generated DSL, 
+					  // or the errors
 						var specElt = getElementById('spec');
 						if (crossword.errors.length === 0) {
 							specElt.classList.remove(classForAlert);
@@ -536,7 +646,6 @@
 						} else {
 							specElt.value = specTextWithoutAnswers;
 						}
-	
 					}
 
 					{ // update the grid display
@@ -571,6 +680,7 @@
 					}
 				}
 
+				// this is called from the main page when DOMContentLoaded
 				function invoke(){
 					console.log("invoked");
 					updateDisplay();
