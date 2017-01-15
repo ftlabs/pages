@@ -96,6 +96,10 @@
 				function parseJson(text) {
 					var dslLines = [];
 					var errors   = [];
+					var response = {
+						errors : errors,
+						dslText : "",
+					};
 					var json;
 
 					try {
@@ -103,38 +107,37 @@
 					}
 					catch(err) {
 						errors.push( err.message );
+						return response;
 					}
 
-					if (errors.length == 0) {
-						let fields = [
-							'author',
-							'editor',
-							'publisher',
-							'copyright',
-							'date',
-						];
-
-						fields.forEach( f => {
-							if (f in json) {
-								let name = f;
-								if (f === 'date') {
-									name = 'pubdate';
-								}
-								dslLines.push( name + ' ' + json[f] );
-							} else {
-								errors.push( 'ERROR: mising field: ', f);
+					// check the simple, single-value fields
+					['author','editor','publisher','copyright','date'].forEach( f => {
+						if (f in json) {
+							let name = f;
+							if (f === 'date') {
+								name = 'pubdate';
 							}
-						});
-					} 
+							dslLines.push( name + ' ' + json[f] );
+						} else {
+							errors.push( 'ERROR: mising field: ', f);
+							return response;
+						}
+					});
+
+					// check for the complex fields
+					// except 'answers' (for now)
+					['size','grid','gridnums','clues'].forEach( f => {
+						if (! (f in json) ) {
+							errors.push( 'ERROR: mising field: ', f);
+							return response;
+						}
+					});
 
 					if( errors.length > 0 ) {
 						errors.unshift('Assuming this is a JSON doc...');
 					}
 
-					return {
-						errors : errors,
-						dslText : dslLines.join("\n")
-					}
+					return response;
 				}
 
 				function parseDSL(text){
