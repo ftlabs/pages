@@ -93,6 +93,50 @@
 			var CrosswordDSL = (function() {
 				const classForAlert = 'alert-condition';
 
+				function parseJson(text) {
+					var dslLines = [];
+					var errors   = [];
+					var json;
+
+					try {
+						json = JSON.parse(text);
+					}
+					catch(err) {
+						errors.push( err.message );
+					}
+
+					if (errors.length == 0) {
+						let fields = [
+							'author',
+							'editor',
+							'publisher',
+							'copyright',
+							'date',
+						];
+
+						fields.forEach( f => {
+							if (f in json) {
+								let name = f;
+								if (f === 'date') {
+									name = 'pubdate';
+								}
+								dslLines.push( name + ' ' + json[f] );
+							} else {
+								errors.push( 'ERROR: mising field: ', f);
+							}
+						});
+					} 
+
+					if( errors.length > 0 ) {
+						errors.unshift('Assuming this is a JSON doc...');
+					}
+
+					return {
+						errors : errors,
+						dslText : dslLines.join("\n")
+					}
+				}
+
 				function parseDSL(text){
 					var crossword = {
 						version : "standard v1",
@@ -419,10 +463,29 @@
 				}
 
 				function updateDisplay() {
+					var crossword;
 					var dslText = getElementById('dsl').value;
-					var crossword = parseDSL(dslText);
-					crossword = validateAndEmbellishCrossword(crossword);
-					console.log("validated crossword=", crossword);
+
+					if (dslText.startsWith('{')) {
+						let parsedJson = parseJson( dslText );
+						if (parsedJson['errors'].length > 0) {
+							crossword = {
+								errors : parsedJson['errors']
+							};
+						} else {
+							crossword = parseDSL(parsedJson.dslText);
+							crossword['generatedDSL'] = parsedJson.dslText;
+						}
+					} else {
+						crossword = parseDSL(dslText);
+					}
+
+					if (crossword.errors.length == 0) {
+						crossword = validateAndEmbellishCrossword(crossword);
+						console.log("validated crossword=", crossword);
+					} else {
+						console.log("did not crossword=", crossword);
+					}
 
 					getElementById('update-button').classList.remove(classForAlert);
 
@@ -445,7 +508,12 @@
 						} else {
 							specElt.classList.add(classForAlert);
 						}
-						specElt.value = specTextWithoutAnswers;
+						if (crossword['generatedDSL']) {
+							specElt.value = crossword['generatedDSL'];
+						} else {
+							specElt.value = specTextWithoutAnswers;
+						}
+	
 					}
 
 					{ // update the grid display
