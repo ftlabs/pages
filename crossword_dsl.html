@@ -102,12 +102,17 @@
 					};
 					var json;
 
+					function responseWithError(e) {
+						errors.unshift('Assuming this is a JSON doc...');
+						errors.push( e );
+						return response;
+					}
+
 					try {
 						json = JSON.parse(text);
 					}
 					catch(err) {
-						errors.push( err.message );
-						return response;
+						return responseWithError( err.message );
 					}
 
 					// check the simple, single-value fields
@@ -119,8 +124,7 @@
 							}
 							dslLines.push( name + ' ' + json[f] );
 						} else {
-							errors.push( 'ERROR: mising field: ', f);
-							return response;
+							return responseWithError( `ERROR: mising field: ${f}` );
 						}
 					});
 
@@ -128,14 +132,21 @@
 					// except 'answers' (for now)
 					['size','grid','gridnums','clues'].forEach( f => {
 						if (! (f in json) ) {
-							errors.push( 'ERROR: mising field: ', f);
-							return response;
+							return responseWithError( `ERROR: mising field: ${f}` );
 						}
 					});
 
-					if( errors.length > 0 ) {
-						errors.unshift('Assuming this is a JSON doc...');
+					if (json.size.rows && json.size.cols) {
+						dslLines.push(`size ${json.size.rows}x${json.size.cols}`);
+					} else {
+						return responseWithError('ERROR: could not parse size rows and cols');
 					}
+
+					if( errors.length > 0 ) {
+						return responseWithError();
+					}
+
+					response['dslText'] = dslLines.join("\n");
 
 					return response;
 				}
@@ -512,7 +523,16 @@
 							specElt.classList.add(classForAlert);
 						}
 						if (crossword['generatedDSL']) {
-							specElt.value = crossword['generatedDSL'];
+							let errorsText = "";
+							if (crossword.errors.length > 0) {
+								errorsText = [
+									"ERRORS found in generated DSL...", 
+									crossword.errors.join("\n"),
+									"",
+									"Generated DSL:",
+									""].join("\n");
+							}
+							specElt.value = errorsText + crossword['generatedDSL'];
 						} else {
 							specElt.value = specTextWithoutAnswers;
 						}
