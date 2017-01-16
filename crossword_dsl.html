@@ -613,7 +613,7 @@
 
 					// generate specTexts with and without answers, or listing the errors
 					var specTextWithoutAnswers = "";
-					var specTextWithAnswers = "";
+					var specTextWithAnswers    = "";
 					if (crossword.errors.length > 0) {
 						specTextWithoutAnswers = crossword.errors.join("\n");
 					} else {
@@ -626,11 +626,15 @@
 					{ // update the spec display, with either the generated spec JSON, 
 					  // or the generated DSL, 
 					  // or the errors
-						var specElt = getElementById('spec');
+						var specElt        = getElementById('spec');
+						var specAnswersElt = getElementById('spec-answers');
+
 						if (crossword.errors.length === 0) {
 							specElt.classList.remove(classForAlert);
+							specAnswersElt.classList.remove(classForAlert);
 						} else {
 							specElt.classList.add(classForAlert);
+							specAnswersElt.classList.add(classForAlert);
 						}
 						if (crossword['generatedDSL']) {
 							let errorsText = "";
@@ -642,9 +646,11 @@
 									"Generated DSL:",
 									""].join("\n");
 							}
-							specElt.value = errorsText + crossword['generatedDSL'];
+							specElt.value = "";
+							specAnswersElt.value = errorsText + crossword['generatedDSL'];
 						} else {
 							specElt.value = specTextWithoutAnswers;
+							specAnswersElt.value = specTextWithAnswers;
 						}
 					}
 
@@ -654,23 +660,24 @@
 						gridElt.innerHTML = gridText;
 					}
 
-					if (crossword.errors.length === 0) {
+					// Apologies, uses same name for class of outer element, then id of inner element.
+					// Make sure we reset the html for the o-crossword component, 
+					// because it generates its own wrapper elements when it constructs the crossword display
+					for ( let cl of ['responsive-crossword', 'responsive-crossword-with-answers'] ){
+						let crosswordSkeletonHTML = `
+							<div class="o-crossword" data-o-component="o-crossword" data-o-crossword-data="" id="${cl}">
+								<ul class="o-crossword-clues"></ul>
+								<table class="o-crossword-table"></table>
+							</div>
+						`;
+						let responsiveCrossElt = getElementByClass(cl);
+						responsiveCrossElt.innerHTML = crosswordSkeletonHTML;
+					}
 
+					// If valid, inject the json crossword spec into the data-o-crossword-data attribute
+					if (crossword.errors.length === 0) {
 						// apologies, uses same name for class of outer element, then id of inner element
 						for ( let cl of ['responsive-crossword', 'responsive-crossword-with-answers'] ){
-							// make sure we reset the html for the o-crossword component, 
-							// because it generates its own wrapper elements when it constructs the crossword display
-	
-							let crosswordSkeletonHTML = `
-								<div class="o-crossword" data-o-component="o-crossword" data-o-crossword-data="" id="${cl}">
-									<ul class="o-crossword-clues"></ul>
-									<table class="o-crossword-table"></table>
-								</div>
-							`;
-							let responsiveCrossElt = getElementByClass(cl);
-							responsiveCrossElt.innerHTML = crosswordSkeletonHTML;
-
-							// then inject the json crossword spec into the data-o-crossword-data attribute
 							let text = (cl === 'responsive-crossword') ? specTextWithoutAnswers : specTextWithAnswers;
 							let oCrosswordElt = getElementById(cl);
 							oCrosswordElt.setAttribute('data-o-crossword-data', text);
@@ -714,6 +721,7 @@
 		<div class="entry-pieces">
 			<div class="spec-entry entry-piece">
 				<h2>type in the crossword details</h2>
+				<p>... either the text spec or the json spec.</p>
 
 				<textarea rows="20" cols="60" id="dsl">
 version standard v1
@@ -736,15 +744,23 @@ down
 # (WORDS,IN,ANSWER): capitalised, and separated by commas or hyphens.
 				</textarea>
 				<BR>
-				<button type="button" id="update-button">Update</button>
+				<button type="button" id="update-button">Update</button> &lt;-- to parse the spec and render the crosswords
 			</div>
 
 			<div class="data-structure entry-piece">
 				<h2>crossword data structure</h2>
 
-				<textarea rows="10" cols="40" onclick="this.focus();this.select()" readonly="readonly" id="spec">
+				<p>without answers</p>
+
+				<textarea rows="5" cols="40" onclick="this.focus();this.select()" readonly="readonly" id="spec">
 				</textarea>
 
+				<p>with answers</p>
+
+				<textarea rows="5" cols="40" onclick="this.focus();this.select()" readonly="readonly" id="spec-answers">
+				</textarea>
+
+				<p>Code links</p>
 				<ul>
 					<li>o-crossword</li>
 					<ul>
