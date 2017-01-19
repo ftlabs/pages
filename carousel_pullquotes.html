@@ -179,6 +179,12 @@
 					].join('');
 				}
 
+				function stripHtml( html ) {
+					var div = document.createElement("div");
+					div.innerHTML = html;
+					return div.innerText;
+				}
+
 				var getAndDisplayJson = function() {
 					var pause = urlParam('pause');
 					var secs  = (pause == null)? defaultPause : pause * 1;					
@@ -198,11 +204,11 @@
 							let writeItemFn = function(){
 							    var pq = data[index];
 							    setClassElement(".pq-image", 	   "src", 		  mungeImgUrl(pq.ImageUrl)           );
-							    setClassElement(".pq-title", 	   "textContent", pq.Title                           );
+							    setClassElement(".pq-title", 	   "textContent", stripHtml(pq.Title)                );
 							    setClassElement(".pq-article-url", "href", 		  pq.Url                             );
 							    setClassElement(".pq-date", 	   "textContent", moment(pq.PubDateString).fromNow() );
 							    setClassElement(".pq-body",        "innerHTML",   pq.PullQuoteAssets[0].Body         );
-							    setClassElement(".pq-attribution", "textContent", pq.PullQuoteAssets[0].Attribution  );
+							    setClassElement(".pq-attribution", "textContent", stripHtml(pq.PullQuoteAssets[0].Attribution));
 							    var currentOrOtherFn = function(_, i) {
 					    			return (i==index)? progressCurrentIcon : progressOtherIcon;
 					    		};
