@@ -188,7 +188,7 @@ var CrosswordDSL = (function() {
       else if (match = /^publisher\s+(.+)$/i             .exec(line) ) { crossword.publisher  = match[1]; }
       else if (match = /^id\s+(.+)$/i                    .exec(line) ) { crossword.id         = match[1]; }
       else if (match = /^pubdate\s+(\d{4}\/\d\d\/\d\d)$/i.exec(line) ) { crossword.pubdate    = match[1]; }
-      else if (match = /^size\s+(15x15|17x17)$/i         .exec(line) ) { crossword.dimensions = match[1]; }
+      else if (match = /^(?:size|dimensions)\s+(15x15|17x17)$/i.exec(line) ) { crossword.dimensions = match[1]; }
       else if (match = /^(across|down)$/i                .exec(line) ) { cluesGrouping        = match[1]; }
       else if (match = /^\[(\d+),(\d+)\]\s+(\d+)\.\s+(.+)\s+\(([A-Z,-]+)\)$/.exec(line) ) {
         if (! /(across|down)/.test(cluesGrouping)) {
@@ -486,6 +486,43 @@ var CrosswordDSL = (function() {
     return spec;
   }
 
+  // given a crossword obj, generate the DSL for it
+  function generateDSL( crossword ){
+    var lines = [];
+    var nonClueFields = [
+      'version', 'title', 'author', 'editor', 'copyright', 'publisher', 'id', 'pubdate',
+    ];
+    nonClueFields.forEach(field => {
+      lines.push(`${field} ${crossword[field]}`);
+    });
+
+    lines.push(`size ${crossword.dimensions}`);
+
+    ['across', 'down'].forEach( grouping => {
+      lines.push(grouping);
+      crossword[grouping].forEach( clue => {
+        var pieces = [
+          `[${clue.coordinates.join(',')}]`,
+          `${clue.id}.`,
+          clue.body,
+          `(${clue.answerCSV})`
+        ];
+        lines.push(pieces.join(' '));
+      });
+    });
+
+    var footerComments = [
+      '',
+      '[coordinates of clue in grid]: [across,down]. [1,1] = top left, [17,17]=bottom right.',
+      '(WORDS,IN,ANSWER): capitalised, and separated by commas or hyphens.'
+    ];
+    lines = lines.concat( footerComments.map(c => "return `# ${c}`") );
+
+    var dsl = lines.join("\n");
+
+    return dsl;
+  }
+
   // given some text, decide what format it is and parse it accordingly,
   // generating the grid text and output format if there are no errors,
   // returning the crossword object with all the bits (or the errors).
@@ -535,6 +572,12 @@ var CrosswordDSL = (function() {
     crossword.specTextWithoutAnswers = specTextWithoutAnswers;
 
     crossword.gridText = generateGridText( crossword );
+
+    if (crossword.errors.length == 0) {
+      crossword.DSLGeneratedFromDSL = generateDSL( crossword );
+
+      console.log('crossword.DSLGeneratedFromDSL:', crossword.DSLGeneratedFromDSL);
+    }
 
     return crossword;
   }
