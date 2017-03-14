@@ -1,12 +1,11 @@
 var CrosswordDSL = (function() {
-  const classForAlert = 'alert-condition';
 
   // Given the json text of a crossword spec, generate the equivalent DSL,
   // bailing as soon as an error is found.
   // Only enough error checking is done to ensure the DSL can be constructed,
   // since it is assumed the DSL will itself be checked subsequently
   // to see if it specifies a valid crossword.
-  function parseJson(text) {
+  function parseJsonIntoDSL(text) {
     var dslLines = [];
     var errors   = [];
     var response = {
@@ -498,7 +497,7 @@ var CrosswordDSL = (function() {
     // otherwise assume it is DSL
 
     if (text.startsWith('{')) {
-      let parsedJson = parseJson( text );
+      let parsedJson = parseJsonIntoDSL( text );
       if (parsedJson['errors'].length > 0) {
         crossword = {
           errors : parsedJson['errors']
