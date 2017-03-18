@@ -1,5 +1,107 @@
 var CrosswordDSL = (function() {
 
+  // Given the XML from CCW, generate the equivalent DSL
+  // bailing as soon as an error is found.
+  // Only enough error checking is done to ensure the DSL can be constructed,
+  // since it is assumed the DSL will itself be checked subsequently
+  // to see if it specifies a valid crossword.
+
+function parseCcwXmlIntoDSL( xmlText ) {
+  var dslLines = [];
+  var errors   = [];
+  var response = {
+    errors : errors,
+    dslText : "",
+  };
+
+  // helper fns
+  function addError(e){
+    errors.push( "ERROR: " + e );
+  }
+
+  function responseWithError(e) {
+    errors.unshift('Assuming this is a CCW XML doc...');
+    if (e) {
+      addError( e );
+    }
+    return response;
+  }
+
+  // do the parsing
+  // strip newlines wrapped in spaces
+
+  xmlText = xmlText.replace(/\s*\n\s*/g, '');
+
+  let matchMeta = xmlText.match(/<metadata[^>]*>(.+)<\/metadata>/);
+  // console.log('xmlText:', xmlText);
+  // console.log("matchMeta:", JSON.stringify(matchMeta));
+
+  if ( matchMeta == null ) {
+    addError('could not find <metadata>');
+  } else {
+    let matchItem;
+    matchItem = matchMeta[1].match(/<title>(.+)<\/title>/);
+    if (matchItem) {
+      dslLines.push(`title ${matchItem[1]}`);
+    }
+    matchItem = matchMeta[1].match(/<title>(.+)<\/title>/);
+    if (matchItem) {
+      dslLines.push(`creator ${matchItem[1]}`);
+    }
+    matchItem = matchMeta[1].match(/<copyright>(.+)<\/copyright>/);
+    if (matchItem) {
+      dslLines.push(`copyright ${matchItem[1]}`);
+    }
+  }
+
+  let matchCrossword = xmlText.match(/<crossword[^>]*>(.+)<\/crossword>/);
+  if ( matchCrossword == null ) {
+    addError('could not find <crossword>');
+  } else {
+    let answerCoords = {};
+    let matchGrid = matchCrossword[0].match(/<grid width="(\d+)" height="(\d+)">(.+)<\/grid>/);
+    if ( matchGrid == null ) {
+      addError('could not find <grid>');
+    } else {
+      dslLines.push(`size ${matchGrid[1]}x${matchGrid[2]}`);
+      let matchCells = xmlText.match(/<cell[^>]+\/>/g);
+      if (matchCells == null) {
+        addError('could not find <cell>');
+      } else {
+        matchCells.forEach(cell => {
+          let matchCellAttribs = cell.match(/x="(\d+)".*y="(\d+)".*number="(\d+)"/);
+          if (matchCellAttribs) {
+            answerCoords[parseInt(matchCellAttribs[3])] = {
+              x: parseInt(matchCellAttribs[1]),
+              y: parseInt(matchCellAttribs[2])
+            };
+          }
+        });
+        dslLines.push(`answerCoords: ${JSON.stringify(answerCoords)}`);
+      }
+    }
+
+    // let matchCluesGroupings = matchCrossword[0].match(/<clues[^>]+><title><b>(Across|Down)<\/b><\/title>(.+)<\/clues>/g);
+    let matchCluesGroupings = matchCrossword[0].match(/<clues[^>]+>(.+)<\/clues>/g);
+    if (matchCluesGroupings == null) {
+      addError('could not find clues groupings');
+    } else {
+      [matchCluesGroupings[1], matchCluesGroupings[2]]
+    }
+  }
+
+  // decide on response
+  if( errors.length > 0 ) {
+    addError("having attempted to catch all the errors, should not reach this point with any remaining errors");
+    return responseWithError();
+  }
+
+  response['dslText'] = dslLines.join("\n");
+
+  return response;
+
+}
+
   // Given the json text of a crossword spec, generate the equivalent DSL,
   // bailing as soon as an error is found.
   // Only enough error checking is done to ensure the DSL can be constructed,
@@ -528,6 +630,8 @@ var CrosswordDSL = (function() {
   // returning the crossword object with all the bits (or the errors).
   function parseWhateverItIs(text) {
     var crossword;
+
+    console.log('parseCcwXmlIntoDSL: ', JSON.stringify( parseCcwXmlIntoDSL(text) ) );
 
     // a bit ugly, but if the text is probably JSON (i.e. starts with a '{'),
     // assume it is the JSON text of the spec, and parse it accordingly,
