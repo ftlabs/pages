@@ -191,7 +191,7 @@ var CrosswordDSL = (function() {
       else if (match = /^pubdate:?\s+(\d{4}\/\d\d\/\d\d)$/i.exec(line) ) { crossword.pubdate    = match[1]; }
       else if (match = /^(?:size|dimensions):?\s+(15x15|17x17)$/i.exec(line) ) { crossword.dimensions = match[1]; }
       else if (match = /^(across|down):?$/i                .exec(line) ) { cluesGrouping        = match[1]; }
-      else if (match = /^(?:\s*-\s)\[(\d+),(\d+)\]\s+(\d+)\.\s+(.+)\s+\(([A-Z,-]+)\)$/.exec(line) ) {
+      else if (match = /^(?:\s*-\s)?\[(\d+),(\d+)\]\s+(\d+)\.\s+(.+)\s+\(([A-Z,-]+)\)$/.exec(line) ) {
         if (! /(across|down)/.test(cluesGrouping)) {
           crossword.errors.push("ERROR: clue specified but no 'across' or 'down' grouping specified");
           break;
@@ -494,15 +494,16 @@ var CrosswordDSL = (function() {
       'version', 'title', 'author', 'editor', 'copyright', 'publisher', 'id', 'pubdate',
     ];
     nonClueFields.forEach(field => {
-      lines.push(`${field} ${crossword[field]}`);
+      lines.push(`${field}: ${crossword[field]}`);
     });
 
-    lines.push(`size ${crossword.dimensions}`);
+    lines.push(`size: ${crossword.dimensions}`);
 
     ['across', 'down'].forEach( grouping => {
-      lines.push(grouping);
+      lines.push(`${grouping}:`);
       crossword[grouping].forEach( clue => {
         var pieces = [
+          '-',
           `[${clue.coordinates.join(',')}]`,
           `${clue.id}.`,
           clue.body,
@@ -517,7 +518,11 @@ var CrosswordDSL = (function() {
       '[coordinates of clue in grid]: [across,down]. [1,1] = top left, [17,17]=bottom right.',
       '(WORDS,IN,ANSWER): capitalised, and separated by commas or hyphens.'
     ];
-    lines = lines.concat( footerComments.map(c => "return `# ${c}`") );
+    lines = lines.concat( footerComments.map(c => { return `# ${c}`; } ) );
+
+    let frontMatterLine = '---';
+    lines.unshift( frontMatterLine );
+    lines.push   ( frontMatterLine );
 
     var dsl = lines.join("\n");
 
