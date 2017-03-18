@@ -587,7 +587,13 @@ var CrosswordDSL = (function() {
     return crossword;
   }
 
+  function parseWhateverItIsIntoSpecText(text) {
+    var crossword = parseWhateverItIs(text);
+    return crossword.specTextWithAnswers;
+  }
+
   return {
-    parseWhateverItIs
+    parseWhateverItIs,
+    parseWhateverItIsIntoSpecText
   }
 })();
