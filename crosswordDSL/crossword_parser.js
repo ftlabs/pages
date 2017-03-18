@@ -182,12 +182,11 @@ var CrosswordDSL = (function() {
       if     ( line === ""   ) { /* ignore blank lines */        }
       else if( line === "---") { /* ignore front matter lines */ }
       else if (match = /^version:?\s+(.+)$/i               .exec(line) ) { crossword.version    = match[1]; }
-      else if (match = /^title:?\s+(.+)$/i                 .exec(line) ) { crossword.title      = match[1]; }
+      else if (match = /^name:?\s+(.+)$/i                 .exec(line) ) { crossword.name      = match[1]; }
       else if (match = /^author:?\s+(.+)$/i                .exec(line) ) { crossword.author     = match[1]; }
       else if (match = /^editor:?\s+(.+)$/i                .exec(line) ) { crossword.editor     = match[1]; }
       else if (match = /^copyright:?\s+(.+)$/i             .exec(line) ) { crossword.copyright  = match[1]; }
       else if (match = /^publisher:?\s+(.+)$/i             .exec(line) ) { crossword.publisher  = match[1]; }
-      else if (match = /^id:?\s+(.+)$/i                    .exec(line) ) { crossword.id         = match[1]; }
       else if (match = /^pubdate:?\s+(\d{4}\/\d\d\/\d\d)$/i.exec(line) ) { crossword.pubdate    = match[1]; }
       else if (match = /^(?:size|dimensions):?\s+(15x15|17x17)$/i.exec(line) ) { crossword.dimensions = match[1]; }
       else if (match = /^(across|down):?$/i                .exec(line) ) { cluesGrouping        = match[1]; }
@@ -428,7 +427,7 @@ var CrosswordDSL = (function() {
   // assuming a later step will convert it to JSON text
   function generateSpec(crossword){
     var spec = {
-          title : crossword.title,
+          name : crossword.name,
            author : crossword.author,
          editor : crossword.editor,
       copyright : crossword.copyright,
@@ -446,7 +445,7 @@ var CrosswordDSL = (function() {
       },
        answers : crossword.answers,
        notepad : "",
-            id : crossword.id,
+            id : crossword.name,
     };
 
     // flesh out spec grid
@@ -491,7 +490,7 @@ var CrosswordDSL = (function() {
   function generateDSL( crossword ){
     var lines = [];
     var nonClueFields = [
-      'version', 'title', 'author', 'editor', 'copyright', 'publisher', 'id', 'pubdate',
+      'version', 'name', 'author', 'editor', 'copyright', 'publisher', 'pubdate',
     ];
     nonClueFields.forEach(field => {
       lines.push(`${field}: ${crossword[field]}`);
