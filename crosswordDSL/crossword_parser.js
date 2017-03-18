@@ -167,6 +167,7 @@ var CrosswordDSL = (function() {
        across : [],
          down : [],
        errors : [],
+       originalDSL : text,
     };
     var cluesGrouping;
     var lines = text.split(/\r|\n/);
@@ -190,7 +191,7 @@ var CrosswordDSL = (function() {
       else if (match = /^pubdate:?\s+(\d{4}\/\d\d\/\d\d)$/i.exec(line) ) { crossword.pubdate    = match[1]; }
       else if (match = /^(?:size|dimensions):?\s+(15x15|17x17)$/i.exec(line) ) { crossword.dimensions = match[1]; }
       else if (match = /^(across|down):?$/i                .exec(line) ) { cluesGrouping        = match[1]; }
-      else if (match = /^(?:\s*-\s)?\[(\d+),(\d+)\]\s+(\d+)\.\s+(.+)\s+\(([A-Z,-]+)\)$/.exec(line) ) {
+      else if (match = /^(?:\s*-\s)?\[(\d+),(\d+)\]\s+(\d+)\.\s+(.+)\s+\(([A-Z,-]+|[0-9,-]+)\)$/.exec(line) ) {
         if (! /(across|down)/.test(cluesGrouping)) {
           crossword.errors.push("ERROR: clue specified but no 'across' or 'down' grouping specified");
           break;
@@ -199,7 +200,7 @@ var CrosswordDSL = (function() {
             coordinates : [ parseInt(match[1]), parseInt(match[2]) ],
                      id : parseInt(match[3]),
                    body : match[4],
-              answerCSV : match[5],
+              answerCSV : match[5], // could be either "A,LIST-OF,WORDS" or "1,4-2,5"
                original : line,
           };
           crossword[cluesGrouping].push(clue);
@@ -234,11 +235,11 @@ var CrosswordDSL = (function() {
     var knownIds = {};
     crossword.knownIds = knownIds;
     var maxId = 0;
-    var answers = {
+
+    crossword.answers = {
       across : [],
       down   : []
     };
-    crossword.answers = answers;
 
     for(let grouping of ['across', 'down']){
       let prev = groupingPrev[grouping];
@@ -285,46 +286,78 @@ var CrosswordDSL = (function() {
           knownIds[clue.id] = clue;
         }
 
-        // check answer within bounds
-        let words = clue.answerCSV.split(/[,-]/);
-        let wordsString = words.join('');
-        clue.wordsString = wordsString;
-        if (wordsString.length > maxCoord) {
-          clueError("answer too long for crossword");
-          break;
-        }
-        answers[grouping].push(wordsString);
+        {
+          // check answer within bounds
+          // and unpack the answerCSV
 
-        clue.wordsLengths = words.map(function(w){
-          return w.length;
-        });
-
-        let answerPieces = clue.answerCSV.split(/([A-Z]+|[,-])/);
-        let answerSpecPieces = answerPieces.map(function(p){
-          if (/[A-Z]+/.exec(p)) {
-            return p.length;
+          // convert "ANSWER,PARTS-INTO,NUMBERS" into number csv e.g. "6,5-4,6" (etc)
+          if ( /^[A-Z,\-]+$/.test(clue.answerCSV) ) {
+            clue.numericCSV = clue.answerCSV.replace(/[A-Z]+/g, match => {return match.length.toString() } );
           } else {
-            return p;
+            clue.numericCSV = clue.answerCSV;
           }
-        });
-        clue.answerSpec = answerSpecPieces.join('');
+
+          // and if the answer is solely Xs, replace that with the number csv
+          if ( /^[X,\-]+$/.test(clue.answerCSV) ) {
+            clue.answerCSV = clue.numericCSV;
+          }
+
+          let answerPieces = clue.answerCSV.split(/[,-]/);
+          let words = answerPieces.map(p => {
+            if (/^[0-9]+$/.test(p)) {
+              let pInt = parseInt(p);
+              if (pInt == 0) {
+                clueError("answer contains a word size of 0");
+              }
+              return 'X'.repeat( pInt );
+            } else {
+              if (p.length == 0) {
+                clueError("answer contains an empty word");
+              }
+              return p;
+            }
+          });
+          let wordsString = words.join('');
+          clue.wordsString = wordsString;
+          if (wordsString.length > maxCoord) {
+            clueError("answer too long for crossword");
+            break;
+          }
+          crossword.answers[grouping].push(wordsString);
+
+          clue.wordsLengths = words.map(function(w){
+            return w.length;
+          });
+        }
+
+        // let answerPieces = clue.answerCSV.split(/([A-Z]+|[,-])/);
+        // let answerSpecPieces = answerPieces.map(function(p){
+        //   if (/[A-Z]+/.exec(p)) {
+        //     return p.length;
+        //   } else {
+        //     return p;
+        //   }
+        // });
+        // clue.answerSpec = answerSpecPieces.join('');
 
         // check answer + offset within bounds
-        if(    (grouping==='across' && (wordsString.length + x - 1 > maxCoord))
-          || (grouping==='down'   && (wordsString.length + y - 1 > maxCoord)) ){
-          clueError("answer too long(" + grouping + ") for crossword from that coord");
+        if(    (grouping==='across' && (clue.wordsString.length + x - 1 > maxCoord))
+          || (grouping==='down'   && (clue.wordsString.length + y - 1 > maxCoord)) ){
+          clueError("answer too long for crossword from that coord");
           break;
         }
 
-        // check answer does not clash with previous answers
-        let step = (grouping==='across')? 1 : maxCoord;
-        for (var i = 0; i < wordsString.length; i++) {
-          let pos = (x-1) + (y-1)*maxCoord + i*step;
-          if (grid[pos] === ' ') {
-            grid[pos] = wordsString[i];
-          } else if( grid[pos] !== wordsString[i] ) {
-            clueError("letter " + (i+1) + " clashes with previous clues");
-            break;
+        {
+          // check answer does not clash with previous answers
+          let step = (grouping==='across')? 1 : maxCoord;
+          for (var i = 0; i < clue.wordsString.length; i++) {
+            let pos = (x-1) + (y-1)*maxCoord + i*step;
+            if (grid[pos] === ' ') {
+              grid[pos] = clue.wordsString[i];
+            } else if( grid[pos] !== clue.wordsString[i] ) {
+              clueError("letter " + (i+1) + " clashes with previous clues");
+              break;
+            }
           }
         }
 
@@ -476,18 +509,28 @@ var CrosswordDSL = (function() {
       crossword[grouping].forEach( function(clue) {
         let item = [
           parseInt(clue.id),
-          clue.body,
+          clue.body + ' (' + clue.numericCSV + ')',
           clue.wordsLengths,
         ];
         spec.clues[grouping].push(item);
       });
     });
 
+    {
+      // if the answers are just placeholders (lots of Xs)
+      // assume they are not to be displayed,
+      // so delete them from the spec
+      let concatAllAnswerWordsStrings = spec.answers.across.join('') + spec.answers.down.join('');
+      if ( /^X+$/.test(concatAllAnswerWordsStrings) ) {
+        delete spec['answers'];
+      }
+    }
+
     return spec;
   }
 
   // given a crossword obj, generate the DSL for it
-  function generateDSL( crossword ){
+  function generateDSL( crossword, withAnswers=true ){
     var lines = [];
     var nonClueFields = [
       'version', 'name', 'author', 'editor', 'copyright', 'publisher', 'pubdate',
@@ -506,7 +549,7 @@ var CrosswordDSL = (function() {
           `[${clue.coordinates.join(',')}]`,
           `${clue.id}.`,
           clue.body,
-          `(${clue.answerCSV})`
+          `(${(withAnswers)? clue.answerCSV : clue.numericCSV})`
         ];
         lines.push(pieces.join(' '));
       });
@@ -528,29 +571,13 @@ var CrosswordDSL = (function() {
     return dsl;
   }
 
-  // given some text, decide what format it is and parse it accordingly,
+  // given some text, decide what format it is (currently, only the DSL)
+  // and parse it accordingly,
   // generating the grid text and output format if there are no errors,
   // returning the crossword object with all the bits (or the errors).
   function parseWhateverItIs(text) {
-    var crossword;
 
-    // a bit ugly, but if the text is probably JSON (i.e. starts with a '{'),
-    // assume it is the JSON text of the spec, and parse it accordingly,
-    // otherwise assume it is DSL
-
-    if (text.startsWith('{')) {
-      let parsedJson = parseJsonIntoDSL( text );
-      if (parsedJson['errors'].length > 0) {
-        crossword = {
-          errors : parsedJson['errors']
-        };
-      } else {
-        crossword = parseDSL(parsedJson.dslText);
-        crossword['generatedDSL'] = parsedJson.dslText;
-      }
-    } else {
-      crossword = parseDSL(text);
-    }
+    let crossword = parseDSL(text);
 
     // only attempt to validate the crossword if no errors found so far
     if (crossword.errors.length == 0) {
@@ -566,12 +593,13 @@ var CrosswordDSL = (function() {
     if (crossword.errors.length > 0) {
       specTextWithoutAnswers = crossword.errors.join("\n");
     } else {
-      let spec = generateSpec(crossword);
-      crossword.spec = spec;
+      let specWithAnswers = generateSpec(crossword);
+      crossword.spec = specWithAnswers;
+      specTextWithAnswers = JSON.stringify(specWithAnswers);
 
-      specTextWithAnswers = JSON.stringify(spec);
-      delete spec['answers'];
-      specTextWithoutAnswers = JSON.stringify(spec);
+      let specWithoutAnswers = generateSpec(crossword);
+      delete specWithoutAnswers['answers'];
+      specTextWithoutAnswers = JSON.stringify(specWithoutAnswers);
     }
     crossword.specTextWithAnswers    = specTextWithAnswers;
     crossword.specTextWithoutAnswers = specTextWithoutAnswers;
@@ -579,9 +607,10 @@ var CrosswordDSL = (function() {
     crossword.gridText = generateGridText( crossword );
 
     if (crossword.errors.length == 0) {
-      crossword.DSLGeneratedFromDSL = generateDSL( crossword );
-
-      console.log('crossword.DSLGeneratedFromDSL:', crossword.DSLGeneratedFromDSL);
+      crossword.DSLGeneratedFromDSLWithAnswers = generateDSL( crossword );
+      console.log('crossword.DSLGeneratedFromDSLWithAnswers:', crossword.DSLGeneratedFromDSLWithAnswers);
+      crossword.DSLGeneratedFromDSLWithoutAnswers = generateDSL( crossword, withAnswers=false );
+      console.log('crossword.DSLGeneratedFromDSLWithoutAnswers:', crossword.DSLGeneratedFromDSLWithoutAnswers);
     }
 
     return crossword;
@@ -589,7 +618,9 @@ var CrosswordDSL = (function() {
 
   function parseWhateverItIsIntoSpecText(text) {
     var crossword = parseWhateverItIs(text);
-    return crossword.specTextWithAnswers;
+    var jsonText = JSON.stringify(crossword.spec);
+    console.log("parseWhateverItIsIntoSpecText: crossword=", crossword, ", jsonText=", jsonText );
+    return jsonText;
   }
 
   return {

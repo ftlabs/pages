@@ -17,66 +17,57 @@ var CrosswordDisplay = (function() {
 
     getElementById('update-button').classList.remove(classForAlert);
 
-    { // update the spec display, with either the generated spec JSON,
-      // or the generated DSL,
-      // or the errors
-      var specElt        = getElementById('spec');
-      var specAnswersElt = getElementById('spec-answers');
+    { // update the spec display with the DSL or the errors
+      let errorsElt      = getElementById('errors');
+      let specElt        = getElementById('spec');
+      let specAnswersElt = getElementById('spec-answers');
+
+      let textElts = [errorsElt, specElt, specAnswersElt];
+
+      var gridElt = getElementById('grid');
+
+      // Apologies, uses same name for class of outer element, then id of inner element.
+      // Make sure we reset the html for the o-crossword component,
+      // because it generates its own wrapper elements when it constructs the crossword display
+      for ( let cl of ['responsive-crossword', 'responsive-crossword-with-answers'] ){
+        let crosswordSkeletonHTML = `
+          <div class="o-crossword" data-o-component="o-crossword" data-o-crossword-data="" id="${cl}">
+            <table class="o-crossword-table"></table>
+            <ul class="o-crossword-clues"></ul>
+          </div>
+        `;
+        let responsiveCrossElt = getElementByClass(cl);
+        responsiveCrossElt.innerHTML = crosswordSkeletonHTML;
+      }
+
+      textElts.forEach(elt => {
+        elt.value = "";
+      });
 
       if (crossword.errors.length === 0) {
-        specElt.classList.remove(classForAlert);
-        specAnswersElt.classList.remove(classForAlert);
-      } else {
-        specElt.classList.add(classForAlert);
-        specAnswersElt.classList.add(classForAlert);
-      }
-      if (crossword['generatedDSL']) {
-        let errorsText = "";
-        if (crossword.errors.length > 0) {
-          errorsText = [
-            "ERRORS found in generated DSL...",
-            crossword.errors.join("\n"),
-            "",
-            "Generated DSL:",
-            ""].join("\n");
+
+        errorsElt.classList.remove(classForAlert);
+        specElt.value = crossword.DSLGeneratedFromDSLWithoutAnswers;
+        specAnswersElt.value = crossword.DSLGeneratedFromDSLWithAnswers;
+
+        gridElt.innerHTML = crossword.gridText;
+
+        // apologies, uses same name for class of outer element, then id of inner element
+        for ( let cl of ['responsive-crossword', 'responsive-crossword-with-answers'] ){
+          let text = (cl === 'responsive-crossword') ? crossword.DSLGeneratedFromDSLWithoutAnswers : crossword.DSLGeneratedFromDSLWithAnswers;
+          let oCrosswordElt = getElementById(cl);
+          oCrosswordElt.setAttribute('data-o-crossword-data', text);
         }
-        specElt.value = "";
-        specAnswersElt.value = errorsText + crossword['generatedDSL'];
-      } else {
-        specElt.value = crossword.specTextWithoutAnswers;
-        specAnswersElt.value = crossword.specTextWithAnswers;
+
+        document.dispatchEvent(new CustomEvent('o.CrosswordDataUpdated'));
+
+      } else { // sadly, errors, :-(
+
+        errorsElt.classList.add(classForAlert);
+        errorsElt.value = crossword.errors.join("\n");
+        gridElt.innerHTML = "...";
+
       }
-    }
-
-    {
-      var gridElt = getElementById('grid');
-      gridElt.innerHTML = crossword.gridText;
-    }
-
-    // Apologies, uses same name for class of outer element, then id of inner element.
-    // Make sure we reset the html for the o-crossword component,
-    // because it generates its own wrapper elements when it constructs the crossword display
-    for ( let cl of ['responsive-crossword', 'responsive-crossword-with-answers'] ){
-      let crosswordSkeletonHTML = `
-        <div class="o-crossword" data-o-component="o-crossword" data-o-crossword-data="" id="${cl}">
-          <table class="o-crossword-table"></table>
-          <ul class="o-crossword-clues"></ul>
-        </div>
-      `;
-      let responsiveCrossElt = getElementByClass(cl);
-      responsiveCrossElt.innerHTML = crosswordSkeletonHTML;
-    }
-
-    // If valid, inject the json crossword spec into the data-o-crossword-data attribute
-    if (crossword.errors.length === 0) {
-      // apologies, uses same name for class of outer element, then id of inner element
-      for ( let cl of ['responsive-crossword', 'responsive-crossword-with-answers'] ){
-        let text = (cl === 'responsive-crossword') ? crossword.specTextWithoutAnswers : crossword.specTextWithAnswers;
-        let oCrosswordElt = getElementById(cl);
-        oCrosswordElt.setAttribute('data-o-crossword-data', text);
-      }
-
-      document.dispatchEvent(new CustomEvent('o.CrosswordDataUpdated'));
     }
   }
 
