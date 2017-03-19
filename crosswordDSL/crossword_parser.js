@@ -607,9 +607,10 @@ var CrosswordDSL = (function() {
     crossword.gridText = generateGridText( crossword );
 
     if (crossword.errors.length == 0) {
-      crossword.DSLGeneratedFromDSLWithAnswers = generateDSL( crossword );
+      let withAnswers = true;
+      crossword.DSLGeneratedFromDSLWithAnswers = generateDSL( crossword, withAnswers );
       console.log('crossword.DSLGeneratedFromDSLWithAnswers:', crossword.DSLGeneratedFromDSLWithAnswers);
-      crossword.DSLGeneratedFromDSLWithoutAnswers = generateDSL( crossword, withAnswers=false );
+      crossword.DSLGeneratedFromDSLWithoutAnswers = generateDSL( crossword, ! withAnswers );
       console.log('crossword.DSLGeneratedFromDSLWithoutAnswers:', crossword.DSLGeneratedFromDSLWithoutAnswers);
     }
 
