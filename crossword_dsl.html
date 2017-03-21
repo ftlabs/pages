@@ -85,7 +85,7 @@
 		<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-fonts@^2,o-icons@^5.2.0,o-teaser@^1.3.1,o-header-services@^1.0.2" />
 
 	<script>(function(d) { d.className = d.className + ' demo-js'; })(document.documentElement);</script>
-	<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-crossword%400.4.5%3A%2Fdemos%2Fsrc%2Fdemo.scss">
+	<link rel="stylesheet" href="//origami-build.ft.com/v2/bundles/css?modules=o-crossword%40^1.0.0">
 
 		<script src="//polyfill.webservices.ft.com/v1/polyfill.min.js"></script>
 
@@ -118,13 +118,13 @@ publisher: Financial Times
 pubdate: 2017/01/08
 size: 17x17 # or 15x15
 across:
-- [1,1] 1. Gges (SCRAMBLED,EGGS)
-- [3,3] 3. To Persia in a hurry (IRAN)
+- (1,1) 1. Gges (SCRAMBLED,EGGS)
+- (3,3) 3. To Persia in a hurry (IRAN)
 down:
-- [1,1] 1. Gges (SCRAMBLED,EGGS)
-- [3,1] 2. Its an air, a police, a disk (RAID)
+- (1,1) 1. Gges (SCRAMBLED,EGGS)
+- (3,1) 2. Its an air, a police, a disk (RAID)
 #
-# [coordinates of clue in grid]: [across,down]. [1,1] = top left, [17,17]=bottom right.
+# (coordinates of clue in grid): (across,down). (1,1) = top left, (17,17)=bottom right.
 # (WORDS,IN,ANSWER): capitalised, and separated by commas or hyphens.
 				</textarea>
 				<BR>
@@ -156,7 +156,7 @@ down:
 					<li>o-crossword</li>
 					<ul>
 						<li><a href="https://github.com/ftlabs/o-crossword/">repo</a></li>
-						<li><a href="http://registry.origami.ft.com/components/o-crossword@0.4.5">origami registry</a></li>
+						<li><a href="http://registry.origami.ft.com/components/o-crossword@1.0.0">origami registry</a></li>
 					</ul>
 					<li>DSL page</li>
 					<ul>
@@ -194,7 +194,7 @@ down:
 
 		<script src="crosswordDSL/crossword_parser.js"></script>
 		<script src="crosswordDSL/crossword_display.js"></script>
-		<script src="//origami-build.ft.com/v2/bundles/js?modules=o-crossword%400.4.5%3A%2Fdemos%2Fsrc%2Fdemo.js"></script>
+		<script src="//origami-build.ft.com/v2/bundles/js?modules=o-crossword%40^1.0.0"></script>
 		<script src="//registry.origami.ft.com/embedapi?autoload=resize"></script>
 
 		<script type="text/javascript">
