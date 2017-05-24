@@ -34,6 +34,7 @@ var CrosswordDisplay = (function() {
           <div class="o-crossword" data-o-component="o-crossword" data-o-crossword-data="" id="${cl}">
             <table class="o-crossword-table"></table>
             <ul class="o-crossword-clues"></ul>
+            <img src="https://www.ft.com/__origami/service/image/v2/images/raw/https://raw.githubusercontent.com/ftlabs/o-crossword/master/src/img/empty.gif?source=o-crossword" class="empty-fallback hidden" />
           </div>
         `;
         let responsiveCrossElt = getElementByClass(cl);
