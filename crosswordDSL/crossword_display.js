@@ -1,5 +1,4 @@
 var CrosswordDisplay = (function() {
-
   const classForAlert = 'alert-condition';
 
   function getElementByClass(name) {
@@ -13,7 +12,7 @@ var CrosswordDisplay = (function() {
   // take the text in the textarea, parse it, generate the various views, write them
   function updateDisplay() {
     var text = getElementById('dsl').value;
-    var crossword = CrosswordDSL.parseWhateverItIs( text );
+    var crossword = CrosswordDSL.whateverItIs( text );
 
     getElementById('update-button').classList.remove(classForAlert);
 

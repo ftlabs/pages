@@ -1,5 +1,16 @@
-var CrosswordDSL = (function() {
-
+// Using UMD (Universal Module Definition), see https://github.com/umdjs/umd, and Jake,
+// for a js file to be included as-is in Node code and in browser code.
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) {
+    // Node. Does not work with strict CommonJS, but
+    // only CommonJS-like environments that support module.exports,
+    // like Node.
+    module.exports = factory();
+  } else {
+    // Browser globals (root is window)
+    root.CrosswordDSL = factory();
+  }
+}(this, function () {
   // given the DSL, ensure we have all the relevant pieces,
   // and assume there will be subsequent checking to ensure they are valid
   function parseDSL(text){
@@ -18,6 +29,7 @@ var CrosswordDSL = (function() {
     };
     var cluesGrouping;
     var lines = text.split(/\r|\n/);
+
     for(let line of lines){
       let match;
       // strip out comments
@@ -171,6 +183,7 @@ var CrosswordDSL = (function() {
               return p;
             }
           });
+
           let wordsString = words.join('');
           clue.wordsString = wordsString;
           if (wordsString.length > maxCoord) {
@@ -355,6 +368,7 @@ var CrosswordDSL = (function() {
           parseInt(clue.id),
           clue.body + ' (' + clue.numericCSV + ')',
           clue.wordsLengths,
+          clue.numericCSV
         ];
         spec.clues[grouping].push(item);
       });
@@ -426,7 +440,6 @@ var CrosswordDSL = (function() {
   // generating the grid text and output format if there are no errors,
   // returning the crossword object with all the bits (or the errors).
   function parseWhateverItIs(text) {
-
     let crossword = parseDSL(text);
 
     // only attempt to validate the crossword if no errors found so far
@@ -468,20 +481,20 @@ var CrosswordDSL = (function() {
     return crossword;
   }
 
-  function parseWhateverItIsIntoSpecText(text) {
+  function parseWhateverItIsIntoSpecJson(text) {
     // returns spec or errors as JSON
     var crossword = parseWhateverItIs(text);
 
     var responseObj;
     if (crossword.errors.length == 0) {
-      console.log("parseWhateverItIsIntoSpecText: no errors found");
+      console.log("parseWhateverItIsIntoSpecJson: no errors found");
       responseObj = crossword.spec;
     } else {
       responseObj = {
         errors: crossword.errors,
         text  : text
       }
-      console.log("parseWhateverItIsIntoSpecText: errors found:\n", crossword.errors.join("\n"), "\ntext=\n", text);
+      console.log("parseWhateverItIsIntoSpecJson: errors found:\n", crossword.errors.join("\n"), "\ntext=\n", text);
     }
 
     var jsonText = JSON.stringify( responseObj );
@@ -490,7 +503,7 @@ var CrosswordDSL = (function() {
   }
 
   return {
-    parseWhateverItIs,
-    parseWhateverItIsIntoSpecText
-  }
-})();
+    'whateverItIs' : parseWhateverItIs,
+    'intoSpecJson' : parseWhateverItIsIntoSpecJson
+  };
+}));
