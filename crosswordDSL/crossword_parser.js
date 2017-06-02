@@ -51,7 +51,7 @@
       else if (match = /^pubdate:?\s+(\d{4}\/\d\d\/\d\d)$/i.exec(line) ) { crossword.pubdate    = match[1]; }
       else if (match = /^(?:size|dimensions):?\s+(15x15|17x17)$/i.exec(line) ) { crossword.dimensions = match[1]; }
       else if (match = /^(across|down):?$/i                .exec(line) ) { cluesGrouping        = match[1]; }
-      else if (match = /^-\s\((\d+),(\d+)\)\s+(\d+)\.\s+(.+)\s+\(([A-Z,-]+|[0-9,-]+)\)$/.exec(line) ) {
+      else if (match = /^-\s\((\d+),(\d+)\)\s+(\d+)\.\s+(.+)\s+\(([A-Z,\-*]+|[0-9,-]+)\)$/.exec(line) ) {
         if (! /(across|down)/.test(cluesGrouping)) {
           crossword.errors.push("ERROR: clue specified but no 'across' or 'down' grouping specified");
           break;
@@ -157,8 +157,8 @@
           // and unpack the answerCSV
 
           // convert "ANSWER,PARTS-INTO,NUMBERS" into number csv e.g. "6,5-4,6" (etc)
-          if ( /^[A-Z,\-]+$/.test(clue.answerCSV) ) {
-            clue.numericCSV = clue.answerCSV.replace(/[A-Z]+/g, match => {return match.length.toString() } );
+          if ( /^[A-Z,\-*]+$/.test(clue.answerCSV) ) {
+            clue.numericCSV = clue.answerCSV.replace(/[A-Z*]+/g, match => {return match.length.toString() } );
           } else {
             clue.numericCSV = clue.answerCSV;
           }
