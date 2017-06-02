@@ -163,8 +163,8 @@
             clue.numericCSV = clue.answerCSV;
           }
 
-          // and if the answer is solely Xs, replace that with the number csv
-          if ( /^[X,\-]+$/.test(clue.answerCSV) ) {
+          // and if the answer is solely *s, replace that with the number csv
+          if ( /^[*,\-]+$/.test(clue.answerCSV) ) {
             clue.answerCSV = clue.numericCSV;
           }
 
@@ -175,7 +175,7 @@
               if (pInt == 0) {
                 clueError("answer contains a word size of 0");
               }
-              return 'X'.repeat( pInt );
+              return '*'.repeat( pInt );
             } else {
               if (p.length == 0) {
                 clueError("answer contains an empty word");
@@ -422,7 +422,7 @@
       "Coordinates of clue in grid are (across,down), so (1,1) = top left, (17,17) = bottom right.",
       "ID is a number, followed by a full stop.",
       "(WORDS,IN,ANSWER): capitalised, and separated by commas or hyphens, or (numbers) separated by commas or hyphens.",
-      "ANSWERS with all words of XXXXXX are converted to numbers.",
+      "ANSWERS with all words of ***** are converted to numbers.",
     ];
     lines = lines.concat( footerComments.map(c => { return `# ${c}`; } ) );
 
