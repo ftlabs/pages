@@ -375,11 +375,11 @@
     });
 
     {
-      // if the answers are just placeholders (lots of Xs)
+      // if the answers are just placeholders (lots of *s)
       // assume they are not to be displayed,
       // so delete them from the spec
       let concatAllAnswerWordsStrings = spec.answers.across.join('') + spec.answers.down.join('');
-      if ( /^X+$/.test(concatAllAnswerWordsStrings) ) {
+      if ( /^\*+$/.test(concatAllAnswerWordsStrings) ) {
         delete spec['answers'];
       }
     }
