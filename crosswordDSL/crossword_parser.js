@@ -1,5 +1,16 @@
-var CrosswordDSL = (function() {
-
+// Using UMD (Universal Module Definition), see https://github.com/umdjs/umd, and Jake,
+// for a js file to be included as-is in Node code and in browser code.
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) {
+    // Node. Does not work with strict CommonJS, but
+    // only CommonJS-like environments that support module.exports,
+    // like Node.
+    module.exports = factory();
+  } else {
+    // Browser globals (root is window)
+    root.CrosswordDSL = factory();
+  }
+}(this, function () {
   // given the DSL, ensure we have all the relevant pieces,
   // and assume there will be subsequent checking to ensure they are valid
   function parseDSL(text){
@@ -18,6 +29,7 @@ var CrosswordDSL = (function() {
     };
     var cluesGrouping;
     var lines = text.split(/\r|\n/);
+
     for(let line of lines){
       let match;
       // strip out comments
@@ -39,7 +51,7 @@ var CrosswordDSL = (function() {
       else if (match = /^pubdate:?\s+(\d{4}\/\d\d\/\d\d)$/i.exec(line) ) { crossword.pubdate    = match[1]; }
       else if (match = /^(?:size|dimensions):?\s+(15x15|17x17)$/i.exec(line) ) { crossword.dimensions = match[1]; }
       else if (match = /^(across|down):?$/i                .exec(line) ) { cluesGrouping        = match[1]; }
-      else if (match = /^-\s\((\d+),(\d+)\)\s+(\d+)\.\s+(.+)\s+\(([A-Z,-]+|[0-9,-]+)\)$/.exec(line) ) {
+      else if (match = /^-\s\((\d+),(\d+)\)\s+(\d+)\.\s+(.+)\s+\(([A-Z,\-*]+|[0-9,-]+)\)$/.exec(line) ) {
         if (! /(across|down)/.test(cluesGrouping)) {
           crossword.errors.push("ERROR: clue specified but no 'across' or 'down' grouping specified");
           break;
@@ -145,14 +157,14 @@ var CrosswordDSL = (function() {
           // and unpack the answerCSV
 
           // convert "ANSWER,PARTS-INTO,NUMBERS" into number csv e.g. "6,5-4,6" (etc)
-          if ( /^[A-Z,\-]+$/.test(clue.answerCSV) ) {
-            clue.numericCSV = clue.answerCSV.replace(/[A-Z]+/g, match => {return match.length.toString() } );
+          if ( /^[A-Z,\-*]+$/.test(clue.answerCSV) ) {
+            clue.numericCSV = clue.answerCSV.replace(/[A-Z*]+/g, match => {return match.length.toString() } );
           } else {
             clue.numericCSV = clue.answerCSV;
           }
 
-          // and if the answer is solely Xs, replace that with the number csv
-          if ( /^[X,\-]+$/.test(clue.answerCSV) ) {
+          // and if the answer is solely *s, replace that with the number csv
+          if ( /^[*,\-]+$/.test(clue.answerCSV) ) {
             clue.answerCSV = clue.numericCSV;
           }
 
@@ -163,7 +175,7 @@ var CrosswordDSL = (function() {
               if (pInt == 0) {
                 clueError("answer contains a word size of 0");
               }
-              return 'X'.repeat( pInt );
+              return '*'.repeat( pInt );
             } else {
               if (p.length == 0) {
                 clueError("answer contains an empty word");
@@ -171,6 +183,7 @@ var CrosswordDSL = (function() {
               return p;
             }
           });
+
           let wordsString = words.join('');
           clue.wordsString = wordsString;
           if (wordsString.length > maxCoord) {
@@ -355,17 +368,18 @@ var CrosswordDSL = (function() {
           parseInt(clue.id),
           clue.body + ' (' + clue.numericCSV + ')',
           clue.wordsLengths,
+          clue.numericCSV
         ];
         spec.clues[grouping].push(item);
       });
     });
 
     {
-      // if the answers are just placeholders (lots of Xs)
+      // if the answers are just placeholders (lots of *s or Xs)
       // assume they are not to be displayed,
       // so delete them from the spec
       let concatAllAnswerWordsStrings = spec.answers.across.join('') + spec.answers.down.join('');
-      if ( /^X+$/.test(concatAllAnswerWordsStrings) ) {
+      if ( /^(X+|\*+)$/.test(concatAllAnswerWordsStrings) ) {
         delete spec['answers'];
       }
     }
@@ -408,7 +422,7 @@ var CrosswordDSL = (function() {
       "Coordinates of clue in grid are (across,down), so (1,1) = top left, (17,17) = bottom right.",
       "ID is a number, followed by a full stop.",
       "(WORDS,IN,ANSWER): capitalised, and separated by commas or hyphens, or (numbers) separated by commas or hyphens.",
-      "ANSWERS with all words of XXXXXX are converted to numbers.",
+      "ANSWERS with all words of ***** are converted to numbers.",
     ];
     lines = lines.concat( footerComments.map(c => { return `# ${c}`; } ) );
 
@@ -426,7 +440,6 @@ var CrosswordDSL = (function() {
   // generating the grid text and output format if there are no errors,
   // returning the crossword object with all the bits (or the errors).
   function parseWhateverItIs(text) {
-
     let crossword = parseDSL(text);
 
     // only attempt to validate the crossword if no errors found so far
@@ -468,20 +481,20 @@ var CrosswordDSL = (function() {
     return crossword;
   }
 
-  function parseWhateverItIsIntoSpecText(text) {
+  function parseWhateverItIsIntoSpecJson(text) {
     // returns spec or errors as JSON
     var crossword = parseWhateverItIs(text);
 
     var responseObj;
     if (crossword.errors.length == 0) {
-      console.log("parseWhateverItIsIntoSpecText: no errors found");
+      console.log("parseWhateverItIsIntoSpecJson: no errors found");
       responseObj = crossword.spec;
     } else {
       responseObj = {
         errors: crossword.errors,
         text  : text
       }
-      console.log("parseWhateverItIsIntoSpecText: errors found:\n", crossword.errors.join("\n"), "\ntext=\n", text);
+      console.log("parseWhateverItIsIntoSpecJson: errors found:\n", crossword.errors.join("\n"), "\ntext=\n", text);
     }
 
     var jsonText = JSON.stringify( responseObj );
@@ -490,7 +503,7 @@ var CrosswordDSL = (function() {
   }
 
   return {
-    parseWhateverItIs,
-    parseWhateverItIsIntoSpecText
-  }
-})();
+    'whateverItIs' : parseWhateverItIs,
+    'intoSpecJson' : parseWhateverItIsIntoSpecJson
+  };
+}));
