@@ -435,9 +435,87 @@
     return dsl;
   }
 
+  function convertTextIntoXMLWithErrors( text ){
+    const parser = new DOMParser();
+    xmlDoc = parser.parseFromString(text, "text/xml");
+    const errors = [];
+    if (xmlDoc.documentElement.nodeName == "parsererror") {
+      errors.push( oDOM.documentElement.nodeName );
+    }
+    return {
+      xmlDoc,
+      errors
+    }
+  }
+
+  // from https://davidwalsh.name/convert-xml-json
+  function xmlToJson(xml) {
+
+  	// Create the return object
+  	var obj = {};
+
+  	if (xml.nodeType == 1) { // element
+  		// do attributes
+  		if (xml.attributes.length > 0) {
+  		obj["@attributes"] = {};
+  			for (var j = 0; j < xml.attributes.length; j++) {
+  				var attribute = xml.attributes.item(j);
+  				obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+  			}
+  		}
+  	} else if (xml.nodeType == 3) { // text
+  		obj = xml.nodeValue;
+  	}
+
+  	// do children
+  	if (xml.hasChildNodes()) {
+  		for(var i = 0; i < xml.childNodes.length; i++) {
+  			var item = xml.childNodes.item(i);
+  			var nodeName = item.nodeName;
+  			if (typeof(obj[nodeName]) == "undefined") {
+  				obj[nodeName] = xmlToJson(item);
+  			} else {
+  				if (typeof(obj[nodeName].push) == "undefined") {
+  					var old = obj[nodeName];
+  					obj[nodeName] = [];
+  					obj[nodeName].push(old);
+  				}
+  				obj[nodeName].push(xmlToJson(item));
+  			}
+  		}
+  	}
+  	return obj;
+  };
+
+  function parseCrosswordCompilerJsonIntoDSL( json ){
+    let errors = [];
+    let dslText = "duff output from parseCrosswordCompilerJsonIntoDSL";
+
+    // now actually do the parsing of the CCW content into DSL
+
+    return {
+      dslText,
+      errors
+    }
+  }
+
+  // given some text, parse it into xml, convert it into the DSL, also returning any errors
   function parseCrosswordCompilerXMLIntoDSL( text ){
     let dslText = "duff output from xml parser";
     let errors = [];
+    let xmlWithErrors = convertTextIntoXMLWithErrors( text );
+    if (xmlWithErrors.errors.length > 0) {
+      errors = errors.concat( xmlWithErrors.errors );
+    } else {
+      const json = xmlToJson( xmlWithErrors.xmlDoc );
+      const dslTextWithErrors = parseCrosswordCompilerJsonIntoDSL( json );
+      if (dslTextWithErrors.errors.length > 0) {
+        errors = errors.concat( dslTextWithErrors.errors );
+      } else {
+        dslText = dslTextWithErrors.dslText;
+      }
+    }
+
     return {
       dslText,
       errors
@@ -472,6 +550,8 @@
       console.log(`parseWhateverItIs: we haz no xml`);
       possibleDSLText = text;
     }
+
+    // console.log(`parseWhateverItIs: errors=${JSON.stringify(errors)}, possibleDSLText=${possibleDSLText}`);
 
     let crossword;
 
