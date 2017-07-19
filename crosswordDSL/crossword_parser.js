@@ -537,6 +537,11 @@
         errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword element');
       } else {
         const crossword = rectpuzz.crossword;
+
+        const clueCoords = {}; // clue id -> {x: 1, y: 2}
+        const answers    = { across: {}, down: {} };
+        const clues      = { across: {}, down: {} };
+
         if (!crossword.hasOwnProperty('grid')) {
           errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid element');
         } else if (! crossword.grid.hasOwnProperty('@attributes')) {
@@ -551,9 +556,8 @@
           }
 
           if ( ! crossword.grid.hasOwnProperty('cell') ) {
-            errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: mssing crossword-compiler.rectangular-puzzle.crossword.grid.cell element');
+            errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid.cell element');
           } else {
-            const clueCoords = {}; // clue id -> {x: 1, y: 2}
             crossword.grid.cell.forEach( cell => {
               if (cell.hasOwnProperty('@attributes')) {
                 if (cell['@attributes'].hasOwnProperty('number')) {
@@ -567,6 +571,46 @@
 
             console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(clueCoords).length} clueCoords` );
           }
+        }
+
+        if (! crossword.hasOwnProperty('word')) {
+          errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.word element');
+        } else {
+          crossword.word.forEach(word => {
+            if (word.hasOwnProperty('@attributes')) {
+              if (word['@attributes'].hasOwnProperty('solution')) {
+                const direction = (word['@attributes'].x.match(/\-/))? 'across' : 'down';
+                answers[direction][word['@attributes'].id] = word['@attributes'].solution;
+              }
+            }
+          });
+
+          console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(answers.across).length + Object.keys(answers.down).length} answers`);
+        }
+
+        // then crossword.clues [across, down]
+        if (! crossword.hasOwnProperty('clues')) {
+          errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.clues element');
+        } else {
+          crossword.clues.forEach( group => {
+            if ( group.hasOwnProperty('title')
+                 && group.title.hasOwnProperty('b')
+                 && group.title.b.hasOwnProperty('#text')
+              ) {
+              const direction = group.title.b['#text'].toLowerCase();
+              group.clue.forEach( clue => {
+                if (clue.hasOwnProperty('@attributes')) {
+                  const id = clue['@attributes'].number;
+                  clues[direction][id] = {
+                    format : clue['@attributes'].number,
+                    text   : clue['#text'],
+                  };
+                }
+              });
+            }
+          });
+
+          console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(clues.across).length + Object.keys(clues.down).length} clues`);
         }
       }
     }
