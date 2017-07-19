@@ -435,12 +435,51 @@
     return dsl;
   }
 
-  // given some text, decide what format it is (currently, only the DSL)
+  function parseCrosswordCompilerXMLIntoDSL( text ){
+    let dslText = "duff output from xml parser";
+    let errors = [];
+    return {
+      dslText,
+      errors
+    }
+  }
+
+  // given some text, decide what format it is,
   // and parse it accordingly,
-  // generating the grid text and output format if there are no errors,
+  // If the input text indicates it is XML,
+  //  check it is CrosswordCompiler XML, else error.
+  // If it is CrosswordCompiler XML, attempt to parse it into DSL,
+  //  and if that produces no errors, pass it to the DSL parser.
+  // Generating the grid text and output format if there are no errors,
   // returning the crossword object with all the bits (or the errors).
   function parseWhateverItIs(text) {
-    let crossword = parseDSL(text);
+    let possibleDSLText;
+    let errors = [];
+    if (text.match(/^\s*<\?xml/)) {
+      console.log(`parseWhateverItIs: we haz xml`);
+      if (text.match(/<crossword-compiler/)) {
+        console.log(`parseWhateverItIs: we haz crossword-compiler xml`);
+        const possibleDSLTextWithErrors = parseCrosswordCompilerXMLIntoDSL( text );
+        if (possibleDSLTextWithErrors.errors.length > 0) {
+          errors = possibleDSLTextWithErrors.errors;
+        } else {
+          possibleDSLText = possibleDSLTextWithErrors.dslText;
+        }
+      } else {
+        errors = [ 'ERROR: input appears to be non-Crossword-Compiler XML' ];
+      }
+    } else {
+      console.log(`parseWhateverItIs: we haz no xml`);
+      possibleDSLText = text;
+    }
+
+    let crossword;
+
+    if (errors.length > 0) {
+      crossword = { errors: errors };
+    } else {
+      crossword = parseDSL(possibleDSLText);
+    }
 
     // only attempt to validate the crossword if no errors found so far
     if (crossword.errors.length == 0) {
