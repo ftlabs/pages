@@ -491,7 +491,81 @@
     let errors = [];
     let dslText = "duff output from parseCrosswordCompilerJsonIntoDSL";
 
+    let dslPieces = {
+      version : 'standard v1',
+      name : 'UNSPECIFIED',
+      author : 'UNSPECIFIED',
+      editor : 'Colin Inman',
+      size : 'UNSPECIFIED',
+      across : [],
+      down : []
+    };
     // now actually do the parsing of the CCW content into DSL
+    // console.log(`parseCrosswordCompilerJsonIntoDSL: json=${JSON.stringify(json, null, 2)}`);
+    // we are looking for:
+      // version: standard v1
+      // name: Polymousse 3456
+      // author: Fred
+      // editor: Colin Inman
+      // copyright: 2017, Financial Times
+      // publisher: Financial Times
+      // pubdate: 2017/01/08
+      // size: 17x17 # or 15x15
+      // across:
+      // - (1,1) 1. Gges (SCRAMBLED,EGGS)
+      // - (3,3) 3. To Persia in a hurry (IRAN)
+      // down:
+      // - (1,1) 1. Gges (SCRAMBLED,EGGS)
+      // - (3,1) 2. Its an air, a police, a disk (RAID)
+
+    if (! json.hasOwnProperty('crossword-compiler') ){
+      errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler element');
+    } else if (! json['crossword-compiler'].hasOwnProperty('rectangular-puzzle') ){
+      errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle element');
+    } else {
+      const rectpuzz = json['crossword-compiler']['rectangular-puzzle'];
+      if (!rectpuzz.hasOwnProperty('metadata')) {
+        errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.metadata element');
+      } else {
+        const metadata = rectpuzz.metadata;
+        if (metadata.hasOwnProperty('title') && metadata.title.hasOwnProperty('#text')) {
+          dslPieces.name = metadata.title['#text'];
+        }
+        if (metadata.hasOwnProperty('creator') && metadata.creator.hasOwnProperty('#text')) {
+          dslPieces.author = metadata.creator['#text'];
+        }
+      }
+      if (!rectpuzz.hasOwnProperty('crossword')) {
+        errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword element');
+      } else {
+        const crossword = rectpuzz.crossword;
+        if (!crossword.hasOwnProperty('grid')) {
+          errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.grid element');
+        } else if (! crossword.grid.hasOwnProperty('@attributes')) {
+          errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.grid @attributes');
+        } else {
+          const width  = crossword.grid['@attributes'].width;
+          const height = crossword.grid['@attributes'].height;
+          if (width !== height) {
+            errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: conflicting width and height in crossword-compiler.rectangular-puzzle.grid @attributes');
+          } else {
+            dslPieces.size = `${width}x${width}`;
+          }
+        }
+      }
+    }
+
+    dslText = Object.keys(dslPieces).map( field => {
+      if (field == 'across' || field == 'down') {
+        const clues = [`${field}:`];
+        dslPieces[field].forEach(clue => {
+          clues.push(`- ${clue}`);
+        })
+        return clues.join("\n");
+      } else {
+        return `${field}: ${dslPieces[field]}`;
+      }
+    }).join("\n");
 
     return {
       dslText,
