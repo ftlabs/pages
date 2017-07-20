@@ -515,120 +515,128 @@
       // down:
       // - (1,1) 1. Gges (SCRAMBLED,EGGS)
       // - (3,1) 2. Its an air, a police, a disk (RAID)
+    try {
 
-    if (! json.hasOwnProperty('crossword-compiler') ){
-      errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler element');
-    } else if (! json['crossword-compiler'].hasOwnProperty('rectangular-puzzle') ){
-      errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle element');
-    } else {
+      if (! json.hasOwnProperty('crossword-compiler') ){
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler element');
+      }
+      if (! json['crossword-compiler'].hasOwnProperty('rectangular-puzzle') ){
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle element');
+      }
+
       const rectpuzz = json['crossword-compiler']['rectangular-puzzle'];
       if (!rectpuzz.hasOwnProperty('metadata')) {
-        errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.metadata element');
-      } else {
-        const metadata = rectpuzz.metadata;
-        if (metadata.hasOwnProperty('title') && metadata.title.hasOwnProperty('#text')) {
-          dslPieces.name = metadata.title['#text'];
-        }
-        if (metadata.hasOwnProperty('creator') && metadata.creator.hasOwnProperty('#text')) {
-          dslPieces.author = metadata.creator['#text'];
-        }
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.metadata element');
       }
+
+      const metadata = rectpuzz.metadata;
+      if (metadata.hasOwnProperty('title') && metadata.title.hasOwnProperty('#text')) {
+        dslPieces.name = metadata.title['#text'];
+      }
+      if (metadata.hasOwnProperty('creator') && metadata.creator.hasOwnProperty('#text')) {
+        dslPieces.author = metadata.creator['#text'];
+      }
+
       if (!rectpuzz.hasOwnProperty('crossword')) {
-        errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword element');
-      } else {
-        const crossword = rectpuzz.crossword;
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword element');
+      }
 
-        const clueCoords = {}; // clue id -> {x: 1, y: 2}
-        const answers    = { across: {}, down: {} };
-        const clues      = { across: {}, down: {} };
+      const crossword = rectpuzz.crossword;
 
-        if (!crossword.hasOwnProperty('grid')) {
-          errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid element');
-        } else if (! crossword.grid.hasOwnProperty('@attributes')) {
-          errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid @attributes');
-        } else {
-          const width  = crossword.grid['@attributes'].width;
-          const height = crossword.grid['@attributes'].height;
-          if (width !== height) {
-            errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: conflicting width and height in crossword-compiler.rectangular-puzzle.crossword.grid @attributes');
-          } else {
-            dslPieces.size = `${width}x${width}`;
-          }
+      const clueCoords = {}; // clue id -> {x: 1, y: 2}
+      const answers    = { across: {}, down: {} };
+      const clues      = { across: {}, down: {} };
 
-          if ( ! crossword.grid.hasOwnProperty('cell') ) {
-            errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid.cell element');
-          } else {
-            crossword.grid.cell.forEach( cell => {
-              if (cell.hasOwnProperty('@attributes')) {
-                if (cell['@attributes'].hasOwnProperty('number')) {
-                  clueCoords[cell['@attributes'].number] = {
-                    x : cell['@attributes'].x,
-                    y : cell['@attributes'].y
-                  };
-                }
-              }
-            });
+      if (!crossword.hasOwnProperty('grid')) {
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid element');
+      }
+      if (! crossword.grid.hasOwnProperty('@attributes')) {
+        errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid @attributes');
+      }
 
-            console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(clueCoords).length} clueCoords` );
+      const width  = crossword.grid['@attributes'].width;
+      const height = crossword.grid['@attributes'].height;
+      if (width !== height) {
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: conflicting width and height in crossword-compiler.rectangular-puzzle.crossword.grid @attributes');
+      }
+
+      dslPieces.size = `${width}x${width}`;
+
+      if ( ! crossword.grid.hasOwnProperty('cell') ) {
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid.cell element');
+      }
+
+      crossword.grid.cell.forEach( cell => {
+        if (cell.hasOwnProperty('@attributes')) {
+          if (cell['@attributes'].hasOwnProperty('number')) {
+            clueCoords[cell['@attributes'].number] = {
+              x : cell['@attributes'].x,
+              y : cell['@attributes'].y
+            };
           }
         }
+      });
 
-        if (! crossword.hasOwnProperty('word')) {
-          errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.word element');
-        } else {
-          crossword.word.forEach(word => {
-            if (word.hasOwnProperty('@attributes')) {
-              if (word['@attributes'].hasOwnProperty('solution')) {
-                const direction = (word['@attributes'].x.match(/\-/))? 'across' : 'down';
-                answers[direction][word['@attributes'].id] = word['@attributes'].solution;
-              }
+      console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(clueCoords).length} clueCoords` );
+
+      if (! crossword.hasOwnProperty('word')) {
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.word element');
+      }
+
+      crossword.word.forEach(word => {
+        if (word.hasOwnProperty('@attributes')) {
+          if (word['@attributes'].hasOwnProperty('solution')) {
+            const direction = (word['@attributes'].x.match(/\-/))? 'across' : 'down';
+            answers[direction][word['@attributes'].id] = word['@attributes'].solution;
+          }
+        }
+      });
+
+      console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(answers.across).length + Object.keys(answers.down).length} answers`);
+
+      // then crossword.clues [across, down]
+      if (! crossword.hasOwnProperty('clues')) {
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.clues element');
+      }
+
+      crossword.clues.forEach( group => {
+        if ( group.hasOwnProperty('title')
+             && group.title.hasOwnProperty('b')
+             && group.title.b.hasOwnProperty('#text')
+          ) {
+          const direction = group.title.b['#text'].toLowerCase();
+          group.clue.forEach( clue => {
+            if (clue.hasOwnProperty('@attributes')) {
+              const id = clue['@attributes'].number;
+              clues[direction][id] = {
+                format : clue['@attributes'].number,
+                text   : clue['#text'],
+              };
             }
           });
-
-          console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(answers.across).length + Object.keys(answers.down).length} answers`);
         }
+      });
 
-        // then crossword.clues [across, down]
-        if (! crossword.hasOwnProperty('clues')) {
-          errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.clues element');
-        } else {
-          crossword.clues.forEach( group => {
-            if ( group.hasOwnProperty('title')
-                 && group.title.hasOwnProperty('b')
-                 && group.title.b.hasOwnProperty('#text')
-              ) {
-              const direction = group.title.b['#text'].toLowerCase();
-              group.clue.forEach( clue => {
-                if (clue.hasOwnProperty('@attributes')) {
-                  const id = clue['@attributes'].number;
-                  clues[direction][id] = {
-                    format : clue['@attributes'].number,
-                    text   : clue['#text'],
-                  };
-                }
-              });
-            }
-          });
+      console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(clues.across).length + Object.keys(clues.down).length} clues`);
 
-          console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(clues.across).length + Object.keys(clues.down).length} clues`);
-        }
+      if (errors.length == 0) {
+        dslText = Object.keys(dslPieces).map( field => {
+          if (field == 'across' || field == 'down') {
+            const clues = [`${field}:`];
+            dslPieces[field].forEach(clue => {
+              clues.push(`- ${clue}`);
+            })
+            return clues.join("\n");
+          } else {
+            return `${field}: ${dslPieces[field]}`;
+          }
+        }).join("\n");
       }
     }
-
-    if (errors.length == 0) {
-      dslText = Object.keys(dslPieces).map( field => {
-        if (field == 'across' || field == 'down') {
-          const clues = [`${field}:`];
-          dslPieces[field].forEach(clue => {
-            clues.push(`- ${clue}`);
-          })
-          return clues.join("\n");
-        } else {
-          return `${field}: ${dslPieces[field]}`;
-        }
-      }).join("\n");
+    catch( err ) {
+      errors.push( err );
     }
-
+    
     return {
       dslText,
       errors
