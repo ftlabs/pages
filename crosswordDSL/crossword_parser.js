@@ -487,15 +487,24 @@
   	return obj;
   };
 
+  function nowAsYYYMMDDD(){
+    const today = new Date();
+    const month = today.getMonth()+1;
+    const monthMM = (month < 10)? '0' + month : month;
+    const yyymmdd = [
+      today.getFullYear(),
+      monthMM,
+      today.getDate()
+    ].join('/');
+
+    return yyymmdd;
+  }
+
   function parseCrosswordCompilerJsonIntoDSL( json ){
     let errors = [];
     let dslText = "duff output from parseCrosswordCompilerJsonIntoDSL";
     const today = new Date();
-    const pubdate = [
-      today.getFullYear(),
-      (today.getMonth()+1 < 10)? '0' + (today.getMonth()+1) : today.getMonth()+1,
-      today.getDate()
-    ].join('/');
+    const pubdate = nowAsYYYMMDDD();
 
     let dslPieces = {
          name : 'UNSPECIFIED',
