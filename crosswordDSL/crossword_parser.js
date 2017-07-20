@@ -490,13 +490,20 @@
   function parseCrosswordCompilerJsonIntoDSL( json ){
     let errors = [];
     let dslText = "duff output from parseCrosswordCompilerJsonIntoDSL";
+    const today = new Date();
+    const pubdate = [
+      today.getFullYear(),
+      (today.getMonth()+1 < 10)? '0' + (today.getMonth()+1) : today.getMonth()+1,
+      today.getDate()
+    ].join('/');
 
     let dslPieces = {
          name : 'UNSPECIFIED',
        author : 'UNSPECIFIED',
          size : 'UNSPECIFIED',
+      pubdate : pubdate,
        across : [],
-         down : []
+         down : [],
     };
     // now actually do the parsing of the CCW content into DSL
     try {
