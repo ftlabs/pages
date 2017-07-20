@@ -15,16 +15,16 @@
   // and assume there will be subsequent checking to ensure they are valid
   function parseDSL(text){
     var crossword = {
-      version : "standard v1",
-       author : "",
-       editor : "Colin Inman",
-      publisher : "Financial Times",
-      copyright : "2017, Financial Times",
-      pubdate : "today",
-     dimensions : "17x17",
-       across : [],
-         down : [],
-       errors : [],
+      version      : "standard v1",
+       author      : "",
+       editor      : "Colin Inman",
+      publisher    : "Financial Times",
+      copyright    : "2017, Financial Times",
+      pubdate      : "today",
+     dimensions    : "17x17",
+       across      : [],
+         down      : [],
+       errors      : [],
        originalDSL : text,
     };
     var cluesGrouping;
@@ -499,22 +499,6 @@
          down : []
     };
     // now actually do the parsing of the CCW content into DSL
-    // console.log(`parseCrosswordCompilerJsonIntoDSL: json=${JSON.stringify(json, null, 2)}`);
-    // we are looking for:
-      // version: standard v1
-      // name: Polymousse 3456
-      // author: Fred
-      // editor: Colin Inman
-      // copyright: 2017, Financial Times
-      // publisher: Financial Times
-      // pubdate: 2017/01/08
-      // size: 17x17 # or 15x15
-      // across:
-      // - (1,1) 1. Gges (SCRAMBLED,EGGS)
-      // - (3,3) 3. To Persia in a hurry (IRAN)
-      // down:
-      // - (1,1) 1. Gges (SCRAMBLED,EGGS)
-      // - (3,1) 2. Its an air, a police, a disk (RAID)
     try {
 
       if (! json.hasOwnProperty('crossword-compiler') ){
@@ -545,7 +529,6 @@
 
       const clueCoords = {}; // clue id -> {x: 1, y: 2}
       const answers    = { across: {}, down: {} };
-      const clues      = { across: {}, down: {} };
 
       if (!crossword.hasOwnProperty('grid')) {
         throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid element');
@@ -605,26 +588,51 @@
              && group.title.b.hasOwnProperty('#text')
           ) {
           const direction = group.title.b['#text'].toLowerCase();
+          if (direction !== 'across' && direction !== 'down') {
+            throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: crossword.clues have unrecognised direction=${direction}`);
+          }
           group.clue.forEach( clue => {
             if (clue.hasOwnProperty('@attributes')) {
               const id = clue['@attributes'].number;
-              clues[direction][id] = {
-                format : clue['@attributes'].number,
+              if (! clueCoords.hasOwnProperty(id)) {
+                throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: clue id=${id} does not have a corresponding entry in clueCoords=${JSON.stringify(clueCoords, null, 2)}`);
+              }
+              dslPieces[direction].push({
+                id     : id,
+                format : clue['@attributes'].format,
                 text   : clue['#text'],
-              };
+                coord  : clueCoords[id],
+              });
             }
           });
         }
       });
 
-      console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(clues.across).length + Object.keys(clues.down).length} clues`);
+      console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(dslPieces.across).length + Object.keys(dslPieces.down).length} clues`);
+
+      // version: standard v1
+      // name: Polymousse 3456
+      // author: Fred
+      // editor: Colin Inman
+      // copyright: 2017, Financial Times
+      // publisher: Financial Times
+      // pubdate: 2017/01/08
+      // size: 17x17 # or 15x15
+      // across:
+      // - (1,1) 1. Gges (SCRAMBLED,EGGS)
+      // - (3,3) 3. To Persia in a hurry (IRAN)
+      // down:
+      // - (1,1) 1. Gges (SCRAMBLED,EGGS)
+      // - (3,1) 2. Its an air, a police, a disk (RAID)
+
+      // construct dslText
 
       if (errors.length == 0) {
         dslText = Object.keys(dslPieces).map( field => {
           if (field == 'across' || field == 'down') {
             const clues = [`${field}:`];
             dslPieces[field].forEach(clue => {
-              clues.push(`- ${clue}`);
+              clues.push(`- (${clue.coord.x},${clue.coord.y}) ${clue.id}. ${clue.text} (${clue.format})`);
             })
             return clues.join("\n");
           } else {
@@ -634,13 +642,18 @@
       }
     }
     catch( err ) {
-      errors.push( err );
+      console.log(`parseCrosswordCompilerJsonIntoDSL: received an ERROR: err=${err}`);
+      errors.push( err.toString() );
     }
-    
-    return {
+
+    const returnObj = {
       dslText,
-      errors
-    }
+      errors,
+    };
+
+    console.log( `parseCrosswordCompilerJsonIntoDSL: returnObj=${JSON.stringify(returnObj, null, 2)}` );
+
+    return returnObj;
   }
 
   // given some text, parse it into xml, convert it into the DSL, also returning any errors
