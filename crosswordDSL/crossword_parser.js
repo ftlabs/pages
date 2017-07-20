@@ -15,16 +15,16 @@
   // and assume there will be subsequent checking to ensure they are valid
   function parseDSL(text){
     var crossword = {
-      version : "standard v1",
-       author : "",
-       editor : "Colin Inman",
-      publisher : "Financial Times",
-      copyright : "2017, Financial Times",
-      pubdate : "today",
-     dimensions : "17x17",
-       across : [],
-         down : [],
-       errors : [],
+      version      : "standard v1",
+       author      : "",
+       editor      : "Colin Inman",
+      publisher    : "Financial Times",
+      copyright    : "2017, Financial Times",
+      pubdate      : "today",
+     dimensions    : "17x17",
+       across      : [],
+         down      : [],
+       errors      : [],
        originalDSL : text,
     };
     var cluesGrouping;
@@ -435,12 +435,304 @@
     return dsl;
   }
 
-  // given some text, decide what format it is (currently, only the DSL)
+  function convertTextIntoXMLWithErrors( text ){
+    const parser = new DOMParser();
+    xmlDoc = parser.parseFromString(text, "text/xml");
+    const errors = [];
+    if (xmlDoc.documentElement.nodeName == "parsererror") {
+      errors.push( oDOM.documentElement.nodeName );
+    }
+    return {
+      xmlDoc,
+      errors
+    }
+  }
+
+  // from https://davidwalsh.name/convert-xml-json
+  function xmlToJson(xml) {
+
+  	// Create the return object
+  	var obj = {};
+
+  	if (xml.nodeType == 1) { // element
+  		// do attributes
+  		if (xml.attributes.length > 0) {
+  		obj["@attributes"] = {};
+  			for (var j = 0; j < xml.attributes.length; j++) {
+  				var attribute = xml.attributes.item(j);
+  				obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+  			}
+  		}
+  	} else if (xml.nodeType == 3) { // text
+  		obj = xml.nodeValue;
+  	}
+
+  	// do children
+  	if (xml.hasChildNodes()) {
+  		for(var i = 0; i < xml.childNodes.length; i++) {
+  			var item = xml.childNodes.item(i);
+  			var nodeName = item.nodeName;
+  			if (typeof(obj[nodeName]) == "undefined") {
+  				obj[nodeName] = xmlToJson(item);
+  			} else {
+  				if (typeof(obj[nodeName].push) == "undefined") {
+  					var old = obj[nodeName];
+  					obj[nodeName] = [];
+  					obj[nodeName].push(old);
+  				}
+  				obj[nodeName].push(xmlToJson(item));
+  			}
+  		}
+  	}
+  	return obj;
+  };
+
+  function nowAsYYYMMDDD(){
+    const today = new Date();
+    const month = today.getMonth()+1;
+    const monthMM = (month < 10)? '0' + month : month;
+    const yyymmdd = [
+      today.getFullYear(),
+      monthMM,
+      today.getDate()
+    ].join('/');
+
+    return yyymmdd;
+  }
+
+  function parseCrosswordCompilerJsonIntoDSL( json ){
+    let errors = [];
+    let dslText = "duff output from parseCrosswordCompilerJsonIntoDSL";
+    const today = new Date();
+    const pubdate = nowAsYYYMMDDD();
+
+    let dslPieces = {
+         name : 'UNSPECIFIED',
+       author : 'UNSPECIFIED',
+         size : 'UNSPECIFIED',
+      pubdate : pubdate,
+       across : [],
+         down : [],
+    };
+    // now actually do the parsing of the CCW content into DSL
+    try {
+
+      if (! json.hasOwnProperty('crossword-compiler') ){
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler element');
+      }
+      if (! json['crossword-compiler'].hasOwnProperty('rectangular-puzzle') ){
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle element');
+      }
+
+      const rectpuzz = json['crossword-compiler']['rectangular-puzzle'];
+      if (!rectpuzz.hasOwnProperty('metadata')) {
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.metadata element');
+      }
+
+      const metadata = rectpuzz.metadata;
+      if (metadata.hasOwnProperty('title') && metadata.title.hasOwnProperty('#text')) {
+        dslPieces.name = metadata.title['#text'];
+      }
+      if (metadata.hasOwnProperty('creator') && metadata.creator.hasOwnProperty('#text')) {
+        dslPieces.author = metadata.creator['#text'];
+      }
+
+      if (!rectpuzz.hasOwnProperty('crossword')) {
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword element');
+      }
+
+      const crossword = rectpuzz.crossword;
+
+      const clueCoords = {}; // clue id -> {x: 1, y: 2}
+      const answers    = { across: {}, down: {} };
+
+      if (!crossword.hasOwnProperty('grid')) {
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid element');
+      }
+      if (! crossword.grid.hasOwnProperty('@attributes')) {
+        errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid @attributes');
+      }
+
+      const width  = crossword.grid['@attributes'].width;
+      const height = crossword.grid['@attributes'].height;
+      if (width !== height) {
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: conflicting width and height in crossword-compiler.rectangular-puzzle.crossword.grid @attributes');
+      }
+
+      dslPieces.size = `${width}x${width}`;
+
+      if ( ! crossword.grid.hasOwnProperty('cell') ) {
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid.cell element');
+      }
+
+      crossword.grid.cell.forEach( cell => {
+        if (cell.hasOwnProperty('@attributes')) {
+          if (cell['@attributes'].hasOwnProperty('number')) {
+            clueCoords[cell['@attributes'].number] = {
+              x : cell['@attributes'].x,
+              y : cell['@attributes'].y
+            };
+          }
+        }
+      });
+
+      console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(clueCoords).length} clueCoords` );
+
+      if (! crossword.hasOwnProperty('word')) {
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.word element');
+      }
+
+      crossword.word.forEach(word => {
+        if (word.hasOwnProperty('@attributes')) {
+          if (word['@attributes'].hasOwnProperty('solution')) {
+            const direction = (word['@attributes'].x.match(/\-/))? 'across' : 'down';
+            answers[direction][word['@attributes'].id] = word['@attributes'].solution;
+          }
+        }
+      });
+
+      console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(answers.across).length + Object.keys(answers.down).length} answers`);
+
+      // then crossword.clues [across, down]
+      if (! crossword.hasOwnProperty('clues')) {
+        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.clues element');
+      }
+
+      crossword.clues.forEach( group => {
+        if ( group.hasOwnProperty('title')
+             && group.title.hasOwnProperty('b')
+             && group.title.b.hasOwnProperty('#text')
+          ) {
+          const direction = group.title.b['#text'].toLowerCase();
+          if (direction !== 'across' && direction !== 'down') {
+            throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: crossword.clues have unrecognised direction=${direction}`);
+          }
+          group.clue.forEach( clue => {
+            if (clue.hasOwnProperty('@attributes')) {
+              const id = clue['@attributes'].number;
+              if (! clueCoords.hasOwnProperty(id)) {
+                throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: clue id=${id} does not have a corresponding entry in clueCoords=${JSON.stringify(clueCoords, null, 2)}`);
+              }
+              dslPieces[direction].push({
+                id     : id,
+                format : clue['@attributes'].format,
+                text   : clue['#text'],
+                coord  : clueCoords[id],
+              });
+            }
+          });
+        }
+      });
+
+      console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(dslPieces.across).length + Object.keys(dslPieces.down).length} clues`);
+
+      // version: standard v1
+      // name: Polymousse 3456
+      // author: Fred
+      // editor: Colin Inman
+      // copyright: 2017, Financial Times
+      // publisher: Financial Times
+      // pubdate: 2017/01/08
+      // size: 17x17 # or 15x15
+      // across:
+      // - (1,1) 1. Gges (SCRAMBLED,EGGS)
+      // - (3,3) 3. To Persia in a hurry (IRAN)
+      // down:
+      // - (1,1) 1. Gges (SCRAMBLED,EGGS)
+      // - (3,1) 2. Its an air, a police, a disk (RAID)
+
+      // construct dslText
+
+      if (errors.length == 0) {
+        dslText = Object.keys(dslPieces).map( field => {
+          if (field == 'across' || field == 'down') {
+            const clues = [`${field}:`];
+            dslPieces[field].forEach(clue => {
+              clues.push(`- (${clue.coord.x},${clue.coord.y}) ${clue.id}. ${clue.text} (${clue.format})`);
+            })
+            return clues.join("\n");
+          } else {
+            return `${field}: ${dslPieces[field]}`;
+          }
+        }).join("\n");
+      }
+    }
+    catch( err ) {
+      console.log(`parseCrosswordCompilerJsonIntoDSL: received an ERROR: err=${err}`);
+      errors.push( err.toString() );
+    }
+
+    const returnObj = {
+      dslText,
+      errors,
+    };
+
+    console.log( `parseCrosswordCompilerJsonIntoDSL: returnObj=${JSON.stringify(returnObj, null, 2)}` );
+
+    return returnObj;
+  }
+
+  // given some text, parse it into xml, convert it into the DSL, also returning any errors
+  function parseCrosswordCompilerXMLIntoDSL( text ){
+    let dslText = "duff output from xml parser";
+    let errors = [];
+    let xmlWithErrors = convertTextIntoXMLWithErrors( text );
+    if (xmlWithErrors.errors.length > 0) {
+      errors = errors.concat( xmlWithErrors.errors );
+    } else {
+      const json = xmlToJson( xmlWithErrors.xmlDoc );
+      const dslTextWithErrors = parseCrosswordCompilerJsonIntoDSL( json );
+      if (dslTextWithErrors.errors.length > 0) {
+        errors = errors.concat( dslTextWithErrors.errors );
+      } else {
+        dslText = dslTextWithErrors.dslText;
+      }
+    }
+
+    return {
+      dslText,
+      errors
+    }
+  }
+
+  // given some text, decide what format it is,
   // and parse it accordingly,
-  // generating the grid text and output format if there are no errors,
+  // If the input text indicates it is XML,
+  //  check it is CrosswordCompiler XML, else error.
+  // If it is CrosswordCompiler XML, attempt to parse it into DSL,
+  //  and if that produces no errors, pass it to the DSL parser.
+  // Generating the grid text and output format if there are no errors,
   // returning the crossword object with all the bits (or the errors).
   function parseWhateverItIs(text) {
-    let crossword = parseDSL(text);
+    let possibleDSLText;
+    let errors = [];
+    if (text.match(/^\s*<\?xml/)) {
+      console.log(`parseWhateverItIs: we haz xml`);
+      if (text.match(/<crossword-compiler/)) {
+        console.log(`parseWhateverItIs: we haz crossword-compiler xml`);
+        const possibleDSLTextWithErrors = parseCrosswordCompilerXMLIntoDSL( text );
+        if (possibleDSLTextWithErrors.errors.length > 0) {
+          errors = possibleDSLTextWithErrors.errors;
+        } else {
+          possibleDSLText = possibleDSLTextWithErrors.dslText;
+        }
+      } else {
+        errors = [ 'ERROR: input appears to be non-Crossword-Compiler XML' ];
+      }
+    } else {
+      console.log(`parseWhateverItIs: we haz no xml`);
+      possibleDSLText = text;
+    }
+
+    // console.log(`parseWhateverItIs: errors=${JSON.stringify(errors)}, possibleDSLText=${possibleDSLText}`);
+
+    let crossword;
+
+    if (errors.length > 0) {
+      crossword = { errors: errors };
+    } else {
+      crossword = parseDSL(possibleDSLText);
+    }
 
     // only attempt to validate the crossword if no errors found so far
     if (crossword.errors.length == 0) {
