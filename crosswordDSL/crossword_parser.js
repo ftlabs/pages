@@ -706,9 +706,14 @@
   function parseWhateverItIs(text) {
     let possibleDSLText;
     let errors = [];
-    if (text.match(/^\s*<\?xml/)) {
+    if (! text.match(/^\s*<\?xml/)) {
+      console.log(`parseWhateverItIs: we haz no xml`);
+      possibleDSLText = text;
+    } else {
       console.log(`parseWhateverItIs: we haz xml`);
-      if (text.match(/<crossword-compiler/)) {
+      if (! text.match(/<crossword-compiler/)) {
+        errors = [ 'ERROR: input appears to be non-Crossword-Compiler XML' ];
+      } else {
         console.log(`parseWhateverItIs: we haz crossword-compiler xml`);
         const possibleDSLTextWithErrors = parseCrosswordCompilerXMLIntoDSL( text );
         if (possibleDSLTextWithErrors.errors.length > 0) {
@@ -716,13 +721,8 @@
         } else {
           possibleDSLText = possibleDSLTextWithErrors.dslText;
         }
-      } else {
-        errors = [ 'ERROR: input appears to be non-Crossword-Compiler XML' ];
       }
-    } else {
-      console.log(`parseWhateverItIs: we haz no xml`);
-      possibleDSLText = text;
-    }
+    } 
 
     // console.log(`parseWhateverItIs: errors=${JSON.stringify(errors)}, possibleDSLText=${possibleDSLText}`);
 
