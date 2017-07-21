@@ -545,6 +545,7 @@
 
       const clueCoords = {}; // clue id -> {x: 1, y: 2}
       const answers    = { across: {}, down: {} };
+      const grid = {}; // {x}{y}=cell@attributes
 
       if (!crossword.hasOwnProperty('grid')) {
         throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid element');
@@ -566,15 +567,26 @@
       }
 
       crossword.grid.cell.forEach( cell => {
-        if (cell.hasOwnProperty('@attributes')) {
+        if (! cell.hasOwnProperty('@attributes')) {
+          throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: missing @attributes in cell=${JSON.stringify(cell)}`);
+        } else {
+          const x = cell['@attributes'].x;
+          const y = cell['@attributes'].y;
+          if (! grid.hasOwnProperty(x)) {
+            grid[x] = {};
+          }
+          grid[x][y] = cell['@attributes'];
+
           if (cell['@attributes'].hasOwnProperty('number')) {
             clueCoords[cell['@attributes'].number] = {
-              x : cell['@attributes'].x,
-              y : cell['@attributes'].y
+              x : x,
+              y : y
             };
           }
         }
       });
+
+      console.log(`parseCrosswordCompilerJsonIntoDSL: grid=${JSON.stringify(grid, null, 2)}`);
 
       console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(clueCoords).length} clueCoords` );
 
@@ -613,12 +625,12 @@
               if (! clueCoords.hasOwnProperty(id)) {
                 throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: clue id=${id} does not have a corresponding entry in clueCoords=${JSON.stringify(clueCoords, null, 2)}`);
               }
-              dslPieces[direction].push({
+              dslPieces[direction][id] = {
                 id     : id,
                 format : clue['@attributes'].format,
                 text   : clue['#text'],
                 coord  : clueCoords[id],
-              });
+              };
             }
           });
         }
@@ -647,7 +659,11 @@
         dslText = Object.keys(dslPieces).map( field => {
           if (field == 'across' || field == 'down') {
             const clues = [`${field}:`];
-            dslPieces[field].forEach(clue => {
+            let ids = Object.keys(dslPieces[field]);
+            let idsAsInts = ids.map(id => { return parseInt(id); });
+            idsAsInts.sort((a,b) => {return a-b;});
+            idsAsInts.forEach(idAsInt => {
+              const clue = dslPieces[field][idAsInt.toString()];
               clues.push(`- (${clue.coord.x},${clue.coord.y}) ${clue.id}. ${clue.text} (${clue.format})`);
             })
             return clues.join("\n");
@@ -681,6 +697,7 @@
       errors = errors.concat( xmlWithErrors.errors );
     } else {
       const json = xmlToJson( xmlWithErrors.xmlDoc );
+      console.log(`DEBUG: parseCrosswordCompilerXMLIntoDSL: json=${JSON.stringify(json, null, 2)}`);
       const dslTextWithErrors = parseCrosswordCompilerJsonIntoDSL( json );
       if (dslTextWithErrors.errors.length > 0) {
         errors = errors.concat( dslTextWithErrors.errors );
@@ -722,7 +739,7 @@
           possibleDSLText = possibleDSLTextWithErrors.dslText;
         }
       }
-    } 
+    }
 
     // console.log(`parseWhateverItIs: errors=${JSON.stringify(errors)}, possibleDSLText=${possibleDSLText}`);
 
