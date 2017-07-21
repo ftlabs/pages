@@ -566,6 +566,8 @@
         throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid.cell element');
       }
 
+      // build up grid[x][y] of the answer letters
+      // and obtain the coords of the start of each clue's answer
       crossword.grid.cell.forEach( cell => {
         if (! cell.hasOwnProperty('@attributes')) {
           throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: missing @attributes in cell=${JSON.stringify(cell)}`);
@@ -594,6 +596,7 @@
         throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.word element');
       }
 
+      // not clear this is worth doing
       crossword.word.forEach(word => {
         if (word.hasOwnProperty('@attributes')) {
           if (word['@attributes'].hasOwnProperty('solution')) {
@@ -605,7 +608,8 @@
 
       console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(answers.across).length + Object.keys(answers.down).length} answers`);
 
-      // then crossword.clues [across, down]
+      // build up the set of clue details,
+      //   handling the multi-clue answers
       if (! crossword.hasOwnProperty('clues')) {
         throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.clues element');
       }
@@ -622,6 +626,10 @@
           group.clue.forEach( clue => {
             if (clue.hasOwnProperty('@attributes')) {
               const id = clue['@attributes'].number;
+              // if number is a CSV,
+              //  split it and generate an entry for each int (in case ), checking for which direction each one is in
+              //  mark which ones are part of a larger set
+              // ...
               if (! clueCoords.hasOwnProperty(id)) {
                 throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: clue id=${id} does not have a corresponding entry in clueCoords=${JSON.stringify(clueCoords, null, 2)}`);
               }
@@ -635,6 +643,13 @@
           });
         }
       });
+
+      // for clues of a multi-clue answer,
+      //   work out each one's answer size (which prtion of the main csv)
+
+      // verify all clues fit the grid
+      //   obtain the answers from the grip
+      //   fit to the CSV
 
       console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(dslPieces.across).length + Object.keys(dslPieces.down).length} clues`);
 
@@ -660,10 +675,9 @@
           if (field == 'across' || field == 'down') {
             const clues = [`${field}:`];
             let ids = Object.keys(dslPieces[field]);
-            let idsAsInts = ids.map(id => { return parseInt(id); });
-            idsAsInts.sort((a,b) => {return a-b;});
-            idsAsInts.forEach(idAsInt => {
-              const clue = dslPieces[field][idAsInt.toString()];
+            ids.sort((a,b) => {return parseInt(a)-parseInt(b);});
+            ids.forEach(id => {
+              const clue = dslPieces[field][id];
               clues.push(`- (${clue.coord.x},${clue.coord.y}) ${clue.id}. ${clue.text} (${clue.format})`);
             })
             return clues.join("\n");
