@@ -500,6 +500,196 @@
     return yyymmdd;
   }
 
+  function ccwJsonCheckMainFields(json){
+    if (! json.hasOwnProperty('crossword-compiler') ){
+      throw('ERROR: ccwJsonCheckMainFields: missing crossword-compiler element');
+    }
+    if (! json['crossword-compiler'].hasOwnProperty('rectangular-puzzle') ){
+      throw('ERROR: ccwJsonCheckMainFields: missing crossword-compiler.rectangular-puzzle element');
+    }
+
+    const rectpuzz = json['crossword-compiler']['rectangular-puzzle'];
+    if (!rectpuzz.hasOwnProperty('metadata')) {
+      throw('ERROR: ccwJsonCheckMainFields: missing crossword-compiler.rectangular-puzzle.metadata element');
+    }
+
+    if (!rectpuzz.hasOwnProperty('crossword')) {
+      throw('ERROR: ccwJsonCheckMainFields: missing crossword-compiler.rectangular-puzzle.crossword element');
+    }
+
+    const crossword = rectpuzz.crossword;
+
+    if (!crossword.hasOwnProperty('grid')) {
+      throw('ERROR: ccwJsonCheckMainFields: missing crossword-compiler.rectangular-puzzle.crossword.grid element');
+    }
+    if (! crossword.grid.hasOwnProperty('@attributes')) {
+      throw('ERROR: ccwJsonCheckMainFields: missing crossword-compiler.rectangular-puzzle.crossword.grid @attributes');
+    }
+
+    if ( ! crossword.grid.hasOwnProperty('cell') ) {
+      throw('ERROR: ccwJsonCheckMainFields: missing crossword-compiler.rectangular-puzzle.crossword.grid.cell element');
+    }
+
+    if ( ! crossword.grid['@attributes'].hasOwnProperty('width') ) {
+      throw('ERROR: ccwJsonCheckMainFields: missing crossword-compiler.rectangular-puzzle.crossword.grid.@attributes.width attribute');
+    }
+    if ( ! crossword.grid['@attributes'].hasOwnProperty('height') ) {
+      throw('ERROR: ccwJsonCheckMainFields: missing crossword-compiler.rectangular-puzzle.crossword.grid.@attributes.height attribute');
+    }
+
+    if (crossword.grid['@attributes'].width !== crossword.grid['@attributes'].height) {
+      throw('ERROR: parseCrosswordCompilerJsonIntoDSL: conflicting width and height in crossword-compiler.rectangular-puzzle.crossword.grid @attributes');
+    }
+
+    crossword.grid.cell.forEach( cell => {
+      if (! cell.hasOwnProperty('@attributes')) {
+        throw(`ERROR: ccwJsonCheckMainFields: missing @attributes in cell=${JSON.stringify(cell)}`);
+      }
+    });
+
+    if (! crossword.hasOwnProperty('word')) {
+      throw('ERROR: ccwJsonCheckMainFields: missing crossword-compiler.rectangular-puzzle.crossword.word element');
+    }
+
+    if (! crossword.hasOwnProperty('clues')) {
+      throw('ERROR: ccwJsonCheckMainFields: missing crossword-compiler.rectangular-puzzle.crossword.clues element');
+    }
+
+  }
+
+  function ccwJsonParseGrid( json ) {
+    const grid = {}; // {y}{x}=cell@attributes, {y=1}{x=1} is top left corner
+    const crossword = json['crossword-compiler']['rectangular-puzzle'].crossword;
+    crossword.grid.cell.forEach( cell => {
+      const x = cell['@attributes'].x;
+      const y = cell['@attributes'].y;
+      if (! grid.hasOwnProperty(y)) {
+        grid[y] = {};
+      }
+      grid[y][x] = cell['@attributes'];
+    });
+    // console.log(`ccwJsonParseGrid: grid=${JSON.stringify(grid, null, 2)}`);
+    return grid;
+  }
+
+  function ccwJsonParseClueCoords( json ) {
+    const clueCoords = {}; // {x}{y}=cell@attributes
+    const crossword = json['crossword-compiler']['rectangular-puzzle'].crossword;
+    crossword.grid.cell.forEach( cell => {
+      const x = cell['@attributes'].x;
+      const y = cell['@attributes'].y;
+      if (cell['@attributes'].hasOwnProperty('number')) {
+        clueCoords[cell['@attributes'].number] = {
+          x : x,
+          y : y
+        };
+      }
+    });
+    console.log(`ccwJsonParseClueCoords: found ${Object.keys(clueCoords).length} clueCoords` );
+    return clueCoords;
+  }
+
+  // function ccwJsonParseAnswers( json ) {
+  //   const answers = { across: {}, down: {} };
+  //   const crossword = json['crossword-compiler']['rectangular-puzzle'].crossword;
+  //   // not clear this is worth doing
+  //   crossword.word.forEach(word => {
+  //     if (word.hasOwnProperty('@attributes')) {
+  //       if (word['@attributes'].hasOwnProperty('solution')) {
+  //         const direction = (word['@attributes'].x.match(/\-/))? 'across' : 'down';
+  //         answers[direction][word['@attributes'].id] = word['@attributes'].solution;
+  //       }
+  //     }
+  //   });
+  //   console.log(`ccwJsonParseAnswers: found ${Object.keys(answers.across).length + Object.keys(answers.down).length} answers`);
+  //   return answers;
+  // }
+
+  function ccwJsonParseCluesExtant( json, clueCoords ) {
+    const clues = { across: {}, down: {} };
+    const crossword = json['crossword-compiler']['rectangular-puzzle'].crossword;
+    crossword.clues.forEach( group => {
+      if ( group.hasOwnProperty('title')
+           && group.title.hasOwnProperty('b')
+           && group.title.b.hasOwnProperty('#text')
+        ) {
+        const direction = group.title.b['#text'].toLowerCase();
+        if (direction !== 'across' && direction !== 'down') {
+          throw(`ERROR: ccwJsonParseCluesExtant: crossword.clues have unrecognised direction=${direction}`);
+        }
+        group.clue.forEach( clue => {
+          if (clue.hasOwnProperty('@attributes')) {
+            const id = clue['@attributes'].number;
+            clues[direction][id] = {
+              id     : id,
+              format : clue['@attributes'].format,
+              text   : clue['#text'],
+              coord  : clueCoords[id],
+            };
+          }
+        });
+      }
+    });
+    return clues;
+  }
+
+  function calcAnswersDirectionAndSizeFromGrid( grid ){
+    const answers = {};
+    const size = Object.keys(grid).length;
+
+    for (let x = 1; x <= size; x++) {
+      for (let y = 1; y <= size; y++) {
+        if (grid[y][x].hasOwnProperty('number')) {
+          const id = grid[y][x].number;
+          answers[id] = {
+            coords    : {x, y},
+            directions: {} // could be across and/or down
+          };
+          // check if is across, and scan to get length and letters of full answers
+          if((x<size)
+          && (grid[y][x+1].type !== 'block')
+          && (x==1 || grid[y][x-1].type == 'block') 
+          ) {
+            const chars = [];
+            for(let wx=x; wx<=size; wx++){
+              if (grid[y][wx].type == 'block') {
+                break;
+              } else {
+                chars.push( grid[y][wx].solution );
+              }
+            }
+            answers[id].directions['across'] = {
+              length: chars.length,
+              text  : chars.join(''),
+            };
+          }
+          // ditto for down
+          if((y<size)
+          && (grid[y+1][x].type !== 'block')
+          && (y==1 || grid[y-1][x].type == 'block')
+          ) {
+            const chars = [];
+            for(let wy=y; wy<=size; wy++){
+              if (grid[wy][x].type == 'block') {
+                break;
+              } else {
+                chars.push( grid[wy][x].solution );
+              }
+            }
+            answers[id].directions['down'] = {
+              length: chars.length,
+              text  : chars.join(''),
+            };
+          }
+        }
+      }
+    }
+
+    console.log(`calcAnswersDirectionAndSizeFromGrid: answers=${JSON.stringify(answers,null,2)}`);
+
+    return answers;
+  }
+
   function parseCrosswordCompilerJsonIntoDSL( json ){
     let errors = [];
     let dslText = "duff output from parseCrosswordCompilerJsonIntoDSL";
@@ -517,17 +707,9 @@
     // now actually do the parsing of the CCW content into DSL
     try {
 
-      if (! json.hasOwnProperty('crossword-compiler') ){
-        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler element');
-      }
-      if (! json['crossword-compiler'].hasOwnProperty('rectangular-puzzle') ){
-        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle element');
-      }
+      ccwJsonCheckMainFields(json);
 
       const rectpuzz = json['crossword-compiler']['rectangular-puzzle'];
-      if (!rectpuzz.hasOwnProperty('metadata')) {
-        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.metadata element');
-      }
 
       const metadata = rectpuzz.metadata;
       if (metadata.hasOwnProperty('title') && metadata.title.hasOwnProperty('#text')) {
@@ -537,119 +719,80 @@
         dslPieces.author = metadata.creator['#text'];
       }
 
-      if (!rectpuzz.hasOwnProperty('crossword')) {
-        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword element');
-      }
-
       const crossword = rectpuzz.crossword;
-
-      const clueCoords = {}; // clue id -> {x: 1, y: 2}
-      const answers    = { across: {}, down: {} };
-      const grid = {}; // {x}{y}=cell@attributes
-
-      if (!crossword.hasOwnProperty('grid')) {
-        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid element');
-      }
-      if (! crossword.grid.hasOwnProperty('@attributes')) {
-        errors.push('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid @attributes');
-      }
-
-      const width  = crossword.grid['@attributes'].width;
-      const height = crossword.grid['@attributes'].height;
-      if (width !== height) {
-        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: conflicting width and height in crossword-compiler.rectangular-puzzle.crossword.grid @attributes');
-      }
+      const width     = crossword.grid['@attributes'].width;
+      const height    = crossword.grid['@attributes'].height;
 
       dslPieces.size = `${width}x${width}`;
 
-      if ( ! crossword.grid.hasOwnProperty('cell') ) {
-        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.grid.cell element');
-      }
-
-      // build up grid[x][y] of the answer letters
-      // and obtain the coords of the start of each clue's answer
-      crossword.grid.cell.forEach( cell => {
-        if (! cell.hasOwnProperty('@attributes')) {
-          throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: missing @attributes in cell=${JSON.stringify(cell)}`);
-        } else {
-          const x = cell['@attributes'].x;
-          const y = cell['@attributes'].y;
-          if (! grid.hasOwnProperty(x)) {
-            grid[x] = {};
-          }
-          grid[x][y] = cell['@attributes'];
-
-          if (cell['@attributes'].hasOwnProperty('number')) {
-            clueCoords[cell['@attributes'].number] = {
-              x : x,
-              y : y
-            };
-          }
-        }
-      });
-
-      console.log(`parseCrosswordCompilerJsonIntoDSL: grid=${JSON.stringify(grid, null, 2)}`);
-
-      console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(clueCoords).length} clueCoords` );
-
-      if (! crossword.hasOwnProperty('word')) {
-        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.word element');
-      }
-
-      // not clear this is worth doing
-      crossword.word.forEach(word => {
-        if (word.hasOwnProperty('@attributes')) {
-          if (word['@attributes'].hasOwnProperty('solution')) {
-            const direction = (word['@attributes'].x.match(/\-/))? 'across' : 'down';
-            answers[direction][word['@attributes'].id] = word['@attributes'].solution;
-          }
-        }
-      });
-
-      console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(answers.across).length + Object.keys(answers.down).length} answers`);
+      const grid       = ccwJsonParseGrid       (json); // {x}{y}=cell@attributes
+      const clueCoords = ccwJsonParseClueCoords (json); // clue id -> {x: 1, y: 2}
+      const answers    = calcAnswersDirectionAndSizeFromGrid(grid); // { id : {coords, directions : {across/down: {length, text}}} }
+      const clues      = ccwJsonParseCluesExtant(json, clueCoords); // { across: {}, down: {} };
 
       // build up the set of clue details,
-      //   handling the multi-clue answers
-      if (! crossword.hasOwnProperty('clues')) {
-        throw('ERROR: parseCrosswordCompilerJsonIntoDSL: missing crossword-compiler.rectangular-puzzle.crossword.clues element');
-      }
+      //  first get the extant clue details, including the multi-clue answers mixed in
+      // for clues of a multi-clue answer,
+      //   work out each one's answer size (which portion of the main csv)
+      //   2nd+ clues always defer to 1st clue in multi
 
-      crossword.clues.forEach( group => {
-        if ( group.hasOwnProperty('title')
-             && group.title.hasOwnProperty('b')
-             && group.title.b.hasOwnProperty('#text')
-          ) {
-          const direction = group.title.b['#text'].toLowerCase();
-          if (direction !== 'across' && direction !== 'down') {
-            throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: crossword.clues have unrecognised direction=${direction}`);
-          }
-          group.clue.forEach( clue => {
-            if (clue.hasOwnProperty('@attributes')) {
-              const id = clue['@attributes'].number;
-              // if number is a CSV,
-              //  split it and generate an entry for each int (in case ), checking for which direction each one is in
-              //  mark which ones are part of a larger set
-              // ...
-              if (! clueCoords.hasOwnProperty(id)) {
-                throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: clue id=${id} does not have a corresponding entry in clueCoords=${JSON.stringify(clueCoords, null, 2)}`);
-              }
-              dslPieces[direction][id] = {
-                id     : id,
-                format : clue['@attributes'].format,
-                text   : clue['#text'],
-                coord  : clueCoords[id],
-              };
+      ['across', 'down'].forEach( direction => {
+        const ids = Object.keys(clues[direction]);
+        const idsMultiOnly = ids.filter( id => { return id.match(/,/); });
+
+        console.log(`parseCrosswordCompilerJsonIntoDSL: idsMultiOnly=${idsMultiOnly}`);
+
+        idsMultiOnly.forEach( idMulti => {
+          const ids = idMulti.split(/,\s*/);
+          console.log(`parseCrosswordCompilerJsonIntoDSL: idMulti=${idMulti}, clues.${direction}[idMulti]=${JSON.stringify(clues[direction][idMulti])}`);
+          ids.forEach( id => {
+            if (! id.match(/^\d+$/) ) {
+              throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: could not parse clue id=${idMulti}`);
             }
           });
-        }
+
+          // get the existing multi clue entry,
+          // create or build a new ones for each constituent clue
+          // remove original multi clue (with first clue in multi clue containing all the formats)
+          const firstId = ids[0];
+          clues[direction][firstId] = {
+            id          : firstId,
+            multiIds    : idMulti,
+            multiFormats: clues[direction].format,
+            text        : clues[direction].text
+          };
+
+          const childIds = ids.slice(1);
+          childIds.forEach( id => {
+            // how do we know which direction the clue belongs to?
+          } );
+        });
       });
 
-      // for clues of a multi-clue answer,
-      //   work out each one's answer size (which prtion of the main csv)
+      // loop over all clues
+      //   check size of clue slot
 
-      // verify all clues fit the grid
-      //   obtain the answers from the grip
-      //   fit to the CSV
+      // parse format
+      // distribute format among multi
+      //  check it all adds up
+      //  loop over list, plucking off the format segments that fit into teh clue length
+      // update clue entries
+
+
+      // loop over all clues
+      //   look up answer chars for slot
+      //   parse according to format
+      //   update clue
+
+      ['across', 'down'].forEach( direction => {
+        const ids = Object.keys(clues[direction]);
+        ids.forEach( id => {
+          if (! clueCoords.hasOwnProperty(id)) {
+            throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: clue id=${id} does not have a corresponding entry in clueCoords`); //=${JSON.stringify(clueCoords, null, 2)}`);
+          }
+          dslPieces[direction][id] = clues[direction][id];
+        });
+      });
 
       console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(dslPieces.across).length + Object.keys(dslPieces.down).length} clues`);
 
@@ -711,7 +854,7 @@
       errors = errors.concat( xmlWithErrors.errors );
     } else {
       const json = xmlToJson( xmlWithErrors.xmlDoc );
-      console.log(`DEBUG: parseCrosswordCompilerXMLIntoDSL: json=${JSON.stringify(json, null, 2)}`);
+      // console.log(`DEBUG: parseCrosswordCompilerXMLIntoDSL: json=${JSON.stringify(json, null, 2)}`);
       const dslTextWithErrors = parseCrosswordCompilerJsonIntoDSL( json );
       if (dslTextWithErrors.errors.length > 0) {
         errors = errors.concat( dslTextWithErrors.errors );
