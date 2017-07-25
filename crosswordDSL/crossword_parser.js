@@ -847,14 +847,20 @@
           const clue = clues[direction][id];
           const answerText = answers[id].directions[direction].text;
           const clueFormat = clue.format;
-          const clueFormatNumbers = clueFormat.split(/[,\-]/);             // '1-2-34,456' --> ["1", "2", "34", "456"]
-          const clueFormatDividers = clueFormat.split(/\d+/).slice(1,-1);  // '1-2-34,456' --> ["-", "-", ","]
+          const clueFormatNumbers = clueFormat.split(/[,\-]/).map(n=>{return parseInt(n);}); // '1-2-34,456' --> [1, 2, 34, 456]
+          const clueFormatDividers = clueFormat.split(/\d+/).slice(1,-1);    // '1-2-34,456' --> ["-", "-", ","]
+          if (clueFormatNumbers.length != (clueFormatDividers.length+1)) {
+            throw `ERROR: ccCalcCluesFormattedAnswers: clueFormatNumbers.length)()${clueFormatNumbers.length}) != clueFormatDividers.length+1(${clueFormatDividers.length+1}) }`
+          }
           let pos = 0;
           const answerTextPieces = clueFormatNumbers.map(num => {
             const piece = answerText.slice(pos, pos+num);
             pos = pos + num;
             return piece;
           });
+          if (answerTextPieces.length != clueFormatNumbers.length) {
+            throw `ERROR: ccCalcCluesFormattedAnswers: answerTextPieces.length(${answerTextPieces.length}) != clueFormatNumbers.length(${clueFormatNumbers.length})`;
+          }
           const answerTextFragments = [answerTextPieces[0]];
           clueFormatDividers.forEach( (cfd, i) => {
             answerTextFragments.push( cfd );
@@ -862,7 +868,7 @@
           });
           const answerTextFormatted = answerTextFragments.join('');
           clue.formattedAnswer = answerTextFormatted;
-          // console.log(`ccCalcCluesFormattedAnswers: id=${id}, direction=${direction}: answerText=${answerText}, clueFormat=${clueFormat}, answerTextFormatted=${answerTextFormatted}`);
+          // console.log(`ccCalcCluesFormattedAnswers: id=${id}, direction=${direction}: answerText=${answerText}, clueFormat=${clueFormat}, clueFormatNumbers=${JSON.stringify(clueFormatNumbers)}, answerTextFormatted=${answerTextFormatted},\nanswerTextPieces=${JSON.stringify(answerTextPieces)}, clueFormatDividers=${JSON.stringify(clueFormatDividers)}\n`);
         }
       } );
     });
