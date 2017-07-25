@@ -870,6 +870,26 @@
     return clues;
   }
 
+  function ccwGenerateDslTextFromDslPieces( dslPieces ){
+    const dslText = Object.keys(dslPieces).map( field => {
+      if (field == 'across' || field == 'down') {
+        const clues = [`${field}:`];
+        let ids = Object.keys(dslPieces[field]);
+        ids.sort((a,b) => {return parseInt(a)-parseInt(b);});
+        ids.forEach(id => {
+          const clue = dslPieces[field][id];
+          const format = (clue.hasOwnProperty('formattedAnswer'))? clue.formattedAnswer : clue.format;
+          const multiPrefixThingy = (clue.hasOwnProperty('multiPrefix'))? ` ${clue.multiPrefix}. ` : '';
+          clues.push(`- (${clue.coord.x},${clue.coord.y}) ${clue.id}. ${multiPrefixThingy}${clue.text} (${format})`);
+        })
+        return clues.join("\n");
+      } else {
+        return `${field}: ${dslPieces[field]}`;
+      }
+    }).join("\n");
+    return dslText;
+  }
+
   function ccwPortCluesToDslPieces( clues, answers, dslPieces ){
     // port all the relevant clues to dslPieces, reading from the answers cos clues might contain  leftover multi entries
 
@@ -932,41 +952,11 @@
 
       console.log(`ccwParseJsonIntoDSL: found ${Object.keys(dslPieces.across).length + Object.keys(dslPieces.down).length} clues`);
 
-      // version: standard v1
-      // name: Polymousse 3456
-      // author: Fred
-      // editor: Colin Inman
-      // copyright: 2017, Financial Times
-      // publisher: Financial Times
-      // pubdate: 2017/01/08
-      // size: 17x17 # or 15x15
-      // across:
-      // - (1,1) 1. Gges (SCRAMBLED,EGGS)
-      // - (3,3) 3. To Persia in a hurry (IRAN)
-      // down:
-      // - (1,1) 1. Gges (SCRAMBLED,EGGS)
-      // - (3,1) 2. Its an air, a police, a disk (RAID)
-
-      // construct dslText
-
-      if (errors.length == 0) {
-        dslText = Object.keys(dslPieces).map( field => {
-          if (field == 'across' || field == 'down') {
-            const clues = [`${field}:`];
-            let ids = Object.keys(dslPieces[field]);
-            ids.sort((a,b) => {return parseInt(a)-parseInt(b);});
-            ids.forEach(id => {
-              const clue = dslPieces[field][id];
-              const format = (clue.hasOwnProperty('formattedAnswer'))? clue.formattedAnswer : clue.format;
-              const multiPrefixThingy = (clue.hasOwnProperty('multiPrefix'))? ` ${clue.multiPrefix}. ` : '';
-              clues.push(`- (${clue.coord.x},${clue.coord.y}) ${clue.id}. ${multiPrefixThingy}${clue.text} (${format})`);
-            })
-            return clues.join("\n");
-          } else {
-            return `${field}: ${dslPieces[field]}`;
-          }
-        }).join("\n");
+      if (errors.length > 0) {
+        throw `ERROR: ccwParseJsonIntoDSL: irony alert. Its an error that we have an error at this stage`;
       }
+
+      dslText = ccwGenerateDslTextFromDslPieces( dslPieces );
     }
     catch( err ) {
       console.log(`ccwParseJsonIntoDSL: received an ERROR: err=${err}`);
