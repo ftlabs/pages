@@ -693,6 +693,86 @@
     return answers;
   }
 
+  function ccwCalcSequenceInfoForMultiClues( clues, answers, clueCoords ){
+    // build up the set of clue details,
+    //  first get the extant clue details, including the multi-clue answers mixed in
+    // for clues of a multi-clue answer,
+    //   work out each one's answer size (which portion of the main csv)
+    //   2nd+ clues always defer to 1st clue in multi
+
+    ['across', 'down'].forEach( direction => {
+      const ids = Object.keys(clues[direction]);
+      const idsMultiOnly = ids.filter( id => { return id.match(/,/); });
+
+      console.log(`ccwCalcSequenceInfoForMultiClues: idsMultiOnly=${idsMultiOnly}`);
+
+      idsMultiOnly.forEach( idMulti => {
+        const ids = idMulti.split(/,\s*/);
+        console.log(`ccwCalcSequenceInfoForMultiClues: idMulti=${idMulti}, clues.${direction}[idMulti]=${JSON.stringify(clues[direction][idMulti])}`);
+        ids.forEach( id => {
+          if (! id.match(/^\d+$/) ) {
+            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: could not parse clue id=${idMulti}`);
+          }
+        });
+
+        const multiSequence = [];
+
+        // get the existing multi clue entry,
+        // create a new one for each constituent clue
+        const firstId = ids[0];
+        const multiFormats = clues[direction][idMulti].format;
+        const firstLength = answers[firstId].directions[direction]['length'];
+        clues[direction][firstId] = {
+          id          : firstId,
+          multiIds    : idMulti,
+          multiFormats: multiFormats,
+          text        : clues[direction][idMulti].text,
+          coord       : clueCoords[firstId],
+          length      : firstLength,
+          multiSequence: multiSequence,
+        };
+
+        multiSequence.push({
+          id       : firstId,
+          direction: direction,
+          length   : firstLength,
+        });
+
+        const childIds = ids.slice(1);
+        childIds.forEach( childId => {
+          // how do we know which direction the clue belongs to?
+          let childDirection = direction;
+          if (answers[childId].numDirections == 2) {
+            // assume is same direction as first, but this is NOT RIGHT and will need to be addressed forthwith
+          } else {
+            childDirection = Object.keys(answers[childId].directions)[0];
+          }
+
+          const childLength = answers[childId].directions[childDirection]['length'];
+          clues[childDirection][childId] = {
+            id    : childId,
+            text  : `See ${firstId} ${direction}`,
+            coord : clueCoords[childId],
+            first : {
+              id       : firstId,
+              direction: direction
+            },
+            length : childLength,
+          };
+
+          multiSequence.push({
+            id       : childId,
+            direction: childDirection,
+            length   : childLength,
+          });
+        } );
+      });
+    });
+    console.log(`ccwCalcSequenceInfoForMultiClues: clues=${JSON.stringify(clues, null, 2)}`);
+
+    return clues;
+  }
+
   function ccwParseJsonIntoDSL( json ){
     let errors = [];
     let dslText = "duff output from ccwParseJsonIntoDSL";
@@ -733,70 +813,7 @@
       const answers    = ccwCalcAnswersDirectionAndSizeFromGrid(grid); // { id : {coords, directions : {across/down: {length, text}}} }
       const clues      = ccwJsonParseCluesExtant(json, clueCoords); // { across: {}, down: {} };
 
-      // build up the set of clue details,
-      //  first get the extant clue details, including the multi-clue answers mixed in
-      // for clues of a multi-clue answer,
-      //   work out each one's answer size (which portion of the main csv)
-      //   2nd+ clues always defer to 1st clue in multi
-
-      ['across', 'down'].forEach( direction => {
-        const ids = Object.keys(clues[direction]);
-        const idsMultiOnly = ids.filter( id => { return id.match(/,/); });
-
-        console.log(`ccwParseJsonIntoDSL: idsMultiOnly=${idsMultiOnly}`);
-
-        idsMultiOnly.forEach( idMulti => {
-          const ids = idMulti.split(/,\s*/);
-          console.log(`ccwParseJsonIntoDSL: idMulti=${idMulti}, clues.${direction}[idMulti]=${JSON.stringify(clues[direction][idMulti])}`);
-          ids.forEach( id => {
-            if (! id.match(/^\d+$/) ) {
-              throw(`ERROR: ccwParseJsonIntoDSL: could not parse clue id=${idMulti}`);
-            }
-          });
-
-
-          // get the existing multi clue entry,
-          // create or build a new ones for each constituent clue
-          // remove original multi clue (with first clue in multi clue containing all the formats)
-          const firstId = ids[0];
-          clues[direction][firstId] = {
-            id          : firstId,
-            multiIds    : idMulti,
-            multiFormats: clues[direction][idMulti].format,
-            text        : clues[direction][idMulti].text,
-            coord       : clueCoords[firstId],
-            length      : answers[firstId].directions[direction]['length'],
-          };
-
-
-
-          const childIds = ids.slice(1);
-          childIds.forEach( childId => {
-            // how do we know which direction the clue belongs to?
-            let childDirection = direction;
-            if (answers[childId].numDirections == 2) {
-              // assume is same direction as first, but this is NOT RIGHT and will need to be addressed forthwith
-            } else {
-              childDirection = Object.keys(answers[childId].directions)[0];
-            }
-
-            clues[childDirection][childId] = {
-              id    : childId,
-              text  : `See ${firstId} ${direction}`,
-              coord : clueCoords[childId],
-              first : {
-                id       : firstId,
-                direction: direction
-              },
-              length : answers[childId].directions[childDirection]['length'],
-            };
-          } );
-        });
-      });
-      console.log(`ccwParseJsonIntoDSL: clues=${JSON.stringify(clues, null, 2)}`);
-
-      // loop over all clues
-      //   check size of clue slot
+      ccwCalcSequenceInfoForMultiClues( clues, answers, clueCoords );
 
       // parse format
       // distribute format among multi
@@ -804,7 +821,7 @@
       //  loop over list, plucking off the format segments that fit into teh clue length
       // update clue entries
 
-
+      
       // loop over all clues
       //   look up answer chars for slot
       //   parse according to format
