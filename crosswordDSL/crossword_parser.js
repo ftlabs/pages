@@ -766,6 +766,12 @@
             length   : childLength,
           });
         } );
+
+        const multiSequencePiecesForPrefix = multiSequence.slice(1).map( seqItem => {
+          return (answers[seqItem.id].numDirections == 1)? seqItem.id : `${seqItem.id} ${seqItem.direction}`;
+        })
+
+        clues[direction][firstId].multiPrefix = ',' + multiSequencePiecesForPrefix.join(',');
       });
     });
     console.log(`ccwCalcSequenceInfoForMultiClues: clues=${JSON.stringify(clues, null, 2)}`);
@@ -856,7 +862,7 @@
           });
           const answerTextFormatted = answerTextFragments.join('');
           clue.formattedAnswer = answerTextFormatted;
-          console.log(`ccCalcCluesFormattedAnswers: id=${id}, direction=${direction}: answerText=${answerText}, clueFormat=${clueFormat}, answerTextFormatted=${answerTextFormatted}`);
+          // console.log(`ccCalcCluesFormattedAnswers: id=${id}, direction=${direction}: answerText=${answerText}, clueFormat=${clueFormat}, answerTextFormatted=${answerTextFormatted}`);
         }
       } );
     });
@@ -951,7 +957,9 @@
             ids.sort((a,b) => {return parseInt(a)-parseInt(b);});
             ids.forEach(id => {
               const clue = dslPieces[field][id];
-              clues.push(`- (${clue.coord.x},${clue.coord.y}) ${clue.id}. ${clue.text} (${clue.format})`);
+              const format = (clue.hasOwnProperty('formattedAnswer'))? clue.formattedAnswer : clue.format;
+              const multiPrefixThingy = (clue.hasOwnProperty('multiPrefix'))? ` ${clue.multiPrefix}. ` : '';
+              clues.push(`- (${clue.coord.x},${clue.coord.y}) ${clue.id}. ${multiPrefixThingy}${clue.text} (${format})`);
             })
             return clues.join("\n");
           } else {
