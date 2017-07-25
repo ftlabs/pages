@@ -773,6 +773,112 @@
     return clues;
   }
 
+  function ccwCalcFormatsForMultiClues( clues ){
+    // parse format
+    // distribute format among multi
+    //  check it all adds up
+    //  loop over list, plucking off the format segments that fit into teh clue length
+    // update clue entries
+
+    ['across', 'down'].forEach( direction => {
+      const ids = Object.keys(clues[direction]);
+      const idsMultiOnly = ids.filter( id => { return clues[direction][id].hasOwnProperty('multiSequence'); });
+
+      console.log(`ccwCalcFormatsForMultiClues: direction=${direction}, idsMultiOnly=${JSON.stringify(idsMultiOnly)}`);
+
+      idsMultiOnly.forEach( id => {
+        const clue = clues[direction][id];
+        const multiFormatList = clue.multiFormats.split(/[,\-]/);
+        console.log(`ccwCalcFormatsForMultiClues: id=${id}, clues.${direction}[${id}]=${JSON.stringify(clue, null, 2)}, \nmultiFormatList=${JSON.stringify(multiFormatList)}`);
+        // loop over multiSequence
+        //   unpack head of remaining multiFormatList into current sequence item until full
+        const remainingFormats = multiFormatList.slice();
+        clue.multiSequence.forEach( currentSeqClue => {
+          const currentSeqFormats = [];
+          let remainingAnswerLength = currentSeqClue['length'];
+          while (remainingAnswerLength > 0) {
+            if (remainingFormats.length == 0) {
+              throw `ERROR: cannot distribute formats among multi-clue: clue=${clue}: not enough remaining format values for currentSeqClue=${currentSeqClue}`;
+            }
+            if (remainingFormats[0] > remainingAnswerLength) {
+              throw `ERROR: cannot distribute formats among multi-clue: clue=${clue}: remaining format value, ${remainingFormats[0]}, too large for remainingAnswerLength, ${remainingAnswerLength}: currentSeqClue=${currentSeqClue}`;
+            }
+            const format = remainingFormats.shift();
+            currentSeqFormats.push(format);
+            remainingAnswerLength = remainingAnswerLength - format;
+          }
+
+          currentSeqClue.format = currentSeqFormats.join(',');
+        });
+        if (remainingFormats.length > 0) {
+          throw `ERROR: cannot fully distribute formats among multi-clue: clue=${clue}: some remainingFormats, ${remainingFormats}`;
+        }
+
+        console.log(`ccwCalcFormatsForMultiClues: id=${id}, clues.${direction}[${id}]=${JSON.stringify(clue, null, 2)}`);
+
+        // update the relevant clues with newly calculated format values
+        clue.multiSequence.forEach( currentSeqClue => {
+          clues[currentSeqClue.direction][currentSeqClue.id].format = currentSeqClue.format;
+        } );
+      } );
+    } );
+    console.log(`ccwCalcFormatsForMultiClues: clues=${JSON.stringify(clues, null, 2)}`);
+    return clues;
+  }
+
+  function ccCalcCluesFormattedAnswers( clues, answers ){
+    // loop over all answers
+    //   look up answer chars for slot
+    //   parse according to format
+    //   update clue
+
+    Object.keys(answers).forEach( id => {
+      ['across', 'down'].forEach( direction => {
+        if (answers[id].directions.hasOwnProperty(direction)) {
+          if (!clues[direction].hasOwnProperty(id)) {
+            throw `ERROR: ccCalcCluesFormattedAnswers: cannot find clue[${direction}][${id}] from answer=${answers[id]}`;
+          }
+          const clue = clues[direction][id];
+          const answerText = answers[id].directions[direction].text;
+          const clueFormat = clue.format;
+          const clueFormatNumbers = clueFormat.split(/[,\-]/);             // '1-2-34,456' --> ["1", "2", "34", "456"]
+          const clueFormatDividers = clueFormat.split(/\d+/).slice(1,-1);  // '1-2-34,456' --> ["-", "-", ","]
+          let pos = 0;
+          const answerTextPieces = clueFormatNumbers.map(num => {
+            const piece = answerText.slice(pos, pos+num);
+            pos = pos + num;
+            return piece;
+          });
+          const answerTextFragments = [answerTextPieces[0]];
+          clueFormatDividers.forEach( (cfd, i) => {
+            answerTextFragments.push( cfd );
+            answerTextFragments.push( answerTextPieces[i+1] );
+          });
+          const answerTextFormatted = answerTextFragments.join('');
+          clue.formattedAnswer = answerTextFormatted;
+          console.log(`ccCalcCluesFormattedAnswers: id=${id}, direction=${direction}: answerText=${answerText}, clueFormat=${clueFormat}, answerTextFormatted=${answerTextFormatted}`);
+        }
+      } );
+    });
+
+    return clues;
+  }
+
+  function ccwPortCluesToDslPieces( clues, answers, dslPieces ){
+    // port all the relevant clues to dslPieces, reading from the answers cos clues might contain  leftover multi entries
+
+    const ids = Object.keys(answers).sort((a,b) => {return parseInt(a)-parseInt(b);});
+    ids.forEach( id => {
+      ['across', 'down'].forEach( direction => {
+        if (answers[id].directions.hasOwnProperty(direction)) {
+          dslPieces[direction][id] = clues[direction][id];
+        }
+      } );
+    } );
+
+    return dslPieces;
+  }
+
   function ccwParseJsonIntoDSL( json ){
     let errors = [];
     let dslText = "duff output from ccwParseJsonIntoDSL";
@@ -814,71 +920,9 @@
       const clues      = ccwJsonParseCluesExtant(json, clueCoords); // { across: {}, down: {} };
 
       ccwCalcSequenceInfoForMultiClues( clues, answers, clueCoords );
-
-      // parse format
-      // distribute format among multi
-      //  check it all adds up
-      //  loop over list, plucking off the format segments that fit into teh clue length
-      // update clue entries
-
-      ['across', 'down'].forEach( direction => {
-        const ids = Object.keys(clues[direction]);
-        const idsMultiOnly = ids.filter( id => { return clues[direction][id].hasOwnProperty('multiSequence'); });
-
-        console.log(`ccwParseJsonIntoDSL: direction=${direction}, idsMultiOnly=${JSON.stringify(idsMultiOnly)}`);
-
-        idsMultiOnly.forEach( id => {
-          const clue = clues[direction][id];
-          const multiFormatList = clue.multiFormats.split(/[,\-]/);
-          console.log(`ccwParseJsonIntoDSL: id=${id}, clues.${direction}[${id}]=${JSON.stringify(clue, null, 2)}, \nmultiFormatList=${JSON.stringify(multiFormatList)}`);
-          // loop over multiSequence
-          //   unpack head of remaining multiFormatList into current sequence item until full
-          const remainingFormats = multiFormatList.slice();
-          clue.multiSequence.forEach( currentSeqClue => {
-            const currentSeqFormats = [];
-            let remainingAnswerLength = currentSeqClue['length'];
-            while (remainingAnswerLength > 0) {
-              if (remainingFormats.length == 0) {
-                throw `ERROR: cannot distribute formats among multi-clue: clue=${clue}: not enough remaining format values for currentSeqClue=${currentSeqClue}`;
-              }
-              if (remainingFormats[0] > remainingAnswerLength) {
-                throw `ERROR: cannot distribute formats among multi-clue: clue=${clue}: remaining format value, ${remainingFormats[0]}, too large for remainingAnswerLength, ${remainingAnswerLength}: currentSeqClue=${currentSeqClue}`;
-              }
-              const format = remainingFormats.shift();
-              currentSeqFormats.push(format);
-              remainingAnswerLength = remainingAnswerLength - format;
-            }
-
-            currentSeqClue.format = currentSeqFormats.join(',');
-          });
-          if (remainingFormats.length > 0) {
-            throw `ERROR: cannot fully distribute formats among multi-clue: clue=${clue}: some remainingFormats, ${remainingFormats}`;
-          }
-
-          console.log(`ccwParseJsonIntoDSL: id=${id}, clues.${direction}[${id}]=${JSON.stringify(clue, null, 2)}`);
-
-          // update the relevant clues with newly calculated format values
-          clue.multiSequence.forEach( currentSeqClue => {
-            clues[currentSeqClue.direction][currentSeqClue.id].format = currentSeqClue.format;
-          } );
-        } );
-      } );
-      console.log(`ccwParseJsonIntoDSL: clues=${JSON.stringify(clues, null, 2)}`);
-
-      // loop over all clues
-      //   look up answer chars for slot
-      //   parse according to format
-      //   update clue
-
-      ['across', 'down'].forEach( direction => {
-        const ids = Object.keys(clues[direction]);
-        ids.forEach( id => {
-          if (! clueCoords.hasOwnProperty(id)) {
-            throw(`ERROR: ccwParseJsonIntoDSL: clue id=${id} does not have a corresponding entry in clueCoords`); //=${JSON.stringify(clueCoords, null, 2)}`);
-          }
-          dslPieces[direction][id] = clues[direction][id];
-        });
-      });
+      ccwCalcFormatsForMultiClues( clues );
+      ccCalcCluesFormattedAnswers( clues, answers );
+      ccwPortCluesToDslPieces( clues, answers, dslPieces );
 
       console.log(`ccwParseJsonIntoDSL: found ${Object.keys(dslPieces.across).length + Object.keys(dslPieces.down).length} clues`);
 
