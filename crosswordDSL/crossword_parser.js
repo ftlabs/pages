@@ -609,24 +609,49 @@
     const clues = { across: {}, down: {} };
     const crossword = json['crossword-compiler']['rectangular-puzzle'].crossword;
     crossword.clues.forEach( group => {
-      if ( group.hasOwnProperty('title')
+      if ( !(group.hasOwnProperty('title')
            && group.title.hasOwnProperty('b')
-           && group.title.b.hasOwnProperty('#text')
+           && group.title.b.hasOwnProperty('#text'))
         ) {
+          throw `ERROR: ccwJsonParseCluesExtant: cannot find title.b.#text in group=${JSON.stringify(group,null,2)}`;
+      } else {
         const direction = group.title.b['#text'].toLowerCase();
         if (direction !== 'across' && direction !== 'down') {
           throw(`ERROR: ccwJsonParseCluesExtant: crossword.clues have unrecognised direction=${direction}`);
         }
         group.clue.forEach( clue => {
-          if (clue.hasOwnProperty('@attributes')) {
-            const id = clue['@attributes'].number;
-            clues[direction][id] = {
-              id     : id,
-              format : clue['@attributes'].format,
-              text   : clue['#text'],
-              coord  : clueCoords[id],
-            };
+          if (!clue.hasOwnProperty('@attributes')) {
+            throw `ERROR: ccwJsonParseCluesExtant: no @attributes in clue=${JSON.stringify(clue, null, 2)}`;
           }
+          if (!clue['@attributes'].hasOwnProperty('number')) {
+            throw `ERROR: ccwJsonParseCluesExtant: no number in clue.@attributes=${JSON.stringify(clue['@attributes'], null, 2)}`;
+          }
+
+          // console.log(`ccwJsonParseCluesExtant: clue=${JSON.stringify(clue, null, 2)}`);
+
+          let clueText;
+          if (clue.hasOwnProperty('#text')) {
+            clueText = clue['#text'];
+          } else if( clue.hasOwnProperty('span') && clue.span.length==2 && clue.hasOwnProperty('i') && clue.i.hasOwnProperty('#text') ){
+            // nasty hack to overcome embedded italic word in clue
+            // arising from an issue with the chosen XML->JSON converter
+            clueText = [
+              clue.span[0]['#text'],
+              '<i>', clue.i['#text'], '</i>',
+              clue.span[1]['#text']
+            ].join('');
+          } else {
+            throw `ERROR: ccwJsonParseCluesExtant: no text in clue.@attributes, nor span+i in clue: clue=${JSON.stringify(clue, null, 2)}`;
+          }
+
+          const id = clue['@attributes'].number;
+          clues[direction][id] = {
+            id     : id,
+            format : clue['@attributes'].format,
+            text   : clueText,
+            coord  : clueCoords[id],
+          };
+
         });
       }
     });
@@ -868,7 +893,7 @@
           });
           const answerTextFormatted = answerTextFragments.join('');
           clue.formattedAnswer = answerTextFormatted;
-          // console.log(`ccCalcCluesFormattedAnswers: id=${id}, direction=${direction}: answerText=${answerText}, clueFormat=${clueFormat}, clueFormatNumbers=${JSON.stringify(clueFormatNumbers)}, answerTextFormatted=${answerTextFormatted},\nanswerTextPieces=${JSON.stringify(answerTextPieces)}, clueFormatDividers=${JSON.stringify(clueFormatDividers)}\n`);
+          // console.log(`ccCalcCluesFormattedAnswers: id=${id}, direction=${direction}: answerText=${answerText}, clueFormat=${clueFormat}, clueFormatNumbers=${JSON.stringify(clueFormatNumbers)}, answerTextFormatted=${answerTextFormatted}`);
         }
       } );
     });
