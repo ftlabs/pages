@@ -538,7 +538,7 @@
     }
 
     if (crossword.grid['@attributes'].width !== crossword.grid['@attributes'].height) {
-      throw('ERROR: parseCrosswordCompilerJsonIntoDSL: conflicting width and height in crossword-compiler.rectangular-puzzle.crossword.grid @attributes');
+      throw('ERROR: ccwParseJsonIntoDSL: conflicting width and height in crossword-compiler.rectangular-puzzle.crossword.grid @attributes');
     }
 
     crossword.grid.cell.forEach( cell => {
@@ -633,7 +633,7 @@
     return clues;
   }
 
-  function calcAnswersDirectionAndSizeFromGrid( grid ){
+  function ccwCalcAnswersDirectionAndSizeFromGrid( grid ){
     const answers = {};
     const size = Object.keys(grid).length;
 
@@ -648,7 +648,7 @@
           // check if is across, and scan to get length and letters of full answers
           if((x<size)
           && (grid[y][x+1].type !== 'block')
-          && (x==1 || grid[y][x-1].type == 'block') 
+          && (x==1 || grid[y][x-1].type == 'block')
           ) {
             const chars = [];
             for(let wx=x; wx<=size; wx++){
@@ -685,14 +685,14 @@
       }
     }
 
-    console.log(`calcAnswersDirectionAndSizeFromGrid: answers=${JSON.stringify(answers,null,2)}`);
+    console.log(`ccwCalcAnswersDirectionAndSizeFromGrid: answers=${JSON.stringify(answers,null,2)}`);
 
     return answers;
   }
 
-  function parseCrosswordCompilerJsonIntoDSL( json ){
+  function ccwParseJsonIntoDSL( json ){
     let errors = [];
-    let dslText = "duff output from parseCrosswordCompilerJsonIntoDSL";
+    let dslText = "duff output from ccwParseJsonIntoDSL";
     const today = new Date();
     const pubdate = nowAsYYYMMDDD();
 
@@ -727,7 +727,7 @@
 
       const grid       = ccwJsonParseGrid       (json); // {x}{y}=cell@attributes
       const clueCoords = ccwJsonParseClueCoords (json); // clue id -> {x: 1, y: 2}
-      const answers    = calcAnswersDirectionAndSizeFromGrid(grid); // { id : {coords, directions : {across/down: {length, text}}} }
+      const answers    = ccwCalcAnswersDirectionAndSizeFromGrid(grid); // { id : {coords, directions : {across/down: {length, text}}} }
       const clues      = ccwJsonParseCluesExtant(json, clueCoords); // { across: {}, down: {} };
 
       // build up the set of clue details,
@@ -740,14 +740,14 @@
         const ids = Object.keys(clues[direction]);
         const idsMultiOnly = ids.filter( id => { return id.match(/,/); });
 
-        console.log(`parseCrosswordCompilerJsonIntoDSL: idsMultiOnly=${idsMultiOnly}`);
+        console.log(`ccwParseJsonIntoDSL: idsMultiOnly=${idsMultiOnly}`);
 
         idsMultiOnly.forEach( idMulti => {
           const ids = idMulti.split(/,\s*/);
-          console.log(`parseCrosswordCompilerJsonIntoDSL: idMulti=${idMulti}, clues.${direction}[idMulti]=${JSON.stringify(clues[direction][idMulti])}`);
+          console.log(`ccwParseJsonIntoDSL: idMulti=${idMulti}, clues.${direction}[idMulti]=${JSON.stringify(clues[direction][idMulti])}`);
           ids.forEach( id => {
             if (! id.match(/^\d+$/) ) {
-              throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: could not parse clue id=${idMulti}`);
+              throw(`ERROR: ccwParseJsonIntoDSL: could not parse clue id=${idMulti}`);
             }
           });
 
@@ -788,13 +788,13 @@
         const ids = Object.keys(clues[direction]);
         ids.forEach( id => {
           if (! clueCoords.hasOwnProperty(id)) {
-            throw(`ERROR: parseCrosswordCompilerJsonIntoDSL: clue id=${id} does not have a corresponding entry in clueCoords`); //=${JSON.stringify(clueCoords, null, 2)}`);
+            throw(`ERROR: ccwParseJsonIntoDSL: clue id=${id} does not have a corresponding entry in clueCoords`); //=${JSON.stringify(clueCoords, null, 2)}`);
           }
           dslPieces[direction][id] = clues[direction][id];
         });
       });
 
-      console.log(`parseCrosswordCompilerJsonIntoDSL: found ${Object.keys(dslPieces.across).length + Object.keys(dslPieces.down).length} clues`);
+      console.log(`ccwParseJsonIntoDSL: found ${Object.keys(dslPieces.across).length + Object.keys(dslPieces.down).length} clues`);
 
       // version: standard v1
       // name: Polymousse 3456
@@ -831,7 +831,7 @@
       }
     }
     catch( err ) {
-      console.log(`parseCrosswordCompilerJsonIntoDSL: received an ERROR: err=${err}`);
+      console.log(`ccwParseJsonIntoDSL: received an ERROR: err=${err}`);
       errors.push( err.toString() );
     }
 
@@ -840,13 +840,13 @@
       errors,
     };
 
-    console.log( `parseCrosswordCompilerJsonIntoDSL: returnObj=${JSON.stringify(returnObj, null, 2)}` );
+    console.log( `ccwParseJsonIntoDSL: returnObj=${JSON.stringify(returnObj, null, 2)}` );
 
     return returnObj;
   }
 
   // given some text, parse it into xml, convert it into the DSL, also returning any errors
-  function parseCrosswordCompilerXMLIntoDSL( text ){
+  function ccwParseXMLIntoDSL( text ){
     let dslText = "duff output from xml parser";
     let errors = [];
     let xmlWithErrors = convertTextIntoXMLWithErrors( text );
@@ -854,8 +854,8 @@
       errors = errors.concat( xmlWithErrors.errors );
     } else {
       const json = xmlToJson( xmlWithErrors.xmlDoc );
-      // console.log(`DEBUG: parseCrosswordCompilerXMLIntoDSL: json=${JSON.stringify(json, null, 2)}`);
-      const dslTextWithErrors = parseCrosswordCompilerJsonIntoDSL( json );
+      // console.log(`DEBUG: ccwParseXMLIntoDSL: json=${JSON.stringify(json, null, 2)}`);
+      const dslTextWithErrors = ccwParseJsonIntoDSL( json );
       if (dslTextWithErrors.errors.length > 0) {
         errors = errors.concat( dslTextWithErrors.errors );
       } else {
@@ -889,7 +889,7 @@
         errors = [ 'ERROR: input appears to be non-Crossword-Compiler XML' ];
       } else {
         console.log(`parseWhateverItIs: we haz crossword-compiler xml`);
-        const possibleDSLTextWithErrors = parseCrosswordCompilerXMLIntoDSL( text );
+        const possibleDSLTextWithErrors = ccwParseXMLIntoDSL( text );
         if (possibleDSLTextWithErrors.errors.length > 0) {
           errors = possibleDSLTextWithErrors.errors;
         } else {
