@@ -630,6 +630,7 @@
         });
       }
     });
+    console.log(`ccwJsonParseCluesExtant: clues=${JSON.stringify(clues, null, 2)}`);
     return clues;
   }
 
@@ -681,6 +682,8 @@
               text  : chars.join(''),
             };
           }
+
+          answers[id].numDirections = Object.keys(answers[id].directions).length;
         }
       }
     }
@@ -751,6 +754,7 @@
             }
           });
 
+
           // get the existing multi clue entry,
           // create or build a new ones for each constituent clue
           // remove original multi clue (with first clue in multi clue containing all the formats)
@@ -758,16 +762,38 @@
           clues[direction][firstId] = {
             id          : firstId,
             multiIds    : idMulti,
-            multiFormats: clues[direction].format,
-            text        : clues[direction].text
+            multiFormats: clues[direction][idMulti].format,
+            text        : clues[direction][idMulti].text,
+            coord       : clueCoords[firstId],
+            length      : answers[firstId].directions[direction]['length'],
           };
 
+
+
           const childIds = ids.slice(1);
-          childIds.forEach( id => {
+          childIds.forEach( childId => {
             // how do we know which direction the clue belongs to?
+            let childDirection = direction;
+            if (answers[childId].numDirections == 2) {
+              // assume is same direction as first, but this is NOT RIGHT and will need to be addressed forthwith
+            } else {
+              childDirection = Object.keys(answers[childId].directions)[0];
+            }
+
+            clues[childDirection][childId] = {
+              id    : childId,
+              text  : `See ${firstId} ${direction}`,
+              coord : clueCoords[childId],
+              first : {
+                id       : firstId,
+                direction: direction
+              },
+              length : answers[childId].directions[childDirection]['length'],
+            };
           } );
         });
       });
+      console.log(`ccwParseJsonIntoDSL: clues=${JSON.stringify(clues, null, 2)}`);
 
       // loop over all clues
       //   check size of clue slot
