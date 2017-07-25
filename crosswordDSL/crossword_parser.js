@@ -585,7 +585,7 @@
         };
       }
     });
-    console.log(`ccwJsonParseClueCoords: found ${Object.keys(clueCoords).length} clueCoords` );
+    // console.log(`ccwJsonParseClueCoords: found ${Object.keys(clueCoords).length} clueCoords` );
     return clueCoords;
   }
 
@@ -630,7 +630,7 @@
         });
       }
     });
-    console.log(`ccwJsonParseCluesExtant: clues=${JSON.stringify(clues, null, 2)}`);
+    // console.log(`ccwJsonParseCluesExtant: clues=${JSON.stringify(clues, null, 2)}`);
     return clues;
   }
 
@@ -688,7 +688,7 @@
       }
     }
 
-    console.log(`ccwCalcAnswersDirectionAndSizeFromGrid: answers=${JSON.stringify(answers,null,2)}`);
+    // console.log(`ccwCalcAnswersDirectionAndSizeFromGrid: answers=${JSON.stringify(answers,null,2)}`);
 
     return answers;
   }
@@ -704,11 +704,11 @@
       const ids = Object.keys(clues[direction]);
       const idsMultiOnly = ids.filter( id => { return id.match(/,/); });
 
-      console.log(`ccwCalcSequenceInfoForMultiClues: idsMultiOnly=${idsMultiOnly}`);
+      // console.log(`ccwCalcSequenceInfoForMultiClues: idsMultiOnly=${idsMultiOnly}`);
 
       idsMultiOnly.forEach( idMulti => {
         const ids = idMulti.split(/,\s*/);
-        console.log(`ccwCalcSequenceInfoForMultiClues: idMulti=${idMulti}, clues.${direction}[idMulti]=${JSON.stringify(clues[direction][idMulti])}`);
+        // console.log(`ccwCalcSequenceInfoForMultiClues: idMulti=${idMulti}, clues.${direction}[idMulti]=${JSON.stringify(clues[direction][idMulti])}`);
         ids.forEach( id => {
           if (! id.match(/^\d+$/) ) {
             throw(`ERROR: ccwCalcSequenceInfoForMultiClues: could not parse clue id=${idMulti}`);
@@ -774,7 +774,7 @@
         clues[direction][firstId].multiPrefix = ',' + multiSequencePiecesForPrefix.join(',');
       });
     });
-    console.log(`ccwCalcSequenceInfoForMultiClues: clues=${JSON.stringify(clues, null, 2)}`);
+    // console.log(`ccwCalcSequenceInfoForMultiClues: clues=${JSON.stringify(clues, null, 2)}`);
 
     return clues;
   }
@@ -790,12 +790,12 @@
       const ids = Object.keys(clues[direction]);
       const idsMultiOnly = ids.filter( id => { return clues[direction][id].hasOwnProperty('multiSequence'); });
 
-      console.log(`ccwCalcFormatsForMultiClues: direction=${direction}, idsMultiOnly=${JSON.stringify(idsMultiOnly)}`);
+      // console.log(`ccwCalcFormatsForMultiClues: direction=${direction}, idsMultiOnly=${JSON.stringify(idsMultiOnly)}`);
 
       idsMultiOnly.forEach( id => {
         const clue = clues[direction][id];
         const multiFormatList = clue.multiFormats.split(/[,\-]/);
-        console.log(`ccwCalcFormatsForMultiClues: id=${id}, clues.${direction}[${id}]=${JSON.stringify(clue, null, 2)}, \nmultiFormatList=${JSON.stringify(multiFormatList)}`);
+        // console.log(`ccwCalcFormatsForMultiClues: id=${id}, clues.${direction}[${id}]=${JSON.stringify(clue, null, 2)}, \nmultiFormatList=${JSON.stringify(multiFormatList)}`);
         // loop over multiSequence
         //   unpack head of remaining multiFormatList into current sequence item until full
         const remainingFormats = multiFormatList.slice();
@@ -820,7 +820,7 @@
           throw `ERROR: cannot fully distribute formats among multi-clue: clue=${clue}: some remainingFormats, ${remainingFormats}`;
         }
 
-        console.log(`ccwCalcFormatsForMultiClues: id=${id}, clues.${direction}[${id}]=${JSON.stringify(clue, null, 2)}`);
+        // console.log(`ccwCalcFormatsForMultiClues: id=${id}, clues.${direction}[${id}]=${JSON.stringify(clue, null, 2)}`);
 
         // update the relevant clues with newly calculated format values
         clue.multiSequence.forEach( currentSeqClue => {
@@ -828,7 +828,7 @@
         } );
       } );
     } );
-    console.log(`ccwCalcFormatsForMultiClues: clues=${JSON.stringify(clues, null, 2)}`);
+    // console.log(`ccwCalcFormatsForMultiClues: clues=${JSON.stringify(clues, null, 2)}`);
     return clues;
   }
 
@@ -950,7 +950,7 @@
       ccCalcCluesFormattedAnswers( clues, answers );
       ccwPortCluesToDslPieces( clues, answers, dslPieces );
 
-      console.log(`ccwParseJsonIntoDSL: found ${Object.keys(dslPieces.across).length + Object.keys(dslPieces.down).length} clues`);
+      // console.log(`ccwParseJsonIntoDSL: found ${Object.keys(dslPieces.across).length + Object.keys(dslPieces.down).length} clues`);
 
       if (errors.length > 0) {
         throw `ERROR: ccwParseJsonIntoDSL: irony alert. Its an error that we have an error at this stage`;
@@ -968,7 +968,7 @@
       errors,
     };
 
-    console.log( `ccwParseJsonIntoDSL: returnObj=${JSON.stringify(returnObj, null, 2)}` );
+    console.log( `ccwParseJsonIntoDSL: dslText=${dslText},\nerrors=${JSON.stringify(errors)}` );
 
     return returnObj;
   }
