@@ -1,0 +1,77 @@
+html, body {
+	width: 100%;
+	height: auto;
+	padding: 0;
+	margin: 0;
+}
+
+
+@font-face {
+    font-family: 'houschka_probold';
+    src: url('../fonts/houschkapro-bold-webfont.eot');
+    src: url('../fonts/houschkapro-bold-webfont.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/houschkapro-bold-webfont.woff2') format('woff2'),
+         url('../fonts/houschkapro-bold-webfont.woff') format('woff'),
+         url('../fonts/houschkapro-bold-webfont.ttf') format('truetype'),
+         url('../fonts/houschkapro-bold-webfont.svg#houschka_probold') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+#poster {
+	min-height: 100%;
+	padding: 8% 10%;
+	background: #c54ba0; /* Old browsers */
+	background: -moz-linear-gradient(-12deg, #070a41 0%, #c54ba0 50%, #fdb253 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(-12deg, #070a41 0%,#c54ba0 50%,#fdb253 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(168deg, #070a41 0%,#c54ba0 50%,#fdb253 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#070a41', endColorstr='#fdb253',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+	box-sizing: border-box;
+	position: relative;
+	overflow: hidden;
+}
+
+#poster p {
+	color: #fff1e0;
+	font-family: 'HouschkaPro-Bold', 'houschka_probold', sans-serif;
+	font-size: 6.8vw;
+	line-height: 1.2;
+	margin: 0;
+	height: 11.7vh;
+	width: 100%;
+	position: absolute;
+	top: 35.75%;
+	user-select:none;
+}
+
+#logo {
+	width: 34%;
+	height: 20%;
+
+	background: url('../img/ftlabs_logo.svg') no-repeat;
+	background-position: center;
+	background-size: cover;
+}
+
+.note {
+	background: rgba(255,240,127,.97);
+	box-shadow: 4px 3px 4px 0px rgba(0,0,0,.15);
+	display: block;
+	cursor: move;
+	position: absolute;
+
+	top: 100px;
+	left: 100px;
+}
+
+.button__add {
+	position: fixed;
+	right: 10px;
+	bottom: 10px;
+}
+
+.button__snap {
+	position: fixed;
+	right: 50px;
+	bottom: 10px;
+}
