@@ -21,15 +21,8 @@ function snapPoster() {
 	const captureHeight = document.documentElement.scrollHeight;
 	console.log(document.documentElement.scrollHeight);
 	html2canvas(poster, {height: captureHeight, width: window.innerWidth}).then(canvas => {
-		// console.log(canvas.toDataURL());
-		// let blob = dataURItoBlob(canvas.toDataURL());
-		// let obj = URL.createObjectURL(blob);
 
 		const image = document.createElement('a');
-		// image.setAttribute('href', blob);
-		// image.setAttribute('download', 'FTLabs_poster');
-
-		// image.click();
 
 		image.setAttribute('href', canvas.toDataURL());
 		image.setAttribute('target', '_blank');

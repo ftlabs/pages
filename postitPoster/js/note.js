@@ -14,7 +14,7 @@ let Note = function() {
 		noteEl.setAttribute('data-rotation', 0);
 		noteEl.style.left = (window.innerWidth - calcSize())/2 + 'px';
 		noteEl.style.top = document.body.scrollTop + (window.innerHeight + calcSize() * NOTE_RATIO)/2 + 'px';
-		//TODO: convert initial pos to %;
+
 		document.getElementById('poster').appendChild(noteEl);
 		return noteEl;
 	}
