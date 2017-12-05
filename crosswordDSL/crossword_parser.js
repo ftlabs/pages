@@ -491,10 +491,12 @@
     const today = new Date();
     const month = today.getMonth()+1;
     const monthMM = (month < 10)? '0' + month : month;
+    const day = today.getDate();
+    const dayDD = (day < 10)? '0' + day : day;
     const yyymmdd = [
       today.getFullYear(),
       monthMM,
-      today.getDate()
+      dayDD,
     ].join('/');
 
     return yyymmdd;
