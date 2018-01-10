@@ -635,12 +635,20 @@
           if (clue.hasOwnProperty('#text')) {
             clueText = clue['#text'];
           } else if( clue.hasOwnProperty('span') && clue.span.length==2 && clue.hasOwnProperty('i') && clue.i.hasOwnProperty('#text') ){
-            // nasty hack to overcome embedded italic word in clue
+            // nasty hack to overcome embedded italic word in clue: text italicText text
             // arising from an issue with the chosen XML->JSON converter
             clueText = [
               clue.span[0]['#text'],
               '<i>', clue.i['#text'], '</i>',
               clue.span[1]['#text']
+            ].join('');
+          } else if( clue.hasOwnProperty('span') && clue.span.hasOwnProperty('#text') && clue.hasOwnProperty('i') && clue.i.hasOwnProperty('#text') ){
+            // nasty hack to overcome embedded italic word in clue: italicText text
+            // (will get it wrong if it is: text italicText)
+            // arising from an issue with the chosen XML->JSON converter
+            clueText = [
+              '<i>', clue.i['#text'], '</i>',
+              clue.span['#text']
             ].join('');
           } else {
             throw `ERROR: ccwJsonParseCluesExtant: no text in clue.@attributes, nor span+i in clue: clue=${JSON.stringify(clue, null, 2)}`;
