@@ -611,59 +611,66 @@
     const clues = { across: {}, down: {} };
     const crossword = json['crossword-compiler']['rectangular-puzzle'].crossword;
     crossword.clues.forEach( group => {
-      if ( !(group.hasOwnProperty('title')
-           && group.title.hasOwnProperty('b')
-           && group.title.b.hasOwnProperty('#text'))
-        ) {
-          throw `ERROR: ccwJsonParseCluesExtant: cannot find title.b.#text in group=${JSON.stringify(group,null,2)}`;
+      let direction;
+      if (
+        group.hasOwnProperty('title')
+        && group.title.hasOwnProperty('b')
+        && group.title.b.hasOwnProperty('#text')
+      ) {
+          direction = group.title.b['#text'].toLowerCase();
+      } else if (
+        group.hasOwnProperty('title')
+        && group.title.hasOwnProperty('#text')
+      ) {
+          direction = group.title['#text'].toLowerCase();
       } else {
-        const direction = group.title.b['#text'].toLowerCase();
-        if (direction !== 'across' && direction !== 'down') {
-          throw(`ERROR: ccwJsonParseCluesExtant: crossword.clues have unrecognised direction=${direction}`);
-        }
-        group.clue.forEach( clue => {
-          if (!clue.hasOwnProperty('@attributes')) {
-            throw `ERROR: ccwJsonParseCluesExtant: no @attributes in clue=${JSON.stringify(clue, null, 2)}`;
-          }
-          if (!clue['@attributes'].hasOwnProperty('number')) {
-            throw `ERROR: ccwJsonParseCluesExtant: no number in clue.@attributes=${JSON.stringify(clue['@attributes'], null, 2)}`;
-          }
-
-          // console.log(`ccwJsonParseCluesExtant: clue=${JSON.stringify(clue, null, 2)}`);
-
-          let clueText;
-          if (clue.hasOwnProperty('#text')) {
-            clueText = clue['#text'];
-          } else if( clue.hasOwnProperty('span') && clue.span.length==2 && clue.hasOwnProperty('i') && clue.i.hasOwnProperty('#text') ){
-            // nasty hack to overcome embedded italic word in clue: text italicText text
-            // arising from an issue with the chosen XML->JSON converter
-            clueText = [
-              clue.span[0]['#text'],
-              '<i>', clue.i['#text'], '</i>',
-              clue.span[1]['#text']
-            ].join('');
-          } else if( clue.hasOwnProperty('span') && clue.span.hasOwnProperty('#text') && clue.hasOwnProperty('i') && clue.i.hasOwnProperty('#text') ){
-            // nasty hack to overcome embedded italic word in clue: italicText text
-            // (will get it wrong if it is: text italicText)
-            // arising from an issue with the chosen XML->JSON converter
-            clueText = [
-              '<i>', clue.i['#text'], '</i>',
-              clue.span['#text']
-            ].join('');
-          } else {
-            throw `ERROR: ccwJsonParseCluesExtant: no text in clue.@attributes, nor span+i in clue: clue=${JSON.stringify(clue, null, 2)}`;
-          }
-
-          const id = clue['@attributes'].number;
-          clues[direction][id] = {
-            id     : id,
-            format : clue['@attributes'].format,
-            text   : clueText,
-            coord  : clueCoords[id],
-          };
-
-        });
+        throw `ERROR: ccwJsonParseCluesExtant: cannot find title.b.#text or title.#text in group=${JSON.stringify(group,null,2)}`;
       }
+
+      if (direction !== 'across' && direction !== 'down') {
+        throw(`ERROR: ccwJsonParseCluesExtant: crossword.clues have unrecognised direction=${direction}`);
+      }
+      group.clue.forEach( clue => {
+        if (!clue.hasOwnProperty('@attributes')) {
+          throw `ERROR: ccwJsonParseCluesExtant: no @attributes in clue=${JSON.stringify(clue, null, 2)}`;
+        }
+        if (!clue['@attributes'].hasOwnProperty('number')) {
+          throw `ERROR: ccwJsonParseCluesExtant: no number in clue.@attributes=${JSON.stringify(clue['@attributes'], null, 2)}`;
+        }
+
+        // console.log(`ccwJsonParseCluesExtant: clue=${JSON.stringify(clue, null, 2)}`);
+
+        let clueText;
+        if (clue.hasOwnProperty('#text')) {
+          clueText = clue['#text'];
+        } else if( clue.hasOwnProperty('span') && clue.span.length==2 && clue.hasOwnProperty('i') && clue.i.hasOwnProperty('#text') ){
+          // nasty hack to overcome embedded italic word in clue: text italicText text
+          // arising from an issue with the chosen XML->JSON converter
+          clueText = [
+            clue.span[0]['#text'],
+            '<i>', clue.i['#text'], '</i>',
+            clue.span[1]['#text']
+          ].join('');
+        } else if( clue.hasOwnProperty('span') && clue.span.hasOwnProperty('#text') && clue.hasOwnProperty('i') && clue.i.hasOwnProperty('#text') ){
+          // nasty hack to overcome embedded italic word in clue: italicText text
+          // (will get it wrong if it is: text italicText)
+          // arising from an issue with the chosen XML->JSON converter
+          clueText = [
+            '<i>', clue.i['#text'], '</i>',
+            clue.span['#text']
+          ].join('');
+        } else {
+          throw `ERROR: ccwJsonParseCluesExtant: no text in clue.@attributes, nor span+i in clue: clue=${JSON.stringify(clue, null, 2)}`;
+        }
+
+        const id = clue['@attributes'].number;
+        clues[direction][id] = {
+          id     : id,
+          format : clue['@attributes'].format,
+          text   : clueText,
+          coord  : clueCoords[id],
+        };
+      });
     });
     // console.log(`ccwJsonParseCluesExtant: clues=${JSON.stringify(clues, null, 2)}`);
     return clues;
