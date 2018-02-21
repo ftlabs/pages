@@ -643,24 +643,8 @@
         let clueText;
         if (clue.hasOwnProperty('#text')) {
           clueText = clue['#text'];
-        } else if( clue.hasOwnProperty('span') && clue.span.length==2 && clue.hasOwnProperty('i') && clue.i.hasOwnProperty('#text') ){
-          // nasty hack to overcome embedded italic word in clue: text italicText text
-          // arising from an issue with the chosen XML->JSON converter
-          clueText = [
-            clue.span[0]['#text'],
-            '<i>', clue.i['#text'], '</i>',
-            clue.span[1]['#text']
-          ].join('');
-        } else if( clue.hasOwnProperty('span') && clue.span.hasOwnProperty('#text') && clue.hasOwnProperty('i') && clue.i.hasOwnProperty('#text') ){
-          // nasty hack to overcome embedded italic word in clue: italicText text
-          // (will get it wrong if it is: text italicText)
-          // arising from an issue with the chosen XML->JSON converter
-          clueText = [
-            '<i>', clue.i['#text'], '</i>',
-            clue.span['#text']
-          ].join('');
         } else {
-          throw `ERROR: ccwJsonParseCluesExtant: no text in clue.@attributes, nor span+i in clue: clue=${JSON.stringify(clue, null, 2)}`;
+          throw `ERROR: ccwJsonParseCluesExtant: no text in clue.@attributes: clue=${JSON.stringify(clue, null, 2)}`;
         }
 
         const id = clue['@attributes'].number;
@@ -1021,17 +1005,42 @@
     return returnObj;
   }
 
+  function preProcessTextBeforeConvertingToXML( text, errors ){
+    let preprocessedText = text
+      .replace( /<span>/gi, '')     // in the <clue> elements, replace span+it in xml with _i_ (start italics) and _ii_ (end italics)
+      .replace( /<\/span>/gi, '')
+      .replace( /<i>/gi, '_i_')
+      .replace( /<\/i>/gi, '_ii_')
+      .replace( /\n/g, '')          // also noticed some spurious-looking line breaks, so get rid of them
+      ;
+
+    return preprocessedText;
+  }
+
+  function postProcessJson( json, errors ){
+    // rather than walk the obj tree, convert it all into a string, regex replace, then back into json
+
+    let text = JSON.stringify(json);
+    text = text
+    .replace(/_i_/g, '<i>')    // convert all _i_ back into <i>
+    .replace(/_ii_/g, '</i>')  // and _ii_ back into </i>
+    ;
+
+    return JSON.parse( text );
+  }
+
   // given some text, parse it into xml, convert it into the DSL, also returning any errors
   function ccwParseXMLIntoDSL( text ){
     let dslText = "duff output from xml parser";
     let errors = [];
-    let xmlWithErrors = convertTextIntoXMLWithErrors( text );
+    let preprocessedText = preProcessTextBeforeConvertingToXML( text, errors );
+    let xmlWithErrors = convertTextIntoXMLWithErrors( preprocessedText );
     if (xmlWithErrors.errors.length > 0) {
       errors = errors.concat( xmlWithErrors.errors );
     } else {
       const json = xmlToJson( xmlWithErrors.xmlDoc );
-      // console.log(`DEBUG: ccwParseXMLIntoDSL: json=${JSON.stringify(json, null, 2)}`);
-      const dslTextWithErrors = ccwParseJsonIntoDSL( json );
+      const postProcessedJson = postProcessJson( json );
+      const dslTextWithErrors = ccwParseJsonIntoDSL( postProcessedJson );
       if (dslTextWithErrors.errors.length > 0) {
         errors = errors.concat( dslTextWithErrors.errors );
       } else {
