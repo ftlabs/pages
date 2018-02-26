@@ -730,11 +730,10 @@
       const ids = Object.keys(clues[direction]);
       const idsMultiOnly = ids.filter( id => { return id.match(/,/); });
 
-      // console.log(`ccwCalcSequenceInfoForMultiClues: idsMultiOnly=${idsMultiOnly}`);
+      // perhaps pre-process each idsMulti to make the implicit directions explicit, e.g. in 'down' having a clue with idsMulti="3,14" and 14 being an 'across'-only clue: more explicit would be "3, 14 down"
 
       idsMultiOnly.forEach( idMulti => {
         const ids = idMulti.split(/,\s*/);
-        // console.log(`ccwCalcSequenceInfoForMultiClues: idMulti=${idMulti}, clues.${direction}[idMulti]=${JSON.stringify(clues[direction][idMulti])}`);
         ids.forEach( id => {
           if (! id.match(/^\d+(?: down| across)?$/) ) {
             throw(`ERROR: ccwCalcSequenceInfoForMultiClues: could not parse clue idMulti="${idMulti}", id="${id}"`);
@@ -820,7 +819,7 @@
         clues[direction][firstId].multiPrefix = ',' + multiSequencePiecesForPrefix.join(',');
       });
     });
-    console.log(`ccwCalcSequenceInfoForMultiClues: clues=${JSON.stringify(clues, null, 2)}`);
+    // console.log(`ccwCalcSequenceInfoForMultiClues: clues=${JSON.stringify(clues, null, 2)}`);
 
     return clues;
   }
