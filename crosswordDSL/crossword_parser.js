@@ -736,8 +736,8 @@
         const ids = idMulti.split(/,\s*/);
         // console.log(`ccwCalcSequenceInfoForMultiClues: idMulti=${idMulti}, clues.${direction}[idMulti]=${JSON.stringify(clues[direction][idMulti])}`);
         ids.forEach( id => {
-          if (! id.match(/^\d+$/) ) {
-            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: could not parse clue id=${idMulti}`);
+          if (! id.match(/^\d+(?: down| across)?$/) ) {
+            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: could not parse clue idMulti="${idMulti}", id="${id}"`);
           }
         });
 
@@ -764,14 +764,23 @@
           length   : firstLength,
         });
 
-        const childIds = ids.slice(1);
-        childIds.forEach( childId => {
+        const childIdsWithDirections = ids.slice(1);
+        childIdsWithDirections.forEach( childIdWithDirection => {
           // how do we know which direction the clue belongs to?
-          let childDirection = direction;
-          if (answers[childId].numDirections == 2) {
-            // assume is same direction as first, but this is NOT RIGHT and will need to be addressed forthwith
-          } else {
-            childDirection = Object.keys(answers[childId].directions)[0];
+            // assume childIdWithDirection is either a number (defaults to the current direction)
+            // or a number followed by "down" or "across"
+
+          const childIdWithDirectionParts = childIdWithDirection.split(/\s+/);
+          const childId = childIdWithDirectionParts[0];
+          const childDirection = (childIdWithDirectionParts.length == 2)? childIdWithDirectionParts[1] : direction;
+          console.log(`ccwCalcSequenceInfoForMultiClues: childId=${childId}, childDirection=${childDirection}`);
+
+          if (! answers.hasOwnProperty(childId) ) {
+            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: answers does not contain childId="${childId}"`);
+          }
+
+          if (! answers[childId].directions.hasOwnProperty(childDirection) ) {
+            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: answers[childId].directions does not contain direction="${childDirection}" for childId="${childId}"`);
           }
 
           const childLength = answers[childId].directions[childDirection]['length'];
@@ -800,7 +809,7 @@
         clues[direction][firstId].multiPrefix = ',' + multiSequencePiecesForPrefix.join(',');
       });
     });
-    // console.log(`ccwCalcSequenceInfoForMultiClues: clues=${JSON.stringify(clues, null, 2)}`);
+    console.log(`ccwCalcSequenceInfoForMultiClues: clues=${JSON.stringify(clues, null, 2)}`);
 
     return clues;
   }
