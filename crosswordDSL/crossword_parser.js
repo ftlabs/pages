@@ -1048,7 +1048,11 @@
     return JSON.parse( text );
   }
 
-  // given some text, parse it into xml, convert it into the DSL, also returning any errors
+  // given some text, convert it into xml, parse that and generate the DSL,
+  // returning {
+  //   dslText: "YAML text spec",
+  //   errors: []
+  // }
   function ccwParseXMLIntoDSL( text ){
     let dslText = "duff output from xml parser";
     let errors = [];
@@ -1094,6 +1098,12 @@
       } else {
         console.log(`parseWhateverItIs: we haz crossword-compiler xml`);
         const possibleDSLTextWithErrors = ccwParseXMLIntoDSL( text );
+        // expecting {
+        //   dslText: "YAML text spec",
+        //   errors: []
+        // }
+        console.log(`parseWhateverItIs: via ccwParseXMLIntoDSL, possibleDSLTextWithErrors=${JSON.stringify(possibleDSLTextWithErrors, null, 2)}`);
+
         if (possibleDSLTextWithErrors.errors.length > 0) {
           errors = possibleDSLTextWithErrors.errors;
         } else {
