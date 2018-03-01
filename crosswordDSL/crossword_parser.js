@@ -730,14 +730,13 @@
       const ids = Object.keys(clues[direction]);
       const idsMultiOnly = ids.filter( id => { return id.match(/,/); });
 
-      // console.log(`ccwCalcSequenceInfoForMultiClues: idsMultiOnly=${idsMultiOnly}`);
+      // perhaps pre-process each idsMulti to make the implicit directions explicit, e.g. in 'down' having a clue with idsMulti="3,14" and 14 being an 'across'-only clue: more explicit would be "3, 14 down"
 
       idsMultiOnly.forEach( idMulti => {
         const ids = idMulti.split(/,\s*/);
-        // console.log(`ccwCalcSequenceInfoForMultiClues: idMulti=${idMulti}, clues.${direction}[idMulti]=${JSON.stringify(clues[direction][idMulti])}`);
         ids.forEach( id => {
-          if (! id.match(/^\d+$/) ) {
-            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: could not parse clue id=${idMulti}`);
+          if (! id.match(/^\d+(?: down| across)?$/) ) {
+            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: could not parse clue idMulti="${idMulti}", id="${id}"`);
           }
         });
 
@@ -764,14 +763,34 @@
           length   : firstLength,
         });
 
-        const childIds = ids.slice(1);
-        childIds.forEach( childId => {
+        const childIdsWithDirections = ids.slice(1);
+        childIdsWithDirections.forEach( childIdWithDirection => {
           // how do we know which direction the clue belongs to?
-          let childDirection = direction;
-          if (answers[childId].numDirections == 2) {
-            // assume is same direction as first, but this is NOT RIGHT and will need to be addressed forthwith
+            // assume childIdWithDirection is either a number (defaults to the current direction)
+            // or a number followed by "down" or "across"
+
+          const childIdWithDirectionParts = childIdWithDirection.split(/\s+/);
+          const childId = childIdWithDirectionParts[0];
+          // const childDirection = (childIdWithDirectionParts.length == 2)? childIdWithDirectionParts[1] : direction;
+
+          if (! answers.hasOwnProperty(childId) ) {
+            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: answers does not contain childId="${childId}"`);
+          }
+
+          let childDirection;
+          if (childIdWithDirectionParts.length == 2) {
+            childDirection = childIdWithDirectionParts[1];
+          } else if (answers[childId].directions.hasOwnProperty(direction) ) {
+            childDirection = direction;
           } else {
-            childDirection = Object.keys(answers[childId].directions)[0];
+            const otherDirection = (direction === 'across')? 'down' : 'across';
+            childDirection = otherDirection;
+          }
+          console.log(`ccwCalcSequenceInfoForMultiClues: childId=${childId}, childDirection=${childDirection}`);
+
+          if (! answers[childId].directions.hasOwnProperty(childDirection) ) {
+            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: answers[childId="${childId}"].directions does not contain direction="${childDirection}",
+            clues[direction="${direction}"][idMulti="${idMulti}"]="${JSON.stringify(clues[direction][idMulti],null, 2)}"`);
           }
 
           const childLength = answers[childId].directions[childDirection]['length'];
@@ -820,7 +839,7 @@
 
       idsMultiOnly.forEach( id => {
         const clue = clues[direction][id];
-        const multiFormatList = clue.multiFormats.split(/[,\-]/);
+        const multiFormatList = clue.multiFormats.split(/\s*[:,\-]\s*/);
         // console.log(`ccwCalcFormatsForMultiClues: id=${id}, clues.${direction}[${id}]=${JSON.stringify(clue, null, 2)}, \nmultiFormatList=${JSON.stringify(multiFormatList)}`);
         // loop over multiSequence
         //   unpack head of remaining multiFormatList into current sequence item until full
@@ -830,10 +849,10 @@
           let remainingAnswerLength = currentSeqClue['length'];
           while (remainingAnswerLength > 0) {
             if (remainingFormats.length == 0) {
-              throw `ERROR: cannot distribute formats among multi-clue: clue=${clue}: not enough remaining format values for currentSeqClue=${currentSeqClue}`;
+              throw `ERROR: cannot distribute formats among multi-clue: clue=${JSON.stringify(clue, null, 2)}: not enough remaining format values for currentSeqClue=${JSON.stringify(currentSeqClue, null, 2)}`;
             }
             if (remainingFormats[0] > remainingAnswerLength) {
-              throw `ERROR: cannot distribute formats among multi-clue: clue=${clue}: remaining format value, ${remainingFormats[0]}, too large for remainingAnswerLength, ${remainingAnswerLength}: currentSeqClue=${currentSeqClue}`;
+              throw `ERROR: cannot distribute formats among multi-clue: clue=${JSON.stringify(clue, null, 2)}: remaining format value, ${remainingFormats[0]}, too large for remainingAnswerLength, ${remainingAnswerLength}: currentSeqClue=${JSON.stringify(currentSeqClue, null, 2)}`;
             }
             const format = remainingFormats.shift();
             currentSeqFormats.push(format);
@@ -843,7 +862,7 @@
           currentSeqClue.format = currentSeqFormats.join(',');
         });
         if (remainingFormats.length > 0) {
-          throw `ERROR: cannot fully distribute formats among multi-clue: clue=${clue}: some remainingFormats, ${remainingFormats}`;
+          throw `ERROR: cannot fully distribute formats among multi-clue: clue=${JSON.stringify(clue, null, 2)}: some remainingFormats, ${remainingFormats}`;
         }
 
         // console.log(`ccwCalcFormatsForMultiClues: id=${id}, clues.${direction}[${id}]=${JSON.stringify(clue, null, 2)}`);
