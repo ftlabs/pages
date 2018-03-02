@@ -1077,6 +1077,81 @@
     }
   }
 
+  // parsing QuickSlow crosswords
+
+  function parseQuickSlowIntoObj( text ){
+    let quickSlowClues = {
+      id     : 'Quick Slow 1',
+      date   : '2018/02/02',
+      author : 'anon',
+      across : [],
+      down   : [],
+      text   : text,
+      errors : [],
+    };
+
+    let cluesGrouping;
+
+    let lines = text.split(/\r|\n/);
+
+    for(let line of lines){
+      let match;
+      // strip out trailing and leading spaces
+      line = line.trim();
+
+      if     ( line === ""   ) {
+        /* ignore blank lines */
+      }
+      else if (line.match('The Across clues are straightforward')){
+        /* ignore */
+      }
+      else if (match = /^(Quick\s+Slow\s+\d+)\s+issue\s+(\d+)\/(\d+)\/(\d+).*Please\s+credit\s+‘(.+)’/i.exec(line) ) {
+        // Quick Slow 375 issue 03/03/18 / [...] Please credit ‘Aldhelm’ / 1 of 4
+        quickSlowClues.id     = match[1];
+        quickSlowClues.date   = `20${match[4]}/${match[3]}/${match[2]}`;
+        quickSlowClues.author = match[5];
+      }
+      else if (match = /^(across|down)$/i.exec(line) ) {
+        cluesGrouping = match[1].toLowerCase();
+      }
+      else if (match = /^(\d+)\s+(.+)\s+\(([0-9,-\s]+)\)$/.exec(line) ) {
+        // 2 Author who&#39;s hoping to hit his targets? (6, 2)
+        if (! /(across|down)/.test(cluesGrouping)) {
+          quickSlowClues.errors.push(`ERROR: clue specified but no 'across' or 'down' grouping specified: "${line}"`);
+          break;
+        } else {
+          let clue = {
+                     id : parseInt(match[1]),
+                   body : match[2].replace(/&#39;/g, "\'"),
+              answerCSV : match[3].replace(/\s+/g, ''), // could be in the form of either "A,LIST-OF,WORDS" or "1,4-2,5", but no spaces
+               original : line,
+          };
+          quickSlowClues[cluesGrouping].push(clue);
+        }
+      } else {
+        quickSlowClues.errors.push("ERROR: couldn't parse line: " + line);
+      }
+    };
+
+    return quickSlowClues;
+  }
+
+  function parseQuickSlowIntoDSLAndErrors( text ){
+    let dslText = "duff output from parser";
+
+    // scan in the text to get clues: id, body, length
+    const quickSlowObj = parseQuickSlowIntoObj( text );
+    console.log(`parseQuickSlowIntoDSL: quickSlowObj=${JSON.stringify(quickSlowObj, null, 2)}`);
+    // decide which template matches
+    // merge clues with template
+    // convert to DSL
+
+    return {
+      dslText,
+      errors: quickSlowObj.errors
+    }
+  }
+
   // given some text, decide what format it is,
   // and parse it accordingly,
   // If the input text indicates it is XML,
@@ -1088,7 +1163,12 @@
   function parseWhateverItIs(text) {
     let possibleDSLText;
     let errors = [];
-    if (! text.match(/^\s*<\?xml/)) {
+    if( text.match(/Quick Slow/) ) {
+      let dslAndErrors = parseQuickSlowIntoDSLAndErrors( text );
+      errors = dslAndErrors.errors;
+      possibleDSLText = dslAndErrors.dslText;
+    }
+    else if (! text.match(/^\s*<\?xml/)) {
       console.log(`parseWhateverItIs: we haz no xml`);
       possibleDSLText = text;
     } else {
