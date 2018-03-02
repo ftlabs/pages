@@ -19,7 +19,7 @@
        author      : "",
        editor      : "Colin Inman",
       publisher    : "Financial Times",
-      copyright    : "2017, Financial Times",
+      copyright    : "2018, Financial Times",
       pubdate      : "today",
      dimensions    : "17x17",
        across      : [],
@@ -1081,13 +1081,17 @@
 
   function parseQuickSlowIntoObj( text ){
     let quickSlowClues = {
-      id     : 'Quick Slow 1',
-      date   : '2018/02/02',
-      author : 'anon',
-      across : [],
-      down   : [],
-      text   : text,
-      errors : [],
+      name      : 'Quick Slow 1',
+      pubdate   : '2018/02/02',
+      author    : 'anon',
+      version   : 'standard v1',
+      editor    : 'anon',
+      copyright : '2018, Financial Times Ltd',
+      publisher : "Financial Times",
+      across    : [],
+      down      : [],
+      text      : text,
+      errors    : [],
     };
 
     let cluesGrouping;
@@ -1107,9 +1111,9 @@
       }
       else if (match = /^(Quick\s+Slow\s+\d+)\s+issue\s+(\d+)\/(\d+)\/(\d+).*Please\s+credit\s+‘(.+)’/i.exec(line) ) {
         // Quick Slow 375 issue 03/03/18 / [...] Please credit ‘Aldhelm’ / 1 of 4
-        quickSlowClues.id     = match[1];
-        quickSlowClues.date   = `20${match[4]}/${match[3]}/${match[2]}`;
-        quickSlowClues.author = match[5];
+        quickSlowClues.name    = match[1];
+        quickSlowClues.pubdate = `20${match[4]}/${match[3]}/${match[2]}`;
+        quickSlowClues.author  = match[5];
       }
       else if (match = /^(across|down)$/i.exec(line) ) {
         cluesGrouping = match[1].toLowerCase();
@@ -1123,7 +1127,7 @@
           let clue = {
                      id : parseInt(match[1]),
                    body : match[2].replace(/&#39;/g, "\'"),
-              answerCSV : match[3].replace(/\s+/g, ''), // could be in the form of either "A,LIST-OF,WORDS" or "1,4-2,5", but no spaces
+             numericCSV : match[3].replace(/\s+/g, ''), // could be in the form of either "A,LIST-OF,WORDS" or "1,4-2,5", but no spaces
                original : line,
           };
           quickSlowClues[cluesGrouping].push(clue);
@@ -1406,14 +1410,18 @@ down:
     // scan in the text to get clues: id, body, length
     const quickSlowObj = parseQuickSlowIntoObj( text );
     // console.log(`parseQuickSlowIntoDSL: quickSlowObj=${JSON.stringify(quickSlowObj, null, 2)}`);
+
     // decide which template matches
     const templateObj = findMatchingQuickSlowTemplate( quickSlowObj );
     // console.log(`parseQuickSlowIntoDSL: templateObj=${JSON.stringify(templateObj, null, 2)}`);
+
     // merge clues with template
     const quickSlowCrosswordObj = mergeQuickSlowObjAndTemplate( quickSlowObj, templateObj );
-    console.log(`parseQuickSlowIntoDSL: quickSlowCrosswordObj=${JSON.stringify(quickSlowCrosswordObj, null, 2)}`);
+    // console.log(`parseQuickSlowIntoDSL: quickSlowCrosswordObj=${JSON.stringify(quickSlowCrosswordObj, null, 2)}`);
+
     // convert to DSL
-    // generateDSL( crossword, withAnswers=true ){
+    dslText = generateDSL( quickSlowCrosswordObj, false /* withAnswers */ );
+    // console.log(`parseQuickSlowIntoDSL: dslText=${dslText}`);
 
     return {
       dslText,
@@ -1423,6 +1431,7 @@ down:
 
   // given some text, decide what format it is,
   // and parse it accordingly,
+  // If it mentions Quick Slow then assume its one of them.
   // If the input text indicates it is XML,
   //  check it is CrosswordCompiler XML, else error.
   // If it is CrosswordCompiler XML, attempt to parse it into DSL,
@@ -1433,6 +1442,7 @@ down:
     let possibleDSLText;
     let errors = [];
     if( text.match(/Quick Slow/) ) {
+      console.log(`parseWhateverItIs: we haz Quick Slow`);
       let dslAndErrors = parseQuickSlowIntoDSLAndErrors( text );
       errors = dslAndErrors.errors;
       possibleDSLText = dslAndErrors.dslText;
