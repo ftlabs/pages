@@ -1384,6 +1384,22 @@ down:
     return null; // no template match found
   }
 
+  function mergeQuickSlowObjAndTemplate( quickSlowObj, templateObj ){
+    // merge template into quickSlowObj
+
+    // copy across individual fields
+    quickSlowObj.dimensions = templateObj.dimensions;
+
+    // copy across clue fields
+    for( let direction of ['across', 'down']){
+      quickSlowObj[direction].map( (clue, i) => {
+        clue.coordinates = templateObj[direction][i].coordinates;
+      })
+    }
+
+    return quickSlowObj;
+  }
+
   function parseQuickSlowIntoDSLAndErrors( text ){
     let dslText = "duff output from parser";
 
@@ -1392,9 +1408,12 @@ down:
     // console.log(`parseQuickSlowIntoDSL: quickSlowObj=${JSON.stringify(quickSlowObj, null, 2)}`);
     // decide which template matches
     const templateObj = findMatchingQuickSlowTemplate( quickSlowObj );
-    console.log(`parseQuickSlowIntoDSL: templateObj=${JSON.stringify(templateObj, null, 2)}`);
+    // console.log(`parseQuickSlowIntoDSL: templateObj=${JSON.stringify(templateObj, null, 2)}`);
     // merge clues with template
+    const quickSlowCrosswordObj = mergeQuickSlowObjAndTemplate( quickSlowObj, templateObj );
+    console.log(`parseQuickSlowIntoDSL: quickSlowCrosswordObj=${JSON.stringify(quickSlowCrosswordObj, null, 2)}`);
     // convert to DSL
+    // generateDSL( crossword, withAnswers=true ){
 
     return {
       dslText,
