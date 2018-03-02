@@ -1133,7 +1133,255 @@
       }
     };
 
+    if (quickSlowClues.across.length === 0) {
+      quickSlowClues.errors.push('ERROR: no across clues found');
+    }
+    if (quickSlowClues.down.length === 0) {
+      quickSlowClues.errors.push('ERROR: no down clues found');
+    }
+
     return quickSlowClues;
+  }
+
+  const QuickSlowTemplateYamls = [
+    `name: QuickSlow grid1 2018/03/01
+author: QuickSlow
+size: 15x15
+pubdate: 2018/03/01
+across:
+- (1,2) 7. Clue (9)
+- (11,2) 8. Clue (5)
+- (1,4) 10. Clue (6)
+- (8,4) 11. Clue (8)
+- (3,6) 12. Clue (6)
+- (10,6) 14. Clue (6)
+- (1,8) 16. Clue (4)
+- (6,8) 17. Clue (5)
+- (12,8) 18. Clue (4)
+- (1,10) 19. Clue (6)
+- (8,10) 21. Clue (6)
+- (1,12) 24. Clue (8)
+- (10,12) 26. Clue (6)
+- (1,14) 27. Clue (5)
+- (7,14) 28. Clue (9)
+down:
+- (2,1) 1. Clue (5)
+- (4,1) 2. Clue (8)
+- (6,1) 3. Clue (6)
+- (8,1) 4. Clue (4)
+- (12,1) 5. Clue (6)
+- (14,1) 6. Clue (9)
+- (10,3) 9. Clue (6)
+- (8,6) 13. Clue (5)
+- (2,7) 15. Clue (9)
+- (6,8) 17. Clue (6)
+- (12,8) 18. Clue (8)
+- (4,10) 20. Clue (6)
+- (10,10) 22. Clue (6)
+- (14,11) 23. Clue (5)
+- (8,12) 25. Clue (4)`,
+
+`name: QuickSlow grid2 2018/03/01
+author: QuickSlow
+size: 15x15
+pubdate: 2018/03/01
+across:
+- (2,1) 1. Clue (11)
+- (1,3) 10. Clue (5)
+- (7,3) 11. Clue (9)
+- (1,5) 12. Clue (9)
+- (11,5) 13. Clue (5)
+- (1,7) 14. Clue (6)
+- (8,7) 16. Clue (8)
+- (1,9) 18. Clue (8)
+- (10,9) 20. Clue (6)
+- (1,11) 23. Clue (5)
+- (7,11) 24. Clue (9)
+- (1,13) 26. Clue (9)
+- (11,13) 27. Clue (5)
+- (4,15) 28. Clue (11)
+down:
+- (3,1) 2. Clue (5)
+- (5,1) 3. Clue (7)
+- (7,1) 4. Clue (6)
+- (9,1) 5. Clue (8)
+- (11,1) 6. Clue (7)
+- (1,2) 7. Clue (13)
+- (13,2) 8. Clue (8)
+- (15,2) 9. Clue (13)
+- (3,7) 15. Clue (8)
+- (7,8) 17. Clue (8)
+- (5,9) 19. Clue (7)
+- (11,9) 21. Clue (7)
+- (9,10) 22. Clue (6)
+- (13,11) 25. Clue (5)`,
+
+`name: QuickSlow grid3 2018/03/01
+author: QuickSlow
+size: 15x15
+pubdate: 2018/03/01
+across:
+- (1,1) 1. Clue (8)
+- (10,1) 6. Clue (6)
+- (1,3) 9. Clue (6)
+- (8,3) 10. Clue (8)
+- (1,5) 11. Clue (8)
+- (10,5) 12. Clue (6)
+- (4,7) 13. Clue (12)
+- (1,9) 16. Clue (12)
+- (1,11) 19. Clue (6)
+- (8,11) 21. Clue (8)
+- (1,13) 23. Clue (8)
+- (10,13) 24. Clue (6)
+- (1,15) 25. Clue (6)
+- (8,15) 26. Clue (8)
+down:
+- (2,1) 2. Clue (6)
+- (4,1) 3. Clue (5)
+- (6,1) 4. Clue (9)
+- (8,1) 5. Clue (7)
+- (10,1) 6. Clue (5)
+- (12,1) 7. Clue (9)
+- (14,1) 8. Clue (8)
+- (4,7) 13. Clue (9)
+- (10,7) 14. Clue (9)
+- (2,8) 15. Clue (8)
+- (8,9) 17. Clue (7)
+- (14,10) 18. Clue (6)
+- (6,11) 20. Clue (5)
+- (12,11) 22. Clue (5)`,
+
+`name: QuickSlow grid4 2018/03/01
+author: QuickSlow
+size: 15x15
+pubdate: 2018/03/01
+across:
+- (1,1) 1. Clue (6)
+- (8,1) 4. Clue (8)
+- (1,3) 9. Clue (5)
+- (7,3) 10. Clue (9)
+- (1,5) 11. Clue (7)
+- (9,5) 12. Clue (7)
+- (1,7) 13. Clue (4)
+- (6,7) 14. Clue (8)
+- (3,9) 17. Clue (8)
+- (12,9) 19. Clue (4)
+- (1,11) 22. Clue (7)
+- (9,11) 24. Clue (7)
+- (1,13) 25. Clue (9)
+- (11,13) 26. Clue (5)
+- (1,15) 27. Clue (8)
+- (10,15) 28. Clue (6)
+down:
+- (1,1) 1. Clue (8)
+- (3,1) 2. Clue (9)
+- (5,1) 3. Clue (6)
+- (9,1) 5. Clue (13)
+- (11,1) 6. Clue (7)
+- (13,1) 7. Clue (5)
+- (15,1) 8. Clue (6)
+- (7,3) 10. Clue (13)
+- (13,7) 15. Clue (9)
+- (15,8) 16. Clue (8)
+- (5,9) 18. Clue (7)
+- (1,10) 20. Clue (6)
+- (11,10) 21. Clue (6)
+- (3,11) 23. Clue (5)`,
+
+`name: QuickSlow grid5 2018/03/01
+author: QuickSlow
+size: 15x15
+pubdate: 2018/03/01
+across:
+- (1,1) 1. Clue (5)
+- (8,1) 5. Clue (8)
+- (1,3) 9. Clue (8)
+- (10,3) 10. Clue (6)
+- (1,5) 11. Clue (8)
+- (10,5) 12. Clue (6)
+- (4,7) 13. Clue (8)
+- (1,8) 15. Clue (4)
+- (12,8) 17. Clue (4)
+- (5,9) 19. Clue (8)
+- (1,11) 20. Clue (6)
+- (8,11) 21. Clue (8)
+- (1,13) 22. Clue (6)
+- (8,13) 23. Clue (8)
+- (1,15) 24. Clue (8)
+- (10,15) 25. Clue (6)
+down:
+- (2,1) 2. Clue (8)
+- (4,1) 3. Clue (8)
+- (6,1) 4. Clue (9)
+- (8,1) 5. Clue (15)
+- (11,1) 6. Clue (7)
+- (13,1) 7. Clue (8)
+- (15,1) 8. Clue (8)
+- (10,7) 14. Clue (9)
+- (1,8) 15. Clue (8)
+- (3,8) 16. Clue (8)
+- (12,8) 17. Clue (8)
+- (14,8) 18. Clue (8)
+- (5,9) 19. Clue (7)`,
+
+`name: QuickSlow grid6 2018/03/01
+author: QuickSlow
+size: 15x15
+pubdate: 2018/03/01
+across:
+- (3,1) 1. Clue (12)
+- (1,3) 9. Clue (5)
+- (7,3) 10. Clue (9)
+- (1,5) 11. Clue (9)
+- (11,5) 12. Clue (5)
+- (1,7) 13. Clue (9)
+- (11,7) 16. Clue (5)
+- (1,9) 18. Clue (5)
+- (7,9) 19. Clue (9)
+- (1,11) 20. Clue (5)
+- (7,11) 22. Clue (9)
+- (1,13) 25. Clue (9)
+- (11,13) 26. Clue (5)
+- (1,15) 27. Clue (12)
+down:
+- (3,1) 1. Clue (9)
+- (5,1) 2. Clue (5)
+- (7,1) 3. Clue (5)
+- (9,1) 4. Clue (9)
+- (11,1) 5. Clue (9)
+- (13,1) 6. Clue (5)
+- (1,2) 7. Clue (13)
+- (15,2) 8. Clue (13)
+- (5,7) 14. Clue (9)
+- (7,7) 15. Clue (9)
+- (13,7) 17. Clue (9)
+- (3,11) 21. Clue (5)
+- (9,11) 23. Clue (5)
+- (11,11) 24. Clue (5)`
+  ];
+
+  function findMatchingQuickSlowTemplate( quickSlowObj ){
+    // create CSV string of across clue ids
+    // loop over each QuickSlowTemplateYamls
+    //   parseDSL of template into obj
+    //   create CSV string of template's across clue ids
+    //   if csvs from quickSlowObj and template match, return the template object
+    // if no match, return null.
+
+    const quickSlowObjCSV = quickSlowObj.across.map( clue => clue.id ).join(',');
+    for(let templateYaml of QuickSlowTemplateYamls){
+      const templateObj = parseDSL( templateYaml );
+      if (templateObj.errors.length > 0) {
+        console.log("ERROR: findMatchingQuickSlowTemplate: could not parseDSL templateYaml");
+        return null; // code failure
+      }
+      const templateCSV = templateObj.across.map( clue => clue.id ).join(',');
+      if (quickSlowObjCSV === templateCSV) {
+        return templateObj;
+      }
+    }
+
+    return null; // no template match found
   }
 
   function parseQuickSlowIntoDSLAndErrors( text ){
@@ -1141,8 +1389,10 @@
 
     // scan in the text to get clues: id, body, length
     const quickSlowObj = parseQuickSlowIntoObj( text );
-    console.log(`parseQuickSlowIntoDSL: quickSlowObj=${JSON.stringify(quickSlowObj, null, 2)}`);
+    // console.log(`parseQuickSlowIntoDSL: quickSlowObj=${JSON.stringify(quickSlowObj, null, 2)}`);
     // decide which template matches
+    const templateObj = findMatchingQuickSlowTemplate( quickSlowObj );
+    console.log(`parseQuickSlowIntoDSL: templateObj=${JSON.stringify(templateObj, null, 2)}`);
     // merge clues with template
     // convert to DSL
 
