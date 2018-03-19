@@ -647,10 +647,20 @@
           throw `ERROR: ccwJsonParseCluesExtant: no text in clue.@attributes: clue=${JSON.stringify(clue, null, 2)}`;
         }
 
+        let clueAttributesFormat = clue['@attributes'].format;
+        if (clueAttributesFormat) {
+          // convert anything that isn't a number or comma or hyphen into a comma
+          clueAttributesFormat = clueAttributesFormat.replace(/[^\d,\-]/g, ',');
+        }
+
+        // if (clueAttributesFormat && ! clueAttributesFormat.match(/^\d+([,\-]\d+)*$/) ) {
+        //   throw `ERROR: ccwJsonParseCluesExtant: could not parse clue.@attributes.format: clue=${JSON.stringify(clue, null, 2)}`;
+        // }
+
         const id = clue['@attributes'].number;
         clues[direction][id] = {
           id     : id,
-          format : clue['@attributes'].format,
+          format : clueAttributesFormat,
           text   : clueText,
           coord  : clueCoords[id],
         };
@@ -895,7 +905,7 @@
           const clueFormatNumbers = clueFormat.split(/[,\-]/).map(n=>{return parseInt(n);}); // '1-2-34,456' --> [1, 2, 34, 456]
           const clueFormatDividers = clueFormat.split(/\d+/).slice(1,-1);    // '1-2-34,456' --> ["-", "-", ","]
           if (clueFormatNumbers.length != (clueFormatDividers.length+1)) {
-            throw `ERROR: ccCalcCluesFormattedAnswers: clueFormatNumbers.length)()${clueFormatNumbers.length}) != clueFormatDividers.length+1(${clueFormatDividers.length+1}) }`
+            throw `ERROR: ccCalcCluesFormattedAnswers: clueFormatNumbers.length (${clueFormatNumbers.length}) != clueFormatDividers.length+1 (${clueFormatDividers.length+1}), from answer.id=${id} direction=${direction}, clue=${JSON.stringify(clues[direction][id], null, 2)};`
           }
           let pos = 0;
           const answerTextPieces = clueFormatNumbers.map(num => {
@@ -904,7 +914,7 @@
             return piece;
           });
           if (answerTextPieces.length != clueFormatNumbers.length) {
-            throw `ERROR: ccCalcCluesFormattedAnswers: answerTextPieces.length(${answerTextPieces.length}) != clueFormatNumbers.length(${clueFormatNumbers.length})`;
+            throw `ERROR: ccCalcCluesFormattedAnswers: answerTextPieces.length(${answerTextPieces.length}) != clueFormatNumbers.length(${clueFormatNumbers.length}), from answer.id=${id} direction=${direction}`;
           }
           const answerTextFragments = [answerTextPieces[0]];
           clueFormatDividers.forEach( (cfd, i) => {
