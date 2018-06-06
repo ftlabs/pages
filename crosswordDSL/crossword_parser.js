@@ -19,7 +19,7 @@
        author      : "",
        editor      : "Colin Inman",
       publisher    : "Financial Times",
-      copyright    : "2017, Financial Times",
+      copyright    : "2018, Financial Times",
       pubdate      : "today",
      dimensions    : "17x17",
        across      : [],
@@ -491,10 +491,12 @@
     const today = new Date();
     const month = today.getMonth()+1;
     const monthMM = (month < 10)? '0' + month : month;
+    const day = today.getDate();
+    const dayDD = (day < 10)? '0' + day : day;
     const yyymmdd = [
       today.getFullYear(),
       monthMM,
-      today.getDate()
+      dayDD,
     ].join('/');
 
     return yyymmdd;
@@ -609,51 +611,60 @@
     const clues = { across: {}, down: {} };
     const crossword = json['crossword-compiler']['rectangular-puzzle'].crossword;
     crossword.clues.forEach( group => {
-      if ( !(group.hasOwnProperty('title')
-           && group.title.hasOwnProperty('b')
-           && group.title.b.hasOwnProperty('#text'))
-        ) {
-          throw `ERROR: ccwJsonParseCluesExtant: cannot find title.b.#text in group=${JSON.stringify(group,null,2)}`;
+      let direction;
+      if (
+        group.hasOwnProperty('title')
+        && group.title.hasOwnProperty('b')
+        && group.title.b.hasOwnProperty('#text')
+      ) {
+          direction = group.title.b['#text'].toLowerCase();
+      } else if (
+        group.hasOwnProperty('title')
+        && group.title.hasOwnProperty('#text')
+      ) {
+          direction = group.title['#text'].toLowerCase();
       } else {
-        const direction = group.title.b['#text'].toLowerCase();
-        if (direction !== 'across' && direction !== 'down') {
-          throw(`ERROR: ccwJsonParseCluesExtant: crossword.clues have unrecognised direction=${direction}`);
-        }
-        group.clue.forEach( clue => {
-          if (!clue.hasOwnProperty('@attributes')) {
-            throw `ERROR: ccwJsonParseCluesExtant: no @attributes in clue=${JSON.stringify(clue, null, 2)}`;
-          }
-          if (!clue['@attributes'].hasOwnProperty('number')) {
-            throw `ERROR: ccwJsonParseCluesExtant: no number in clue.@attributes=${JSON.stringify(clue['@attributes'], null, 2)}`;
-          }
-
-          // console.log(`ccwJsonParseCluesExtant: clue=${JSON.stringify(clue, null, 2)}`);
-
-          let clueText;
-          if (clue.hasOwnProperty('#text')) {
-            clueText = clue['#text'];
-          } else if( clue.hasOwnProperty('span') && clue.span.length==2 && clue.hasOwnProperty('i') && clue.i.hasOwnProperty('#text') ){
-            // nasty hack to overcome embedded italic word in clue
-            // arising from an issue with the chosen XML->JSON converter
-            clueText = [
-              clue.span[0]['#text'],
-              '<i>', clue.i['#text'], '</i>',
-              clue.span[1]['#text']
-            ].join('');
-          } else {
-            throw `ERROR: ccwJsonParseCluesExtant: no text in clue.@attributes, nor span+i in clue: clue=${JSON.stringify(clue, null, 2)}`;
-          }
-
-          const id = clue['@attributes'].number;
-          clues[direction][id] = {
-            id     : id,
-            format : clue['@attributes'].format,
-            text   : clueText,
-            coord  : clueCoords[id],
-          };
-
-        });
+        throw `ERROR: ccwJsonParseCluesExtant: cannot find title.b.#text or title.#text in group=${JSON.stringify(group,null,2)}`;
       }
+
+      if (direction !== 'across' && direction !== 'down') {
+        throw(`ERROR: ccwJsonParseCluesExtant: crossword.clues have unrecognised direction=${direction}`);
+      }
+      group.clue.forEach( clue => {
+        if (!clue.hasOwnProperty('@attributes')) {
+          throw `ERROR: ccwJsonParseCluesExtant: no @attributes in clue=${JSON.stringify(clue, null, 2)}`;
+        }
+        if (!clue['@attributes'].hasOwnProperty('number')) {
+          throw `ERROR: ccwJsonParseCluesExtant: no number in clue.@attributes=${JSON.stringify(clue['@attributes'], null, 2)}`;
+        }
+
+        // console.log(`ccwJsonParseCluesExtant: clue=${JSON.stringify(clue, null, 2)}`);
+
+        let clueText;
+        if (clue.hasOwnProperty('#text')) {
+          clueText = clue['#text'];
+        } else {
+          throw `ERROR: ccwJsonParseCluesExtant: no text in clue.@attributes: clue=${JSON.stringify(clue, null, 2)}`;
+        }
+
+        let clueAttributesFormat = clue['@attributes'].format;
+        if (clueAttributesFormat) {
+          // convert anything that isn't a number or comma or hyphen into a comma
+          clueAttributesFormat = clueAttributesFormat.replace(/[^\d,\-]/g, ',');
+        }
+
+        // if (clueAttributesFormat && ! clueAttributesFormat.match(/^\d+([,\-]\d+)*$/) ) {
+        //   throw `ERROR: ccwJsonParseCluesExtant: could not parse clue.@attributes.format: clue=${JSON.stringify(clue, null, 2)}`;
+        // }
+
+        const id = clue['@attributes'].number;
+        clues[direction][id] = {
+          id     : id,
+          format : clueAttributesFormat,
+          text   : clueText,
+          coord  : clueCoords[id],
+        };
+      });
     });
     // console.log(`ccwJsonParseCluesExtant: clues=${JSON.stringify(clues, null, 2)}`);
     return clues;
@@ -729,14 +740,13 @@
       const ids = Object.keys(clues[direction]);
       const idsMultiOnly = ids.filter( id => { return id.match(/,/); });
 
-      // console.log(`ccwCalcSequenceInfoForMultiClues: idsMultiOnly=${idsMultiOnly}`);
+      // perhaps pre-process each idsMulti to make the implicit directions explicit, e.g. in 'down' having a clue with idsMulti="3,14" and 14 being an 'across'-only clue: more explicit would be "3, 14 down"
 
       idsMultiOnly.forEach( idMulti => {
         const ids = idMulti.split(/,\s*/);
-        // console.log(`ccwCalcSequenceInfoForMultiClues: idMulti=${idMulti}, clues.${direction}[idMulti]=${JSON.stringify(clues[direction][idMulti])}`);
         ids.forEach( id => {
-          if (! id.match(/^\d+$/) ) {
-            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: could not parse clue id=${idMulti}`);
+          if (! id.match(/^\d+(?: down| across)?$/) ) {
+            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: could not parse clue idMulti="${idMulti}", id="${id}"`);
           }
         });
 
@@ -763,14 +773,34 @@
           length   : firstLength,
         });
 
-        const childIds = ids.slice(1);
-        childIds.forEach( childId => {
+        const childIdsWithDirections = ids.slice(1);
+        childIdsWithDirections.forEach( childIdWithDirection => {
           // how do we know which direction the clue belongs to?
-          let childDirection = direction;
-          if (answers[childId].numDirections == 2) {
-            // assume is same direction as first, but this is NOT RIGHT and will need to be addressed forthwith
+            // assume childIdWithDirection is either a number (defaults to the current direction)
+            // or a number followed by "down" or "across"
+
+          const childIdWithDirectionParts = childIdWithDirection.split(/\s+/);
+          const childId = childIdWithDirectionParts[0];
+          // const childDirection = (childIdWithDirectionParts.length == 2)? childIdWithDirectionParts[1] : direction;
+
+          if (! answers.hasOwnProperty(childId) ) {
+            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: answers does not contain childId="${childId}"`);
+          }
+
+          let childDirection;
+          if (childIdWithDirectionParts.length == 2) {
+            childDirection = childIdWithDirectionParts[1];
+          } else if (answers[childId].directions.hasOwnProperty(direction) ) {
+            childDirection = direction;
           } else {
-            childDirection = Object.keys(answers[childId].directions)[0];
+            const otherDirection = (direction === 'across')? 'down' : 'across';
+            childDirection = otherDirection;
+          }
+          console.log(`ccwCalcSequenceInfoForMultiClues: childId=${childId}, childDirection=${childDirection}`);
+
+          if (! answers[childId].directions.hasOwnProperty(childDirection) ) {
+            throw(`ERROR: ccwCalcSequenceInfoForMultiClues: answers[childId="${childId}"].directions does not contain direction="${childDirection}",
+            clues[direction="${direction}"][idMulti="${idMulti}"]="${JSON.stringify(clues[direction][idMulti],null, 2)}"`);
           }
 
           const childLength = answers[childId].directions[childDirection]['length'];
@@ -819,7 +849,7 @@
 
       idsMultiOnly.forEach( id => {
         const clue = clues[direction][id];
-        const multiFormatList = clue.multiFormats.split(/[,\-]/);
+        const multiFormatList = clue.multiFormats.split(/\s*[:,\-]\s*/);
         // console.log(`ccwCalcFormatsForMultiClues: id=${id}, clues.${direction}[${id}]=${JSON.stringify(clue, null, 2)}, \nmultiFormatList=${JSON.stringify(multiFormatList)}`);
         // loop over multiSequence
         //   unpack head of remaining multiFormatList into current sequence item until full
@@ -829,10 +859,10 @@
           let remainingAnswerLength = currentSeqClue['length'];
           while (remainingAnswerLength > 0) {
             if (remainingFormats.length == 0) {
-              throw `ERROR: cannot distribute formats among multi-clue: clue=${clue}: not enough remaining format values for currentSeqClue=${currentSeqClue}`;
+              throw `ERROR: cannot distribute formats among multi-clue: clue=${JSON.stringify(clue, null, 2)}: not enough remaining format values for currentSeqClue=${JSON.stringify(currentSeqClue, null, 2)}`;
             }
             if (remainingFormats[0] > remainingAnswerLength) {
-              throw `ERROR: cannot distribute formats among multi-clue: clue=${clue}: remaining format value, ${remainingFormats[0]}, too large for remainingAnswerLength, ${remainingAnswerLength}: currentSeqClue=${currentSeqClue}`;
+              throw `ERROR: cannot distribute formats among multi-clue: clue=${JSON.stringify(clue, null, 2)}: remaining format value, ${remainingFormats[0]}, too large for remainingAnswerLength, ${remainingAnswerLength}: currentSeqClue=${JSON.stringify(currentSeqClue, null, 2)}`;
             }
             const format = remainingFormats.shift();
             currentSeqFormats.push(format);
@@ -842,7 +872,7 @@
           currentSeqClue.format = currentSeqFormats.join(',');
         });
         if (remainingFormats.length > 0) {
-          throw `ERROR: cannot fully distribute formats among multi-clue: clue=${clue}: some remainingFormats, ${remainingFormats}`;
+          throw `ERROR: cannot fully distribute formats among multi-clue: clue=${JSON.stringify(clue, null, 2)}: some remainingFormats, ${remainingFormats}`;
         }
 
         // console.log(`ccwCalcFormatsForMultiClues: id=${id}, clues.${direction}[${id}]=${JSON.stringify(clue, null, 2)}`);
@@ -875,7 +905,7 @@
           const clueFormatNumbers = clueFormat.split(/[,\-]/).map(n=>{return parseInt(n);}); // '1-2-34,456' --> [1, 2, 34, 456]
           const clueFormatDividers = clueFormat.split(/\d+/).slice(1,-1);    // '1-2-34,456' --> ["-", "-", ","]
           if (clueFormatNumbers.length != (clueFormatDividers.length+1)) {
-            throw `ERROR: ccCalcCluesFormattedAnswers: clueFormatNumbers.length)()${clueFormatNumbers.length}) != clueFormatDividers.length+1(${clueFormatDividers.length+1}) }`
+            throw `ERROR: ccCalcCluesFormattedAnswers: clueFormatNumbers.length (${clueFormatNumbers.length}) != clueFormatDividers.length+1 (${clueFormatDividers.length+1}), from answer.id=${id} direction=${direction}, clue=${JSON.stringify(clues[direction][id], null, 2)};`
           }
           let pos = 0;
           const answerTextPieces = clueFormatNumbers.map(num => {
@@ -884,7 +914,7 @@
             return piece;
           });
           if (answerTextPieces.length != clueFormatNumbers.length) {
-            throw `ERROR: ccCalcCluesFormattedAnswers: answerTextPieces.length(${answerTextPieces.length}) != clueFormatNumbers.length(${clueFormatNumbers.length})`;
+            throw `ERROR: ccCalcCluesFormattedAnswers: answerTextPieces.length(${answerTextPieces.length}) != clueFormatNumbers.length(${clueFormatNumbers.length}), from answer.id=${id} direction=${direction}`;
           }
           const answerTextFragments = [answerTextPieces[0]];
           clueFormatDividers.forEach( (cfd, i) => {
@@ -1004,17 +1034,46 @@
     return returnObj;
   }
 
-  // given some text, parse it into xml, convert it into the DSL, also returning any errors
+  function preProcessTextBeforeConvertingToXML( text, errors ){
+    let preprocessedText = text
+      .replace( /<span>/gi, '')     // in the <clue> elements, replace span+it in xml with _i_ (start italics) and _ii_ (end italics)
+      .replace( /<\/span>/gi, '')
+      .replace( /<i>/gi, '_i_')
+      .replace( /<\/i>/gi, '_ii_')
+      .replace( /\n/g, '')          // also noticed some spurious-looking line breaks, so get rid of them
+      ;
+
+    return preprocessedText;
+  }
+
+  function postProcessJson( json, errors ){
+    // rather than walk the obj tree, convert it all into a string, regex replace, then back into json
+
+    let text = JSON.stringify(json);
+    text = text
+    .replace(/_i_/g, '<i>')    // convert all _i_ back into <i>
+    .replace(/_ii_/g, '</i>')  // and _ii_ back into </i>
+    ;
+
+    return JSON.parse( text );
+  }
+
+  // given some text, convert it into xml, parse that and generate the DSL,
+  // returning {
+  //   dslText: "YAML text spec",
+  //   errors: []
+  // }
   function ccwParseXMLIntoDSL( text ){
     let dslText = "duff output from xml parser";
     let errors = [];
-    let xmlWithErrors = convertTextIntoXMLWithErrors( text );
+    let preprocessedText = preProcessTextBeforeConvertingToXML( text, errors );
+    let xmlWithErrors = convertTextIntoXMLWithErrors( preprocessedText );
     if (xmlWithErrors.errors.length > 0) {
       errors = errors.concat( xmlWithErrors.errors );
     } else {
       const json = xmlToJson( xmlWithErrors.xmlDoc );
-      // console.log(`DEBUG: ccwParseXMLIntoDSL: json=${JSON.stringify(json, null, 2)}`);
-      const dslTextWithErrors = ccwParseJsonIntoDSL( json );
+      const postProcessedJson = postProcessJson( json );
+      const dslTextWithErrors = ccwParseJsonIntoDSL( postProcessedJson );
       if (dslTextWithErrors.errors.length > 0) {
         errors = errors.concat( dslTextWithErrors.errors );
       } else {
@@ -1028,8 +1087,361 @@
     }
   }
 
+  // parsing QuickSlow crosswords
+
+  function parseQuickSlowIntoObj( text ){
+    let quickSlowClues = {
+      name      : 'Quick Slow 1',
+      pubdate   : '2018/02/02',
+      author    : 'anon',
+      version   : 'standard v1',
+      editor    : 'anon',
+      copyright : '2018, Financial Times Ltd',
+      publisher : "Financial Times",
+      across    : [],
+      down      : [],
+      text      : text,
+      errors    : [],
+    };
+
+    let cluesGrouping;
+
+    let lines = text.split(/\r|\n/);
+
+    for(let line of lines){
+      let match;
+      // strip out trailing and leading spaces
+      line = line.trim();
+
+      if     ( line === ""   ) {
+        /* ignore blank lines */
+      }
+      else if (line.match('The Across clues are straightforward')){
+        /* ignore */
+      }
+      else if (match = /^(Quick\s+Slow\s+\d+)\s+issue\s+(\d+)\/(\d+)\/(\d+).*Please\s+credit\s+‘(.+)’/i.exec(line) ) {
+        // Quick Slow 375 issue 03/03/18 / [...] Please credit ‘Aldhelm’ / 1 of 4
+        quickSlowClues.name    = match[1];
+        quickSlowClues.pubdate = `20${match[4]}/${match[3]}/${match[2]}`;
+        quickSlowClues.author  = match[5];
+      }
+      else if (match = /^(across|down)$/i.exec(line) ) {
+        cluesGrouping = match[1].toLowerCase();
+      }
+      else if (match = /^(\d+)\s+(.+)\s+\(([0-9,-\s]+)\)$/.exec(line) ) {
+        // 2 Author who&#39;s hoping to hit his targets? (6, 2)
+        if (! /(across|down)/.test(cluesGrouping)) {
+          quickSlowClues.errors.push(`ERROR: clue specified but no 'across' or 'down' grouping specified: "${line}"`);
+          break;
+        } else {
+          let clue = {
+                     id : parseInt(match[1]),
+                   body : match[2].replace(/&#39;/g, "\'"),
+             numericCSV : match[3].replace(/\s+/g, ''), // could be in the form of either "A,LIST-OF,WORDS" or "1,4-2,5", but no spaces
+               original : line,
+          };
+          quickSlowClues[cluesGrouping].push(clue);
+        }
+      } else {
+        quickSlowClues.errors.push("ERROR: couldn't parse line: " + line);
+      }
+    };
+
+    if (quickSlowClues.across.length === 0) {
+      quickSlowClues.errors.push('ERROR: no across clues found');
+    }
+    if (quickSlowClues.down.length === 0) {
+      quickSlowClues.errors.push('ERROR: no down clues found');
+    }
+
+    return quickSlowClues;
+  }
+
+  const QuickSlowTemplateYamls = [
+    `name: QuickSlow grid1 2018/03/01
+author: QuickSlow
+size: 15x15
+pubdate: 2018/03/01
+across:
+- (1,2) 7. Clue (9)
+- (11,2) 8. Clue (5)
+- (1,4) 10. Clue (6)
+- (8,4) 11. Clue (8)
+- (3,6) 12. Clue (6)
+- (10,6) 14. Clue (6)
+- (1,8) 16. Clue (4)
+- (6,8) 17. Clue (5)
+- (12,8) 18. Clue (4)
+- (1,10) 19. Clue (6)
+- (8,10) 21. Clue (6)
+- (1,12) 24. Clue (8)
+- (10,12) 26. Clue (6)
+- (1,14) 27. Clue (5)
+- (7,14) 28. Clue (9)
+down:
+- (2,1) 1. Clue (5)
+- (4,1) 2. Clue (8)
+- (6,1) 3. Clue (6)
+- (8,1) 4. Clue (4)
+- (12,1) 5. Clue (6)
+- (14,1) 6. Clue (9)
+- (10,3) 9. Clue (6)
+- (8,6) 13. Clue (5)
+- (2,7) 15. Clue (9)
+- (6,8) 17. Clue (6)
+- (12,8) 18. Clue (8)
+- (4,10) 20. Clue (6)
+- (10,10) 22. Clue (6)
+- (14,11) 23. Clue (5)
+- (8,12) 25. Clue (4)`,
+
+`name: QuickSlow grid2 2018/03/01
+author: QuickSlow
+size: 15x15
+pubdate: 2018/03/01
+across:
+- (2,1) 1. Clue (11)
+- (1,3) 10. Clue (5)
+- (7,3) 11. Clue (9)
+- (1,5) 12. Clue (9)
+- (11,5) 13. Clue (5)
+- (1,7) 14. Clue (6)
+- (8,7) 16. Clue (8)
+- (1,9) 18. Clue (8)
+- (10,9) 20. Clue (6)
+- (1,11) 23. Clue (5)
+- (7,11) 24. Clue (9)
+- (1,13) 26. Clue (9)
+- (11,13) 27. Clue (5)
+- (4,15) 28. Clue (11)
+down:
+- (3,1) 2. Clue (5)
+- (5,1) 3. Clue (7)
+- (7,1) 4. Clue (6)
+- (9,1) 5. Clue (8)
+- (11,1) 6. Clue (7)
+- (1,2) 7. Clue (13)
+- (13,2) 8. Clue (8)
+- (15,2) 9. Clue (13)
+- (3,7) 15. Clue (8)
+- (7,8) 17. Clue (8)
+- (5,9) 19. Clue (7)
+- (11,9) 21. Clue (7)
+- (9,10) 22. Clue (6)
+- (13,11) 25. Clue (5)`,
+
+`name: QuickSlow grid3 2018/03/01
+author: QuickSlow
+size: 15x15
+pubdate: 2018/03/01
+across:
+- (1,1) 1. Clue (8)
+- (10,1) 6. Clue (6)
+- (1,3) 9. Clue (6)
+- (8,3) 10. Clue (8)
+- (1,5) 11. Clue (8)
+- (10,5) 12. Clue (6)
+- (4,7) 13. Clue (12)
+- (1,9) 16. Clue (12)
+- (1,11) 19. Clue (6)
+- (8,11) 21. Clue (8)
+- (1,13) 23. Clue (8)
+- (10,13) 24. Clue (6)
+- (1,15) 25. Clue (6)
+- (8,15) 26. Clue (8)
+down:
+- (2,1) 2. Clue (6)
+- (4,1) 3. Clue (5)
+- (6,1) 4. Clue (9)
+- (8,1) 5. Clue (7)
+- (10,1) 6. Clue (5)
+- (12,1) 7. Clue (9)
+- (14,1) 8. Clue (8)
+- (4,7) 13. Clue (9)
+- (10,7) 14. Clue (9)
+- (2,8) 15. Clue (8)
+- (8,9) 17. Clue (7)
+- (14,10) 18. Clue (6)
+- (6,11) 20. Clue (5)
+- (12,11) 22. Clue (5)`,
+
+`name: QuickSlow grid4 2018/03/01
+author: QuickSlow
+size: 15x15
+pubdate: 2018/03/01
+across:
+- (1,1) 1. Clue (6)
+- (8,1) 4. Clue (8)
+- (1,3) 9. Clue (5)
+- (7,3) 10. Clue (9)
+- (1,5) 11. Clue (7)
+- (9,5) 12. Clue (7)
+- (1,7) 13. Clue (4)
+- (6,7) 14. Clue (8)
+- (3,9) 17. Clue (8)
+- (12,9) 19. Clue (4)
+- (1,11) 22. Clue (7)
+- (9,11) 24. Clue (7)
+- (1,13) 25. Clue (9)
+- (11,13) 26. Clue (5)
+- (1,15) 27. Clue (8)
+- (10,15) 28. Clue (6)
+down:
+- (1,1) 1. Clue (8)
+- (3,1) 2. Clue (9)
+- (5,1) 3. Clue (6)
+- (9,1) 5. Clue (13)
+- (11,1) 6. Clue (7)
+- (13,1) 7. Clue (5)
+- (15,1) 8. Clue (6)
+- (7,3) 10. Clue (13)
+- (13,7) 15. Clue (9)
+- (15,8) 16. Clue (8)
+- (5,9) 18. Clue (7)
+- (1,10) 20. Clue (6)
+- (11,10) 21. Clue (6)
+- (3,11) 23. Clue (5)`,
+
+`name: QuickSlow grid5 2018/03/01
+author: QuickSlow
+size: 15x15
+pubdate: 2018/03/01
+across:
+- (1,1) 1. Clue (5)
+- (8,1) 5. Clue (8)
+- (1,3) 9. Clue (8)
+- (10,3) 10. Clue (6)
+- (1,5) 11. Clue (8)
+- (10,5) 12. Clue (6)
+- (4,7) 13. Clue (8)
+- (1,8) 15. Clue (4)
+- (12,8) 17. Clue (4)
+- (5,9) 19. Clue (8)
+- (1,11) 20. Clue (6)
+- (8,11) 21. Clue (8)
+- (1,13) 22. Clue (6)
+- (8,13) 23. Clue (8)
+- (1,15) 24. Clue (8)
+- (10,15) 25. Clue (6)
+down:
+- (2,1) 2. Clue (8)
+- (4,1) 3. Clue (8)
+- (6,1) 4. Clue (9)
+- (8,1) 5. Clue (15)
+- (11,1) 6. Clue (7)
+- (13,1) 7. Clue (8)
+- (15,1) 8. Clue (8)
+- (10,7) 14. Clue (9)
+- (1,8) 15. Clue (8)
+- (3,8) 16. Clue (8)
+- (12,8) 17. Clue (8)
+- (14,8) 18. Clue (8)
+- (5,9) 19. Clue (7)`,
+
+`name: QuickSlow grid6 2018/03/01
+author: QuickSlow
+size: 15x15
+pubdate: 2018/03/01
+across:
+- (3,1) 1. Clue (12)
+- (1,3) 9. Clue (5)
+- (7,3) 10. Clue (9)
+- (1,5) 11. Clue (9)
+- (11,5) 12. Clue (5)
+- (1,7) 13. Clue (9)
+- (11,7) 16. Clue (5)
+- (1,9) 18. Clue (5)
+- (7,9) 19. Clue (9)
+- (1,11) 20. Clue (5)
+- (7,11) 22. Clue (9)
+- (1,13) 25. Clue (9)
+- (11,13) 26. Clue (5)
+- (1,15) 27. Clue (12)
+down:
+- (3,1) 1. Clue (9)
+- (5,1) 2. Clue (5)
+- (7,1) 3. Clue (5)
+- (9,1) 4. Clue (9)
+- (11,1) 5. Clue (9)
+- (13,1) 6. Clue (5)
+- (1,2) 7. Clue (13)
+- (15,2) 8. Clue (13)
+- (5,7) 14. Clue (9)
+- (7,7) 15. Clue (9)
+- (13,7) 17. Clue (9)
+- (3,11) 21. Clue (5)
+- (9,11) 23. Clue (5)
+- (11,11) 24. Clue (5)`
+  ];
+
+  function findMatchingQuickSlowTemplate( quickSlowObj ){
+    // create CSV string of across clue ids
+    // loop over each QuickSlowTemplateYamls
+    //   parseDSL of template into obj
+    //   create CSV string of template's across clue ids
+    //   if csvs from quickSlowObj and template match, return the template object
+    // if no match, return null.
+
+    const quickSlowObjCSV = quickSlowObj.across.map( clue => clue.id ).join(',');
+    for(let templateYaml of QuickSlowTemplateYamls){
+      const templateObj = parseDSL( templateYaml );
+      if (templateObj.errors.length > 0) {
+        console.log("ERROR: findMatchingQuickSlowTemplate: could not parseDSL templateYaml");
+        return null; // code failure
+      }
+      const templateCSV = templateObj.across.map( clue => clue.id ).join(',');
+      if (quickSlowObjCSV === templateCSV) {
+        return templateObj;
+      }
+    }
+
+    return null; // no template match found
+  }
+
+  function mergeQuickSlowObjAndTemplate( quickSlowObj, templateObj ){
+    // merge template into quickSlowObj
+
+    // copy across individual fields
+    quickSlowObj.dimensions = templateObj.dimensions;
+
+    // copy across clue fields
+    for( let direction of ['across', 'down']){
+      quickSlowObj[direction].map( (clue, i) => {
+        clue.coordinates = templateObj[direction][i].coordinates;
+      })
+    }
+
+    return quickSlowObj;
+  }
+
+  function parseQuickSlowIntoDSLAndErrors( text ){
+    let dslText = "duff output from parser";
+
+    // scan in the text to get clues: id, body, length
+    const quickSlowObj = parseQuickSlowIntoObj( text );
+    // console.log(`parseQuickSlowIntoDSL: quickSlowObj=${JSON.stringify(quickSlowObj, null, 2)}`);
+
+    // decide which template matches
+    const templateObj = findMatchingQuickSlowTemplate( quickSlowObj );
+    // console.log(`parseQuickSlowIntoDSL: templateObj=${JSON.stringify(templateObj, null, 2)}`);
+
+    // merge clues with template
+    const quickSlowCrosswordObj = mergeQuickSlowObjAndTemplate( quickSlowObj, templateObj );
+    // console.log(`parseQuickSlowIntoDSL: quickSlowCrosswordObj=${JSON.stringify(quickSlowCrosswordObj, null, 2)}`);
+
+    // convert to DSL
+    dslText = generateDSL( quickSlowCrosswordObj, false /* withAnswers */ );
+    // console.log(`parseQuickSlowIntoDSL: dslText=${dslText}`);
+
+    return {
+      dslText,
+      errors: quickSlowObj.errors
+    }
+  }
+
   // given some text, decide what format it is,
   // and parse it accordingly,
+  // If it mentions Quick Slow then assume its one of them.
   // If the input text indicates it is XML,
   //  check it is CrosswordCompiler XML, else error.
   // If it is CrosswordCompiler XML, attempt to parse it into DSL,
@@ -1039,7 +1451,13 @@
   function parseWhateverItIs(text) {
     let possibleDSLText;
     let errors = [];
-    if (! text.match(/^\s*<\?xml/)) {
+    if( text.match(/Quick Slow/) ) {
+      console.log(`parseWhateverItIs: we haz Quick Slow`);
+      let dslAndErrors = parseQuickSlowIntoDSLAndErrors( text );
+      errors = dslAndErrors.errors;
+      possibleDSLText = dslAndErrors.dslText;
+    }
+    else if (! text.match(/^\s*<\?xml/)) {
       console.log(`parseWhateverItIs: we haz no xml`);
       possibleDSLText = text;
     } else {
@@ -1049,6 +1467,12 @@
       } else {
         console.log(`parseWhateverItIs: we haz crossword-compiler xml`);
         const possibleDSLTextWithErrors = ccwParseXMLIntoDSL( text );
+        // expecting {
+        //   dslText: "YAML text spec",
+        //   errors: []
+        // }
+        console.log(`parseWhateverItIs: via ccwParseXMLIntoDSL, possibleDSLTextWithErrors=${JSON.stringify(possibleDSLTextWithErrors, null, 2)}`);
+
         if (possibleDSLTextWithErrors.errors.length > 0) {
           errors = possibleDSLTextWithErrors.errors;
         } else {
