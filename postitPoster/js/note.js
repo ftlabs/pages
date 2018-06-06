@@ -18,6 +18,7 @@ var Note = function(params) {
 		if(params.type === 'kiosk') {
 			noteEl.style.left = getLeftKioskRatio(params.left);	
 			noteEl.style.top = getTopKioskRatio(params.top, params.paraHeight);
+
 			if(params.orientation === 'v') {
 				noteEl.style.transform = 'rotate(-90deg)';	
 			}
@@ -114,8 +115,6 @@ var Note = function(params) {
 	function getTopKioskRatio(top, height) {
 		var t = Number(top);
 		var h = Number(height);
-
-		console.log(t-35.75);
 
 		var ratio = 380 + (KIOSK_RATIO*(t - 35.75)/100)*h;
 

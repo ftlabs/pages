@@ -5,13 +5,14 @@ function init() {
 	var save = document.querySelector('.button__save');
 	var poster = document.getElementById('poster');
 
-		add.addEventListener('click', addNote);
 	if (mode === "kiosk") {
 		document.documentElement.classList.add("kiosk");
 		add.style.display = 'none';
 		save.style.display = 'none';
+
 		getNoteDetails();
 	} else {
+		add.addEventListener('click', addNote);
 		poster.style.height = window.innerWidth * 2 + 'px';	
 		save.addEventListener('click', showKioskUrl);
 		window.addEventListener('resize', handleResize);
@@ -24,7 +25,7 @@ function addNote(event) {
 
 function getNoteDetails() {
 	var notes = getQueryStringValue("notes").split('-');
-	var paraHeight = document.querySelector('#poster > p').scrollHeight;
+	var paraHeight = document.querySelector('#poster > p').offsetHeight;
 
 	for(var i = 0 ; i < notes.length; ++i) {
 		var note = notes[i].split(';');
@@ -83,7 +84,6 @@ function getAllNotes() {
 	Array.from(notes).forEach(function(note) {
 		var orient = (note.getAttribute('data-rotation') === '0') ? 'h' : 'v';
 		var text = note.textContent;
-		console.log(text);
 		var data = note.style.top.slice(0, -1) + ';' + note.style.left.slice(0, -1) + ';' + orient + ';' + text;
 
 		noteData.push(data);
