@@ -28,7 +28,7 @@ function getNoteDetails() {
 
 	for(var i = 0 ; i < notes.length; ++i) {
 		var note = notes[i].split(';');
-		addNote({top: note[0], left: note[1], paraHeight: paraHeight, orientation: note[2], type: 'kiosk'});
+		addNote({top: note[0], left: note[1], paraHeight: paraHeight, orientation: note[2], text: note[3], type: 'kiosk'});
 	}
 }
 
@@ -82,7 +82,9 @@ function getAllNotes() {
 
 	Array.from(notes).forEach(function(note) {
 		var orient = (note.getAttribute('data-rotation') === '0') ? 'h' : 'v';
-		var data = note.style.top.slice(0, -1) + ';' + note.style.left.slice(0, -1) + ';' + orient;
+		var text = note.textContent;
+		console.log(text);
+		var data = note.style.top.slice(0, -1) + ';' + note.style.left.slice(0, -1) + ';' + orient + ';' + text;
 
 		noteData.push(data);
 	});

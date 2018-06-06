@@ -9,6 +9,7 @@ var Note = function(params) {
 
 	function setNote(params) {
 		var noteEl = document.createElement('article');
+		var noteText = document.createElement('p');
 		noteEl.classList.add('note');
 		noteEl.style.width = calcSize() + 'px';
 		noteEl.style.height = calcSize() * NOTE_RATIO + 'px';
@@ -20,15 +21,19 @@ var Note = function(params) {
 			if(params.orientation === 'v') {
 				noteEl.style.transform = 'rotate(-90deg)';	
 			}
+			noteText.textContent = params.text
 		} else {
 			noteEl.style.left = (window.innerWidth - calcSize())/2 + 'px';	
 			noteEl.style.top = document.body.scrollTop + (window.innerHeight + calcSize() * NOTE_RATIO)/2 + 'px';	
 		}
+
+		noteText.addEventListener('click', editText);
+		noteEl.appendChild(noteText);
 		document.getElementById('poster').appendChild(noteEl);
 		return noteEl;
 	}
 
-	if(params.type === 'click') {	
+	if(params.type === 'click') {
 		note.addEventListener('mousedown', initDrag);
 		note.addEventListener('dblclick', rotateNote);
 		document.addEventListener('mousemove', dragNote);
@@ -68,6 +73,10 @@ var Note = function(params) {
 		var angle = (parseInt(e.target.getAttribute('data-rotation')) === 0)?-90:0;
 		e.target.style.transform = 'rotate('+ angle +'deg)';
 		e.target.setAttribute('data-rotation', angle);
+	}
+
+	function editText(e) {
+		e.currentTarget.setAttribute('contenteditable', true);
 	}
 
 	function calcSize() {

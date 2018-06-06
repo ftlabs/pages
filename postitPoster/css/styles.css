@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css?family=Nothing+You+Could+Do');
+
 html, body {
 	width: 100%;
 	height: auto;
@@ -31,7 +33,7 @@ html, body {
 	overflow: hidden;
 }
 
-#poster p {
+#poster > p {
 	color: #fff1e0;
 	font-family: 'HouschkaPro-Bold', 'houschka_probold', sans-serif;
 	font-size: 6.8vw;
@@ -54,7 +56,7 @@ html, body {
 }
 
 .note {
-	background: rgba(255,240,127,.97);
+	background: rgba(255,240,127,.94);
 	box-shadow: 4px 3px 4px 0px rgba(0,0,0,.15);
 	display: block;
 	cursor: move;
@@ -62,6 +64,15 @@ html, body {
 
 	top: 100px;
 	left: 100px;
+}
+
+.note p {
+	width: 80%;
+    height: 50%;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 5vw;
+    font-family: 'Nothing You Could Do', cursive;
 }
 
 .button__add {
