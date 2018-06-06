@@ -23,14 +23,13 @@ function addNote(kiosk = false) {
 }
 
 function getNoteDetails() {
-	var note = getQueryStringValue("n1");
+	var notes = getQueryStringValue("notes").split('-');
 	var paraHeight = document.querySelector('#poster > p').scrollHeight;
 
-	var top = note.split(';')[0];
-	var left = note.split(';')[1];
-	var orientation = note.split(';')[2];
-
-	addNote({top: top, left: left, paraHeight: paraHeight, orientation: orientation});
+	for(var i =0 ; i < notes.length; ++i) {
+		var note = notes[i].split(';');
+		addNote({top: note[0], left: note[1], paraHeight: paraHeight, orientation: note[2]});
+	}
 }
 
 function snapPoster() {
