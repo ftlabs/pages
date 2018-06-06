@@ -2,49 +2,34 @@ function init() {
 	var mode = getQueryStringValue("type");
 
 	var add = document.querySelector('.button__add');
-	var snap = document.querySelector('.button__snap');
+	var save = document.querySelector('.button__save');
 	var poster = document.getElementById('poster');
 
 		add.addEventListener('click', addNote);
 	if (mode === "kiosk") {
 		document.documentElement.classList.add("kiosk");
 		add.style.display = 'none';
-		snap.style.display = 'none';
+		save.style.display = 'none';
 		getNoteDetails();
 	} else {
 		poster.style.height = window.innerWidth * 2 + 'px';	
-		snap.addEventListener('click', snapPoster);
+		save.addEventListener('click', showKioskUrl);
 		window.addEventListener('resize', handleResize);
 	}
 }
 
-function addNote(kiosk = false) {
-	var note = new Note(kiosk);
+function addNote(event) {
+	var note = new Note(event);
 }
 
 function getNoteDetails() {
 	var notes = getQueryStringValue("notes").split('-');
 	var paraHeight = document.querySelector('#poster > p').scrollHeight;
 
-	for(var i =0 ; i < notes.length; ++i) {
+	for(var i = 0 ; i < notes.length; ++i) {
 		var note = notes[i].split(';');
-		addNote({top: note[0], left: note[1], paraHeight: paraHeight, orientation: note[2]});
+		addNote({top: note[0], left: note[1], paraHeight: paraHeight, orientation: note[2], type: 'kiosk'});
 	}
-}
-
-function snapPoster() {
-	var poster = document.getElementById('poster');
-
-	var captureHeight = document.documentElement.scrollHeight;
-	console.log(document.documentElement.scrollHeight);
-	html2canvas(poster, {height: captureHeight, width: window.innerWidth}).then(canvas => {
-
-		var image = document.createElement('a');
-
-		image.setAttribute('href', canvas.toDataURL());
-		image.setAttribute('target', '_blank');
-		image.click();
-	});
 }
 
 function dataURItoBlob(dataURI) {
@@ -84,6 +69,25 @@ function handleResize(e) {
 
 function getQueryStringValue (key) {  
   return decodeURIComponent(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));  
-}  
+}
+
+function showKioskUrl() {
+	var showKioskUrl = window.location.href + '?type=kiosk&notes=' + getAllNotes();
+	prompt('Copy this URL', showKioskUrl);
+}
+
+function getAllNotes() {
+	var notes = document.querySelectorAll('.note');
+	var noteData = [];
+
+	Array.from(notes).forEach(function(note) {
+		var orient = (note.getAttribute('data-rotation') === '0') ? 'h' : 'v';
+		var data = note.style.top.slice(0, -1) + ';' + note.style.left.slice(0, -1) + ';' + orient;
+
+		noteData.push(data);
+	});
+
+	return noteData.join('-');
+}
 
 document.addEventListener("DOMContentLoaded", init);

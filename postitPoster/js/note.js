@@ -2,22 +2,22 @@ var POSTER_RATIO = 12.7/100;
 var NOTE_RATIO = 7.6/12.7;
 var KIOSK_RATIO = 8.33;
 
-var Note = function(kiosk) {
+var Note = function(params) {
 	var isDragging = false;
-	var note = setNote(kiosk);
+	var note = setNote(params);
 	var offsetX, offsetY;
 
-	function setNote(kiosk) {
+	function setNote(params) {
 		var noteEl = document.createElement('article');
 		noteEl.classList.add('note');
 		noteEl.style.width = calcSize() + 'px';
 		noteEl.style.height = calcSize() * NOTE_RATIO + 'px';
 		noteEl.setAttribute('data-rotation', 0);
 
-		if(kiosk) {
-			noteEl.style.left = getLeftKioskRatio(kiosk.left);	
-			noteEl.style.top = getTopKioskRatio(kiosk.top, kiosk.paraHeight);
-			if(kiosk.orientation === 'v') {
+		if(params.type === 'kiosk') {
+			noteEl.style.left = getLeftKioskRatio(params.left);	
+			noteEl.style.top = getTopKioskRatio(params.top, params.paraHeight);
+			if(params.orientation === 'v') {
 				noteEl.style.transform = 'rotate(-90deg)';	
 			}
 		} else {
@@ -28,7 +28,7 @@ var Note = function(kiosk) {
 		return noteEl;
 	}
 
-	if(!kiosk) {	
+	if(params.type === 'click') {	
 		note.addEventListener('mousedown', initDrag);
 		note.addEventListener('dblclick', rotateNote);
 		document.addEventListener('mousemove', dragNote);
