@@ -50,7 +50,7 @@ html, body {
 
 	background: url('../img/ftlabs_logo.svg') no-repeat;
 	background-position: center;
-	background-size: cover;
+	background-size: contain;
 }
 
 .note {
@@ -74,4 +74,26 @@ html, body {
 	position: fixed;
 	right: 50px;
 	bottom: 10px;
+}
+
+html.kiosk, html.kiosk body {
+	height: 100%;
+}
+
+html.kiosk #logo {
+	width: 345px;
+	height: 200px;
+	position: absolute;
+	top: 5%;
+	left: -23px;
+}
+
+html.kiosk #poster {
+	padding: 8% 70px;
+}
+
+html.kiosk #poster p {
+	top: 40%;
+	font-size: 6.8vw;
+	height: 6vh;
 }

@@ -1,28 +1,35 @@
 function init() {
-	const add = document.querySelector('.button__add');
-	add.addEventListener('click', addNote);
+	var mode = getQueryStringValue("type");
 
-	const snap = document.querySelector('.button__snap');
-	snap.addEventListener('click', snapPoster);
+	var add = document.querySelector('.button__add');
+	var snap = document.querySelector('.button__snap');
+	var poster = document.getElementById('poster');
 
-	const poster = document.getElementById('poster');
-	poster.style.height = window.innerWidth * 2 + 'px';
+		add.addEventListener('click', addNote);
+	if (mode === "kiosk") {
+		document.documentElement.classList.add("kiosk");
+		add.style.display = 'none';
+		snap.style.display = 'none';
+	} else {
+		poster.style.height = window.innerWidth * 2 + 'px';	
+		snap.addEventListener('click', snapPoster);
+	}
 
 	window.addEventListener('resize', handleResize);
 }
 
 function addNote() {
-	const note = new Note();
+	var note = new Note();
 }
 
 function snapPoster() {
-	const poster = document.getElementById('poster');
+	var poster = document.getElementById('poster');
 
-	const captureHeight = document.documentElement.scrollHeight;
+	var captureHeight = document.documentElement.scrollHeight;
 	console.log(document.documentElement.scrollHeight);
 	html2canvas(poster, {height: captureHeight, width: window.innerWidth}).then(canvas => {
 
-		const image = document.createElement('a');
+		var image = document.createElement('a');
 
 		image.setAttribute('href', canvas.toDataURL());
 		image.setAttribute('target', '_blank');
@@ -51,10 +58,12 @@ function dataURItoBlob(dataURI) {
 }
 
 function handleResize(e) {
-	const poster = document.getElementById('poster');
-	poster.style.height = window.innerWidth * 2 + 'px';
+	var poster = document.getElementById('poster');
+	if(!document.documentElement.classList.contains('kiosk')) {
+		poster.style.height = window.innerWidth * 2 + 'px';	
+	}
 
-	const notes = document.querySelectorAll('.note');
+	var notes = document.querySelectorAll('.note');
 	if (notes.length > 0) {
 		Array.from(notes).forEach(note => {
 			note.style.width = window.innerWidth * POSTER_RATIO + 'px';
@@ -62,5 +71,9 @@ function handleResize(e) {
 		});
 	}
 }
+
+function getQueryStringValue (key) {  
+  return decodeURIComponent(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));  
+}  
 
 document.addEventListener("DOMContentLoaded", init);
