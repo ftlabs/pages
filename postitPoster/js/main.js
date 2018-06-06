@@ -10,16 +10,27 @@ function init() {
 		document.documentElement.classList.add("kiosk");
 		add.style.display = 'none';
 		snap.style.display = 'none';
+		getNoteDetails();
 	} else {
 		poster.style.height = window.innerWidth * 2 + 'px';	
 		snap.addEventListener('click', snapPoster);
+		window.addEventListener('resize', handleResize);
 	}
-
-	window.addEventListener('resize', handleResize);
 }
 
-function addNote() {
-	var note = new Note();
+function addNote(kiosk = false) {
+	var note = new Note(kiosk);
+}
+
+function getNoteDetails() {
+	var note = getQueryStringValue("n1");
+	var paraHeight = document.querySelector('#poster > p').scrollHeight;
+
+	var top = note.split(';')[0];
+	var left = note.split(';')[1];
+	var orientation = note.split(';')[2];
+
+	addNote({top: top, left: left, paraHeight: paraHeight, orientation: orientation});
 }
 
 function snapPoster() {
