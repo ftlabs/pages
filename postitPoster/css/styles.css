@@ -67,7 +67,7 @@ html, body {
 }
 
 .note p {
-	width: 80%;
+	width: 95%;
     height: 50%;
     margin: 0 auto;
     text-align: center;
@@ -83,7 +83,7 @@ html, body {
 
 .button__save {
 	position: fixed;
-	right: 50px;
+	right: 100px;
 	bottom: 10px;
 }
 

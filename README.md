@@ -20,3 +20,7 @@ Caveat Emptor: all sorts of shoddy programming practices come out to play in thi
 ## on-going projects
 
 * [crossword spec checker](https://ftlabs.github.io/pages/crossword_dsl.html)
+
+## unclassifiable
+
+* [post-it poster](https://ftlabs.github.io/pages/postit_poster.html)
