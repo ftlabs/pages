@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css?family=Reenie+Beanie');
+
 html, body {
 	width: 100%;
 	height: auto;
@@ -31,13 +33,13 @@ html, body {
 	overflow: hidden;
 }
 
-#poster p {
+#poster > p {
 	color: #fff1e0;
 	font-family: 'HouschkaPro-Bold', 'houschka_probold', sans-serif;
 	font-size: 6.8vw;
 	line-height: 1.2;
 	margin: 0;
-	height: 11.7vh;
+	height: auto;
 	width: 100%;
 	position: absolute;
 	top: 35.75%;
@@ -50,11 +52,11 @@ html, body {
 
 	background: url('../img/ftlabs_logo.svg') no-repeat;
 	background-position: center;
-	background-size: cover;
+	background-size: contain;
 }
 
 .note {
-	background: rgba(255,240,127,.97);
+	background: rgba(255,240,127,.94);
 	box-shadow: 4px 3px 4px 0px rgba(0,0,0,.15);
 	display: block;
 	cursor: move;
@@ -64,14 +66,47 @@ html, body {
 	left: 100px;
 }
 
+.note p {
+	width: 95%;
+    height: 50%;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 7vw;
+    font-family: 'Reenie Beanie', cursive;
+}
+
 .button__add {
 	position: fixed;
 	right: 10px;
 	bottom: 10px;
 }
 
-.button__snap {
+.button__save {
 	position: fixed;
-	right: 50px;
+	right: 100px;
 	bottom: 10px;
+}
+
+html.kiosk, html.kiosk body {
+	height: 100%;
+}
+
+html.kiosk #logo {
+	width: 345px;
+	height: 200px;
+	position: absolute;
+	top: 5%;
+	left: -23px;
+}
+
+html.kiosk #poster {
+	padding: 8% 70px;
+}
+
+html.kiosk #poster p {
+	top: 380px;
+}
+
+html.kiosk .note {
+	cursor: default;
 }

@@ -1,33 +1,36 @@
 function init() {
-	const add = document.querySelector('.button__add');
-	add.addEventListener('click', addNote);
+	var mode = getQueryStringValue("type");
 
-	const snap = document.querySelector('.button__snap');
-	snap.addEventListener('click', snapPoster);
+	var add = document.querySelector('.button__add');
+	var save = document.querySelector('.button__save');
+	var poster = document.getElementById('poster');
 
-	const poster = document.getElementById('poster');
-	poster.style.height = window.innerWidth * 2 + 'px';
+	if (mode === "kiosk") {
+		document.documentElement.classList.add("kiosk");
+		add.style.display = 'none';
+		save.style.display = 'none';
 
-	window.addEventListener('resize', handleResize);
+		getNoteDetails();
+	} else {
+		add.addEventListener('click', addNote);
+		poster.style.height = window.innerWidth * 2 + 'px';	
+		save.addEventListener('click', showKioskUrl);
+		window.addEventListener('resize', handleResize);
+	}
 }
 
-function addNote() {
-	const note = new Note();
+function addNote(event) {
+	var note = new Note(event);
 }
 
-function snapPoster() {
-	const poster = document.getElementById('poster');
+function getNoteDetails() {
+	var notes = getQueryStringValue("notes").split('-');
+	var paraHeight = document.querySelector('#poster > p').offsetHeight;
 
-	const captureHeight = document.documentElement.scrollHeight;
-	console.log(document.documentElement.scrollHeight);
-	html2canvas(poster, {height: captureHeight, width: window.innerWidth}).then(canvas => {
-
-		const image = document.createElement('a');
-
-		image.setAttribute('href', canvas.toDataURL());
-		image.setAttribute('target', '_blank');
-		image.click();
-	});
+	for(var i = 0 ; i < notes.length; ++i) {
+		var note = notes[i].split(';');
+		addNote({top: note[0], left: note[1], paraHeight: paraHeight, orientation: note[2], text: note[3], type: 'kiosk'});
+	}
 }
 
 function dataURItoBlob(dataURI) {
@@ -51,16 +54,42 @@ function dataURItoBlob(dataURI) {
 }
 
 function handleResize(e) {
-	const poster = document.getElementById('poster');
-	poster.style.height = window.innerWidth * 2 + 'px';
+	var poster = document.getElementById('poster');
+	if(!document.documentElement.classList.contains('kiosk')) {
+		poster.style.height = window.innerWidth * 2 + 'px';	
+	}
 
-	const notes = document.querySelectorAll('.note');
+	var notes = document.querySelectorAll('.note');
 	if (notes.length > 0) {
 		Array.from(notes).forEach(note => {
 			note.style.width = window.innerWidth * POSTER_RATIO + 'px';
 			note.style.height = window.innerWidth * POSTER_RATIO * NOTE_RATIO + 'px';
 		});
 	}
+}
+
+function getQueryStringValue (key) {  
+  return decodeURIComponent(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));  
+}
+
+function showKioskUrl() {
+	var showKioskUrl = window.location.href + '?type=kiosk&notes=' + getAllNotes();
+	prompt('Copy this URL', showKioskUrl);
+}
+
+function getAllNotes() {
+	var notes = document.querySelectorAll('.note');
+	var noteData = [];
+
+	Array.from(notes).forEach(function(note) {
+		var orient = (note.getAttribute('data-rotation') === '0') ? 'h' : 'v';
+		var text = note.textContent;
+		var data = note.style.top.slice(0, -1) + ';' + note.style.left.slice(0, -1) + ';' + orient + ';' + text;
+
+		noteData.push(data);
+	});
+
+	return noteData.join('-');
 }
 
 document.addEventListener("DOMContentLoaded", init);
